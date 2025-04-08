@@ -1,0 +1,9 @@
+/node_modules
+/package-lock.json
+.env
+.env.local
+.env.development.local
+.DS_Store
+
+
+setup.md
