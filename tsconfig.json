@@ -20,6 +20,6 @@
         "@middleware/*": ["src/middleware/*"]
       }
     },
-    "include": ["src/**/*", "serverless.ts","jest.setup.js", "jest.config.js"],
+    "include": ["src/**/*","tests/**/*", "serverless.ts","jest.setup.js", "jest.config.js"],
     "exclude": ["node_modules", ".serverless", ".build"]
   }

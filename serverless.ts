@@ -7,7 +7,7 @@ const serverlessConfiguration: AWS = {
     name: "aws",
     runtime: "nodejs18.x",
     stage: '${opt:stage, "dev"}',
-    region: '${opt:region, "us-east-1"}',
+    region: "us-east-1",
     memorySize: 256,
     timeout: 30,
     environment: {
