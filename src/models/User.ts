@@ -19,6 +19,24 @@ const userPreferencesSchema = new Schema<IUserPreferences>(
     defaultCurrency: { type: String, default: "USD" },
     notificationsEnabled: { type: Boolean, default: true },
     twoFactorEnabled: { type: Boolean, default: false },
+    aiAssistantPreferences: {
+      defaultCurrency: { type: String, default: "USD" },
+      preferredTimeZone: { type: String, default: "UTC" },
+      preferredReportingPeriod: {
+        type: String,
+        enum: ["week", "month", "quarter"],
+        default: "month",
+      },
+      reminderSettings: {
+        enabled: { type: Boolean, default: false },
+        frequency: {
+          type: String,
+          enum: ["daily", "weekly", "monthly"],
+          default: "weekly",
+        },
+        time: { type: String, default: "09:00" }, // HH:MM format
+      },
+    },
   },
   { _id: false }
 );

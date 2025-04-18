@@ -53,6 +53,15 @@ const transactionSchema = new Schema<ITransaction>(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
+    category: { type: String, required: true }, // e.g., 'design', 'writing', 'consulting'
+    tags: { type: [String], default: [] }, // user-defined tags
+    client: String, // for freelancers to tag client-specific work
+    projectId: String, // to group transactions by project
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: { type: Date, default: Date.now },
     metadata: {
       type: transactionMetadataSchema,
       default: () => ({}),
@@ -68,6 +77,16 @@ transactionSchema.index({ status: 1 });
 transactionSchema.index({ createdAt: -1 });
 transactionSchema.index({ "metadata.orderId": 1 }, { sparse: true });
 transactionSchema.index({ "metadata.subscriptionId": 1 }, { sparse: true });
+
+// indices for analytics
+transactionSchema.index({ toUserId: 1, createdAt: -1, type: 1 });
+transactionSchema.index({ fromUserId: 1, createdAt: -1, type: 1 });
+transactionSchema.index({
+  toUserId: 1,
+  type: 1,
+  "metadata.category": 1,
+  createdAt: -1,
+});
 
 export const Transaction = model<ITransaction>(
   "Transaction",

@@ -16,6 +16,16 @@ export interface IUserPreferences {
   defaultCurrency: string;
   notificationsEnabled: boolean;
   twoFactorEnabled: boolean;
+  aiAssistantPreferences: {
+    defaultCurrency: string;
+    preferredTimeZone: string;
+    preferredReportingPeriod: "week" | "month" | "quarter";
+    reminderSettings: {
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "monthly";
+      time: string; // HH:MM format
+    };
+  };
 }
 
 export interface IUser extends Document {
@@ -72,6 +82,10 @@ export interface ITransaction extends Document {
   metadata: ITransactionMetadata;
   createdAt: Date;
   updatedAt: Date;
+  category: string; // e.g., 'design', 'writing', 'consulting'
+  tags: string[]; // user-defined tags
+  client?: string; // for freelancers to tag client-specific work
+  projectId?: string; // to group transactions by project
 }
 
 // Order-related types
@@ -242,4 +256,55 @@ export interface SendTipRequestBody {
   senderWalletAddress: string;
   message?: string;
   anonymous?: boolean;
+}
+
+export interface IMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: Date;
+}
+
+export interface IChatSession extends Document {
+  userId: Types.ObjectId;
+  title: string;
+  messages: IMessage[];
+  lastInteraction: Date;
+  active: boolean;
+  metadata: {
+    context?: {
+      dateRange?: {
+        start?: Date;
+        end?: Date;
+      };
+      transactionTypes?: string[];
+      clients?: string[];
+      projects?: string[];
+    };
+    aiProvider?: string;
+    modelVersion?: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IAnalyticsCache extends Document {
+  userId: Types.ObjectId;
+  queryType: string;
+  params: {
+    period?: "day" | "week" | "month" | "quarter" | "year";
+    startDate?: Date;
+    endDate?: Date;
+    transactionType?: string;
+    categories?: string[];
+    tags?: string[];
+    clients?: string[];
+    groupBy?: string;
+    currency?: string;
+    includeDetails?: boolean;
+  };
+  results: any;
+  createdAt: Date;
+  expiresAt: Date;
+  lastAccessed: Date;
+  accessCount: number;
 }

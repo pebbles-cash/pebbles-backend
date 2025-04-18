@@ -52,7 +52,7 @@ A serverless API for a payment platform built for freelancers, content creators,
 4. Start MongoDB locally:
    ```bash
    # Using Docker
-   docker run -d -p 27017:27017 --name mongodb mongo:latest
+   docker run -d -p 27017:27017 --name mongodb mongo:latest 
    
    # Or use your local MongoDB instance
    ```
