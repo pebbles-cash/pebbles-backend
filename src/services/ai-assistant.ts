@@ -65,8 +65,20 @@ export async function processUserMessage(
     let tokenUsage;
 
     if (intent.type === "financial_analysis") {
+      const financialIntent = intent as {
+        type: "financial_analysis";
+        timeframe?: "day" | "week" | "month" | "year";
+        transactionType?: string;
+        client?: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+
       // Query analytics data based on intent
-      const analyticsData = await getFinancialDataForQuery(userId, intent);
+      const analyticsData = await getFinancialDataForQuery(
+        userId,
+        financialIntent
+      );
 
       // Generate response using LLM with context
       const llmResponse = await generateLLMResponse(session, analyticsData);
@@ -74,7 +86,15 @@ export async function processUserMessage(
       tokenUsage = llmResponse.tokenUsage;
     } else if (intent.type === "invoice_generation") {
       // Extract invoice details from the query
-      const invoiceData = await prepareInvoiceData(userId, intent);
+      const invoiceIntent = intent as {
+        type: "invoice_generation";
+        timeframe?: "day" | "week" | "month" | "year";
+        transactionType?: string;
+        client?: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+      const invoiceData = await prepareInvoiceData(userId, invoiceIntent);
 
       // Generate response about the invoice
       const llmResponse = await generateLLMResponse(session, invoiceData);

@@ -1,5 +1,5 @@
 import { Schema, model, Document, Types } from "mongoose";
-import { IAnalyticsCache } from "../types";
+import { IAnalyticsCache, AnalyticsCacheModel } from "../types";
 
 const analyticsCacheSchema = new Schema<IAnalyticsCache>({
   userId: {
@@ -132,7 +132,7 @@ analyticsCacheSchema.statics.generateCacheKey = function (
   return `${queryType}:${JSON.stringify(sortedParams)}`;
 };
 
-export const AnalyticsCache = model<IAnalyticsCache>(
+export const AnalyticsCache = model<IAnalyticsCache, AnalyticsCacheModel>(
   "AnalyticsCache",
   analyticsCacheSchema
 );

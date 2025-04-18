@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { Document, Types } from "mongoose";
+import { Document, Model, Types } from "mongoose";
 
 // User-related types
 export interface ISocialProfile {
@@ -285,6 +285,8 @@ export interface IChatSession extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  addMessage(sender: string, content: string): void;
+  generateTitle(): string;
 }
 
 export interface IAnalyticsCache extends Document {
@@ -307,4 +309,22 @@ export interface IAnalyticsCache extends Document {
   expiresAt: Date;
   lastAccessed: Date;
   accessCount: number;
+  isValid(): boolean;
+  updateAccess(): void;
+  generateCacheKey(queryType: string, params: Record<string, any>): string;
+  findByParams(
+    userId: Types.ObjectId,
+    queryType: string,
+    params: Record<string, any>
+  ): Promise<IAnalyticsCache | null>;
+}
+
+// Model interface (for static methods)
+export interface AnalyticsCacheModel extends Model<IAnalyticsCache> {
+  generateCacheKey(queryType: string, params: Record<string, any>): string;
+  findByParams(
+    userId: Types.ObjectId,
+    queryType: string,
+    params: Record<string, any>
+  ): Promise<IAnalyticsCache | null>;
 }
