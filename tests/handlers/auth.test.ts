@@ -1,347 +1,291 @@
-import { login, callback } from "../../src/handlers/auth";
-import { createMockEvent, parseResponseBody } from "../utils/test-utils";
-import axios from "axios";
+import { APIGatewayProxyEvent } from "aws-lambda";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 import mongoose from "mongoose";
+import { authenticate, verifyToken, logout } from "../../src/handlers/auth";
+import { connectToDatabase } from "../../src/services/mongoose";
 import { User } from "../../src/models";
+import jwksClient from "jwks-rsa";
 
 // Mock dependencies
-jest.mock("axios");
-jest.mock("jsonwebtoken");
+jest.mock("../../src/services/mongoose");
 jest.mock("mongoose", () => {
-  const actualMongoose = jest.requireActual("mongoose");
+  const original = jest.requireActual("mongoose");
   return {
-    ...actualMongoose,
-    connect: jest.fn().mockResolvedValue({
-      connection: {
-        readyState: 1,
-      },
-    }),
+    ...original,
     connection: {
       db: {
         collection: jest.fn().mockReturnValue({
-          insertOne: jest.fn().mockResolvedValue({}),
-          findOne: jest.fn().mockResolvedValue({
-            stateToken: "mock-state-token",
-            status: "initiated",
-          }),
-          updateOne: jest.fn().mockResolvedValue({}),
+          insertOne: jest.fn().mockResolvedValue({ insertedId: "mock-id" }),
+          updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1 }),
+          findOne: jest.fn().mockResolvedValue(null),
         }),
       },
     },
   };
 });
-
-jest.mock("../../src/services/mongoose", () => ({
-  connectToDatabase: jest.fn().mockResolvedValue(mongoose.connection),
-  closeConnection: jest.fn().mockResolvedValue(undefined),
-}));
-
 jest.mock("../../src/models", () => ({
   User: {
     findOne: jest.fn(),
     findById: jest.fn(),
   },
 }));
+jest.mock("axios");
+jest.mock("jsonwebtoken");
+jest.mock("jwks-rsa");
 
-describe("Auth Handler", () => {
+// Mock jwks-rsa client
+const mockJwksClient = {
+  getSigningKey: jest.fn().mockResolvedValue({
+    getPublicKey: jest.fn().mockReturnValue("mock-public-key"),
+  }),
+};
+(jwksClient as jest.Mock).mockReturnValue(mockJwksClient);
+
+describe("Auth Handlers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Set up environment variables
     process.env.JWT_SECRET = "test-secret";
-    process.env.DYNAMIC_API_URL = "https://api.test.dynamic.xyz";
-    process.env.DYNAMIC_API_KEY = "test-api-key";
-    process.env.AUTH_REDIRECT_URL = "https://test.app/callback";
+    process.env.DYNAMIC_ENVIRONMENT_ID = "test-env-id";
   });
 
-  describe("login", () => {
-    it("should return an auth URL when login is successful", async () => {
-      // Mock JWT sign
-      (jwt.sign as jest.Mock).mockReturnValue("mock-state-token");
+  describe("authenticate", () => {
+    const mockDynamicToken = "mock-dynamic-token";
+    const mockDecodedToken = {
+      sub: "dynamic-user-123",
+      email: "test@example.com",
+      name: "Test User",
+    };
+    const mockUser = {
+      _id: "user-123",
+      email: "test@example.com",
+      username: "testuser",
+      displayName: "Test User",
+      save: jest.fn().mockResolvedValue(true),
+    };
+    const mockEvent = {
+      body: JSON.stringify({ dynamicToken: mockDynamicToken }),
+    } as unknown as APIGatewayProxyEvent;
 
-      // Mock axios response
-      (axios.post as jest.Mock).mockResolvedValue({
-        data: {
-          authUrl: "https://test.dynamic.xyz/auth/login/redirect",
-        },
+    it("should authenticate a user with valid Dynamic token - existing user", async () => {
+      // Mock JWT verification
+      (jwt.decode as jest.Mock).mockReturnValue({
+        header: { kid: "test-key-id" },
+        payload: mockDecodedToken,
       });
+      (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
+      (jwt.sign as jest.Mock).mockReturnValue("new-session-token");
 
-      // Create mock event
-      const event = createMockEvent({
-        loginMethod: "email",
-        redirectUrl: "https://app.test/callback",
-      });
+      // Mock user exists
+      (User.findOne as jest.Mock).mockResolvedValue(mockUser);
 
-      // Call the handler
-      const response = await login(event);
+      const response = await authenticate(mockEvent);
 
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
+      // Check response
       expect(response.statusCode).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.data).toHaveProperty("authUrl");
-      expect(body.data).toHaveProperty("stateToken");
-      expect(body.data.stateToken).toBe("mock-state-token");
+      expect(JSON.parse(response.body).success).toBe(true);
+      expect(JSON.parse(response.body).data.token).toBe("new-session-token");
+      expect(JSON.parse(response.body).data.user.id).toBe("user-123");
 
-      // Verify axios was called with correct params
-      expect(axios.post).toHaveBeenCalledWith(
-        "https://api.test.dynamic.xyz/auth/login",
-        {
-          apiKey: "test-api-key",
-          loginMethod: "email",
-          redirectUrl: "https://app.test/callback",
-          state: "mock-state-token",
-        }
-      );
-
-      // Verify JWT sign was called correctly
-      expect(jwt.sign).toHaveBeenCalledWith(
-        expect.objectContaining({ timestamp: expect.any(Number) }),
-        "test-secret",
-        { expiresIn: "15m" }
-      );
-    });
-
-    it("should return an error if login method is missing", async () => {
-      // Create mock event with missing loginMethod
-      const event = createMockEvent({});
-
-      // Call the handler
-      const response = await login(event);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
-      expect(response.statusCode).toBe(400);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe("Login method is required");
-    });
-
-    it("should handle errors when the API call fails", async () => {
-      // Mock JWT sign
-      (jwt.sign as jest.Mock).mockReturnValue("mock-state-token");
-
-      // Mock axios to throw an error
-      (axios.post as jest.Mock).mockRejectedValue(new Error("API error"));
-
-      // Create mock event
-      const event = createMockEvent({
-        loginMethod: "email",
+      // Verify function calls
+      expect(connectToDatabase).toHaveBeenCalled();
+      expect(jwt.decode).toHaveBeenCalledWith(mockDynamicToken, {
+        complete: true,
       });
-
-      // Call the handler
-      const response = await login(event);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
-      expect(response.statusCode).toBe(503);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe("Authentication service unavailable");
-    });
-  });
-
-  describe("callback", () => {
-    it("should create a new user when authenticating for the first time", async () => {
-      // Mock JWT verify
-      (jwt.verify as jest.Mock).mockReturnValue({ timestamp: Date.now() });
-
-      // Mock JWT sign for session token
-      (jwt.sign as jest.Mock).mockReturnValue("mock-session-token");
-
-      // Mock axios response for token request
-      (axios.post as jest.Mock).mockResolvedValue({
-        data: {
-          accessToken: "mock-access-token",
-          refreshToken: "mock-refresh-token",
-          idToken: "mock-id-token",
-          expiresIn: 3600,
-        },
+      expect(mockJwksClient.getSigningKey).toHaveBeenCalledWith("test-key-id");
+      expect(jwt.verify).toHaveBeenCalledWith(
+        mockDynamicToken,
+        "mock-public-key"
+      );
+      expect(User.findOne).toHaveBeenCalledWith({
+        dynamicUserId: "dynamic-user-123",
       });
+      expect(jwt.sign).toHaveBeenCalled();
+      expect(mongoose.connection.db.collection).toHaveBeenCalledWith(
+        "userSessions"
+      );
+    });
 
-      // Mock axios response for user info
-      (axios.get as jest.Mock).mockResolvedValue({
-        data: {
-          id: "dynamic-user-id",
+    it("should authenticate a user with valid Dynamic token - new user", async () => {
+      // Mock JWT verification
+      (jwt.decode as jest.Mock).mockReturnValue({
+        header: { kid: "test-key-id" },
+        payload: mockDecodedToken,
+      });
+      (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
+      (jwt.sign as jest.Mock).mockReturnValue("new-session-token");
+
+      // Mock user doesn't exist, then created
+      (User.findOne as jest.Mock)
+        .mockResolvedValueOnce(null) // First call returns null (user not found)
+        .mockResolvedValueOnce(null); // Second call for username check
+
+      // Mock user creation
+      const mockNewUser = {
+        ...mockUser,
+        _id: "new-user-123",
+      };
+      jest.spyOn(User, "findOne").mockImplementation(() => null);
+      const UserMock = User as any;
+      UserMock.prototype = Object.create(mongoose.Model.prototype);
+      UserMock.prototype.save = jest.fn().mockResolvedValue(true);
+      UserMock.mockImplementation(() => ({
+        ...mockNewUser,
+        save: UserMock.prototype.save,
+      }));
+
+      const response = await authenticate(mockEvent);
+
+      // Check correct user creation fields
+      expect(UserMock).toHaveBeenCalledWith(
+        expect.objectContaining({
           email: "test@example.com",
-          username: "testuser",
-          displayName: "Test User",
-          avatar: "https://example.com/avatar.jpg",
-          walletAddress: "0x1234567890",
-          socialAccounts: [
-            {
-              provider: "twitter",
-              id: "twitter-id",
-              username: "twitteruser",
-            },
-          ],
-        },
-      });
-
-      // Mock User.findOne to return null (no existing user)
-      (User.findOne as jest.Mock).mockResolvedValue(null);
-
-      // Mock User model save method
-      const mockSave = jest.fn().mockResolvedValue(undefined);
-
-      // Mock new User construction
-      const mockUserData = {
-        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85"),
-        email: "test@example.com",
-        username: "testuser",
-        displayName: "Test User",
-        avatar: "https://example.com/avatar.jpg",
-        dynamicUserId: "dynamic-user-id",
-        walletAddress: "0x1234567890",
-        socialProfiles: [
-          {
-            platform: "twitter",
-            profileId: "twitter-id",
-            username: "twitteruser",
-            lastUpdated: expect.any(Date),
-          },
-        ],
-        save: mockSave,
-      };
-
-      // @ts-expect-error - Constructor mock
-      User.mockImplementation(() => mockUserData);
-
-      // Create mock event
-      const event = createMockEvent({
-        code: "auth-code",
-        state: "mock-state-token",
-      });
-
-      // Call the handler
-      const response = await callback(event);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
-      expect(response.statusCode).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.data).toHaveProperty("user");
-      expect(body.data).toHaveProperty("token");
-      expect(body.data).toHaveProperty("dynamicTokens");
-      expect(body.data.token).toBe("mock-session-token");
-      expect(body.data.user).toHaveProperty("id");
-      expect(body.data.user.username).toBe("testuser");
-
-      // Verify User model save was called
-      expect(mockSave).toHaveBeenCalled();
-
-      // Verify JWT sign was called correctly for session token
-      expect(jwt.sign).toHaveBeenCalledWith(
-        {
-          userId: expect.any(String),
-          dynamicId: "dynamic-user-id",
-        },
-        "test-secret",
-        { expiresIn: "7d" }
+          dynamicUserId: "dynamic-user-123",
+        })
       );
     });
 
-    it("should return an error if code or state is missing", async () => {
-      // Create mock event with missing code and state
-      const event = createMockEvent({});
+    it("should return error with missing token", async () => {
+      const invalidEvent = {
+        body: JSON.stringify({}),
+      } as unknown as APIGatewayProxyEvent;
 
-      // Call the handler
-      const response = await callback(event);
+      const response = await authenticate(invalidEvent);
 
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
       expect(response.statusCode).toBe(400);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe("Invalid callback parameters");
+      expect(JSON.parse(response.body).success).toBe(false);
+      expect(JSON.parse(response.body).error).toBe("Dynamic token is required");
     });
 
-    it("should update an existing user when they authenticate again", async () => {
-      // Mock JWT verify
-      (jwt.verify as jest.Mock).mockReturnValue({ timestamp: Date.now() });
+    it("should handle invalid token structure", async () => {
+      // Mock JWT decode to return invalid structure
+      (jwt.decode as jest.Mock).mockReturnValue(null);
 
-      // Mock JWT sign for session token
-      (jwt.sign as jest.Mock).mockReturnValue("mock-session-token");
+      const response = await authenticate(mockEvent);
 
-      // Mock axios responses
-      (axios.post as jest.Mock).mockResolvedValue({
-        data: {
-          accessToken: "mock-access-token",
-          refreshToken: "mock-refresh-token",
-          idToken: "mock-id-token",
-          expiresIn: 3600,
+      expect(response.statusCode).toBe(500);
+      expect(JSON.parse(response.body).success).toBe(false);
+      expect(JSON.parse(response.body).error).toBe("Authentication failed");
+    });
+  });
+
+  describe("verifyToken", () => {
+    it("should verify a valid token", async () => {
+      const mockEvent = {
+        headers: {
+          Authorization: "Bearer valid-token",
         },
-      });
+      } as unknown as APIGatewayProxyEvent;
 
-      (axios.get as jest.Mock).mockResolvedValue({
-        data: {
-          id: "dynamic-user-id",
-          email: "existing@example.com",
-          username: "existinguser",
-          displayName: "Existing User",
-          avatar: "https://example.com/new-avatar.jpg",
-          walletAddress: "0xABCDEF1234",
-          socialAccounts: [
-            {
-              provider: "twitter",
-              id: "new-twitter-id",
-              username: "newTwitterUser",
-            },
-          ],
-        },
-      });
+      // Mock JWT verification
+      (jwt.verify as jest.Mock).mockReturnValue({ userId: "user-123" });
 
-      // Mock existing user
-      const mockSave = jest.fn().mockResolvedValue(undefined);
-      const existingUser = {
-        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c86"),
-        email: "old@example.com",
-        username: "existinguser",
-        displayName: "Old Name",
-        avatar: "https://example.com/old-avatar.jpg",
-        dynamicUserId: "dynamic-user-id",
-        walletAddress: "0xOLDWALLET",
-        socialProfiles: [],
-        save: mockSave,
-      };
+      const response = await verifyToken(mockEvent);
 
-      // Mock User.findOne to return an existing user
-      (User.findOne as jest.Mock).mockResolvedValue(existingUser);
-
-      // Create mock event
-      const event = createMockEvent({
-        code: "auth-code",
-        state: "mock-state-token",
-      });
-
-      // Call the handler
-      const response = await callback(event);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
       expect(response.statusCode).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.data.user.id).toEqual(existingUser._id);
+      expect(JSON.parse(response.body).success).toBe(true);
+      expect(JSON.parse(response.body).data.valid).toBe(true);
+    });
 
-      // Verify user was updated
-      expect(existingUser.email).toBe("existing@example.com");
-      expect(existingUser.displayName).toBe("Existing User");
-      expect(existingUser.avatar).toBe("https://example.com/new-avatar.jpg");
-      expect(existingUser.walletAddress).toBe("0xABCDEF1234");
-      expect(existingUser.socialProfiles.length).toBe(1);
+    it("should return invalid for expired token", async () => {
+      const mockEvent = {
+        headers: {
+          Authorization: "Bearer expired-token",
+        },
+      } as unknown as APIGatewayProxyEvent;
 
-      // Verify save was called
-      expect(mockSave).toHaveBeenCalled();
+      // Mock JWT verification to throw error
+      (jwt.verify as jest.Mock).mockImplementation(() => {
+        throw new Error("Token expired");
+      });
+
+      const response = await verifyToken(mockEvent);
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body).success).toBe(true);
+      expect(JSON.parse(response.body).data.valid).toBe(false);
+    });
+
+    it("should handle missing token", async () => {
+      const mockEvent = {
+        headers: {},
+      } as unknown as APIGatewayProxyEvent;
+
+      const response = await verifyToken(mockEvent);
+
+      expect(response.statusCode).toBe(401);
+      expect(JSON.parse(response.body).success).toBe(false);
+      expect(JSON.parse(response.body).error).toBe("Authorization required");
+    });
+  });
+
+  describe("logout", () => {
+    const mockEvent = {
+      headers: {
+        Authorization: "Bearer valid-token",
+      },
+      user: {
+        id: "user-123",
+      },
+    } as unknown as any;
+
+    it("should logout a user successfully", async () => {
+      // Mock necessary functions
+      const mockUpdateOne = jest.fn().mockResolvedValue({ modifiedCount: 1 });
+      (mongoose.connection.db.collection as jest.Mock).mockReturnValue({
+        updateOne: mockUpdateOne,
+      });
+
+      const response = await logout(mockEvent);
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body).success).toBe(true);
+      expect(JSON.parse(response.body).data.message).toBe(
+        "Logged out successfully"
+      );
+
+      // Verify session was invalidated
+      expect(mockUpdateOne).toHaveBeenCalledWith(
+        {
+          userId: new mongoose.Types.ObjectId("user-123"),
+          token: "valid-token",
+        },
+        { $set: { invalidated: true, loggedOutAt: expect.any(Date) } }
+      );
+    });
+
+    it("should handle missing user ID", async () => {
+      const invalidEvent = {
+        headers: {
+          Authorization: "Bearer valid-token",
+        },
+        user: {},
+      } as unknown as any;
+
+      const response = await logout(invalidEvent);
+
+      expect(response.statusCode).toBe(401);
+      expect(JSON.parse(response.body).success).toBe(false);
+      expect(JSON.parse(response.body).error).toBe(
+        "User ID not found in token"
+      );
+    });
+
+    it("should handle missing token", async () => {
+      const invalidEvent = {
+        headers: {},
+        user: {
+          id: "user-123",
+        },
+      } as unknown as any;
+
+      const response = await logout(invalidEvent);
+
+      expect(response.statusCode).toBe(401);
+      expect(JSON.parse(response.body).success).toBe(false);
+      expect(JSON.parse(response.body).error).toBe(
+        "Authorization token not found"
+      );
     });
   });
 });
