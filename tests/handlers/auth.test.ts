@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import mongoose from "mongoose";
@@ -40,7 +40,7 @@ const mockJwksClient = {
     getPublicKey: jest.fn().mockReturnValue("mock-public-key"),
   }),
 };
-(jwksClient as jest.Mock).mockReturnValue(mockJwksClient);
+(jwksClient as unknown as jest.Mock).mockReturnValue(mockJwksClient);
 
 describe("Auth Handlers", () => {
   beforeEach(() => {
@@ -125,7 +125,12 @@ describe("Auth Handlers", () => {
         ...mockUser,
         _id: "new-user-123",
       };
-      jest.spyOn(User, "findOne").mockImplementation(() => null);
+      // Mock User.findOne to return a properly structured mongoose Query that resolves to null
+      jest.spyOn(User, "findOne").mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+        clone: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockReturnThis(),
+      } as any);
       const UserMock = User as any;
       UserMock.prototype = Object.create(mongoose.Model.prototype);
       UserMock.prototype.save = jest.fn().mockResolvedValue(true);
@@ -220,6 +225,21 @@ describe("Auth Handlers", () => {
   });
 
   describe("logout", () => {
+    const mockContext: Context = {
+      callbackWaitsForEmptyEventLoop: false,
+      functionName: "test",
+      functionVersion: "1",
+      invokedFunctionArn: "arn:test",
+      memoryLimitInMB: "128",
+      awsRequestId: "test-id",
+      logGroupName: "test-group",
+      logStreamName: "test-stream",
+      getRemainingTimeInMillis: () => 1000,
+      done: () => {},
+      fail: () => {},
+      succeed: () => {},
+    };
+
     const mockEvent = {
       headers: {
         Authorization: "Bearer valid-token",
@@ -236,7 +256,7 @@ describe("Auth Handlers", () => {
         updateOne: mockUpdateOne,
       });
 
-      const response = await logout(mockEvent);
+      const response = await logout(mockEvent, mockContext);
 
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.body).success).toBe(true);
@@ -262,7 +282,7 @@ describe("Auth Handlers", () => {
         user: {},
       } as unknown as any;
 
-      const response = await logout(invalidEvent);
+      const response = await logout(invalidEvent, mockContext);
 
       expect(response.statusCode).toBe(401);
       expect(JSON.parse(response.body).success).toBe(false);
@@ -279,7 +299,7 @@ describe("Auth Handlers", () => {
         },
       } as unknown as any;
 
-      const response = await logout(invalidEvent);
+      const response = await logout(invalidEvent, mockContext);
 
       expect(response.statusCode).toBe(401);
       expect(JSON.parse(response.body).success).toBe(false);

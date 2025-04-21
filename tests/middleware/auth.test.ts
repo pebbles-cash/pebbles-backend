@@ -3,11 +3,7 @@ import mongoose from "mongoose";
 import { requireAuth, optionalAuth } from "../../src/middleware/auth";
 import { connectToDatabase } from "../../src/services/mongoose";
 import { User } from "../../src/models";
-import {
-  APIGatewayProxyEvent,
-  Context,
-  APIGatewayProxyResult,
-} from "aws-lambda";
+import { APIGatewayProxyEvent, Context } from "aws-lambda";
 
 // Mock dependencies
 jest.mock("../../src/services/mongoose");
