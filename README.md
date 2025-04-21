@@ -170,6 +170,11 @@ Run tests with coverage:
 npm run test:coverage
 ```
 
+Run specific tests:
+```
+npm test -- tests/handlers/auth.test.ts
+``` 
+
 ## Contributing
 
 1. Fork the repository
