@@ -9,7 +9,6 @@ A serverless API for a payment platform built for freelancers, content creators,
 - 👛 Wallet management
 - 📊 Transaction tracking and analytics
 - 🔄 Subscription management
-- 💸 Tipping functionality
 
 ## Tech Stack
 

@@ -3,6 +3,7 @@ import {
   createMockEvent,
   createMockAuthenticatedEvent,
   parseResponseBody,
+  createMockContext,
 } from "../utils/test-utils";
 import mongoose from "mongoose";
 import { User, Wallet } from "../../src/models";
@@ -45,6 +46,7 @@ jest.mock("../../src/middleware/auth", () => ({
 }));
 
 describe("User Handler", () => {
+  const mockContext = createMockContext();
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -181,7 +183,10 @@ describe("User Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await userHandlerModule.getCurrentUser(event);
+      const response = await userHandlerModule.getCurrentUser(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -245,7 +250,10 @@ describe("User Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await userHandlerModule.updateCurrentUser(event);
+      const response = await userHandlerModule.updateCurrentUser(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -293,7 +301,10 @@ describe("User Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await userHandlerModule.updateCurrentUser(event);
+      const response = await userHandlerModule.updateCurrentUser(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);

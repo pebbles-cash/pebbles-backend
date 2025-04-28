@@ -442,6 +442,19 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    // Database Health Check
+    checkDbConnection: {
+      handler: "src/handlers/health.checkDbConnection",
+      events: [
+        {
+          http: {
+            path: "/api/health/db",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
   },
 
   plugins: ["serverless-offline", "serverless-domain-manager"],
@@ -455,6 +468,7 @@ const serverlessConfiguration: AWS = {
       useChildProcesses: true,
       websocketPort: 3001,
       noPrependStageInUrl: true,
+      dotenv: true,
     },
     customDomain: {
       domainName: "api-${self:provider.stage}.payment-platform.com",

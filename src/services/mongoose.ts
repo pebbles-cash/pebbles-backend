@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { MONGODB_URI, MONGODB_DATABASE } from "../config/env";
 
 // Keep track of connection status
 let isConnected = false;
@@ -20,8 +21,12 @@ export const connectToDatabase = async (): Promise<
     mongoose.set("strictQuery", false);
 
     // Get MongoDB URI and database name from environment variables
-    const uri = process.env.MONGODB_URI;
-    const dbName = process.env.MONGODB_DATABASE;
+    const uri = MONGODB_URI;
+    const dbName = MONGODB_DATABASE;
+
+    console.log("Connecting to MongoDB...");
+    console.log(`URI: ${uri}`);
+    console.log(`Database: ${dbName}`);
 
     if (!uri) {
       throw new Error("MONGODB_URI environment variable is not set");

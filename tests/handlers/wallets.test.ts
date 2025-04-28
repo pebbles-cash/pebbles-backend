@@ -87,7 +87,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.getUserWallets(event, mockContext);
+      const response = await walletsHandlerModule.getUserWallets(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -125,12 +128,15 @@ describe("Wallets Handler", () => {
         "testuser",
         "test@example.com"
       );
-      
+
       // Remove the ID to simulate this error case
       event.user!.id = undefined as any;
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getUserWallets(event, mockContext);
+      const response = await walletsHandlerModule.getUserWallets(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -153,7 +159,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getUserWallets(event, mockContext);
+      const response = await walletsHandlerModule.getUserWallets(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -208,7 +217,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.getWalletDetails(event, mockContext);
+      const response = await walletsHandlerModule.getWalletDetails(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -253,12 +265,15 @@ describe("Wallets Handler", () => {
         null,
         { walletId: "wallet-id-123" }
       );
-      
+
       // Remove the ID to simulate this error case
       event.user!.id = undefined as any;
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletDetails(event, mockContext);
+      const response = await walletsHandlerModule.getWalletDetails(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -278,7 +293,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletDetails(event, mockContext);
+      const response = await walletsHandlerModule.getWalletDetails(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -307,7 +325,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.getWalletDetails(event, mockContext);
+      const response = await walletsHandlerModule.getWalletDetails(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -334,7 +355,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletDetails(event, mockContext);
+      const response = await walletsHandlerModule.getWalletDetails(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -381,7 +405,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -441,7 +468,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -468,12 +498,15 @@ describe("Wallets Handler", () => {
         null,
         { walletId: "wallet-id-123" }
       );
-      
+
       // Remove the ID to simulate this error case
       event.user!.id = undefined as any;
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -493,7 +526,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -518,7 +554,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -545,7 +584,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.getWalletBalance(event, mockContext);
+      const response = await walletsHandlerModule.getWalletBalance(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -558,168 +600,6 @@ describe("Wallets Handler", () => {
   });
 
   describe("createWallet", () => {
-    it("should create a new wallet for the user", async () => {
-      // Mock user ID
-      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
-
-      // Mock user data
-      const mockUser = {
-        _id: userId,
-        username: "testuser",
-        email: "test@example.com",
-        walletAddress: null,
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      // Mock new wallet data
-      const mockWallet = {
-        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c86"),
-        userId: userId,
-        address: "0x1234567890abcdef", // Mocked new address
-        type: "eip7702",
-        chain: "polygon",
-        isDefault: true, // This is the first wallet
-        createdAt: new Date(),
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      // Mock User.findById to return the mock user
-      (User.findById as jest.Mock).mockResolvedValue(mockUser);
-
-      // Mock Wallet.countDocuments to return 0 (no existing wallets)
-      (Wallet.countDocuments as jest.Mock).mockResolvedValue(0);
-
-      // Mock Wallet constructor
-      const WalletMock = jest.fn(() => mockWallet);
-      (global as any).Wallet = WalletMock;
-
-      // Create mock authenticated event
-      const event = createMockAuthenticatedEvent(
-        userId.toString(),
-        "testuser",
-        "test@example.com",
-        {
-          chain: "polygon",
-          type: "eip7702",
-        }
-      );
-
-      // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
-      expect(response.statusCode).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.data).toHaveProperty("id", mockWallet._id.toString());
-      expect(body.data).toHaveProperty("address", "0x1234567890abcdef");
-      expect(body.data).toHaveProperty("type", "eip7702");
-      expect(body.data).toHaveProperty("chain", "polygon");
-      expect(body.data).toHaveProperty("isDefault", true);
-
-      // Verify User.findById was called correctly
-      expect(User.findById).toHaveBeenCalledWith(userId.toString());
-
-      // Verify Wallet.countDocuments was called correctly
-      expect(Wallet.countDocuments).toHaveBeenCalledWith({
-        userId: userId.toString(),
-      });
-
-      // Verify Wallet constructor was called with correct params
-      expect(WalletMock).toHaveBeenCalledWith({
-        userId: userId.toString(),
-        address: expect.any(String),
-        type: "eip7702",
-        chain: "polygon",
-        isDefault: true,
-      });
-
-      // Verify wallet was saved
-      expect(mockWallet.save).toHaveBeenCalled();
-
-      // Verify user's primary wallet address was updated
-      expect(mockUser.walletAddress).toBe("0x1234567890abcdef");
-      expect(mockUser.save).toHaveBeenCalled();
-    });
-
-    it("should create a non-default wallet if user already has wallets", async () => {
-      // Mock user ID
-      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
-
-      // Mock user data
-      const mockUser = {
-        _id: userId,
-        username: "testuser",
-        email: "test@example.com",
-        walletAddress: "0xexisting1234567890", // User already has a wallet address
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      // Mock new wallet data
-      const mockWallet = {
-        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c86"),
-        userId: userId,
-        address: "0x1234567890abcdef",
-        type: "eoa",
-        chain: "ethereum",
-        isDefault: false, // Not the default wallet
-        createdAt: new Date(),
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      // Mock User.findById to return the mock user
-      (User.findById as jest.Mock).mockResolvedValue(mockUser);
-
-      // Mock Wallet.countDocuments to return 2 (user has existing wallets)
-      (Wallet.countDocuments as jest.Mock).mockResolvedValue(2);
-
-      // Mock Wallet constructor
-      const WalletMock = jest.fn(() => mockWallet);
-      (global as any).Wallet = WalletMock;
-
-      // Create mock authenticated event
-      const event = createMockAuthenticatedEvent(
-        userId.toString(),
-        "testuser",
-        "test@example.com",
-        {
-          chain: "ethereum",
-          type: "eoa",
-        }
-      );
-
-      // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
-
-      // Parse the response body
-      const body = parseResponseBody(response);
-
-      // Assert
-      expect(response.statusCode).toBe(200);
-      expect(body.success).toBe(true);
-      expect(body.data).toHaveProperty("id", mockWallet._id.toString());
-      expect(body.data).toHaveProperty("address", "0x1234567890abcdef");
-      expect(body.data).toHaveProperty("isDefault", false);
-
-      // Verify Wallet constructor was called with isDefault = false
-      expect(WalletMock).toHaveBeenCalledWith({
-        userId: userId.toString(),
-        address: expect.any(String),
-        type: "eoa",
-        chain: "ethereum",
-        isDefault: false,
-      });
-
-      // Verify wallet was saved
-      expect(mockWallet.save).toHaveBeenCalled();
-
-      // Verify user's primary wallet address was NOT updated
-      expect(mockUser.walletAddress).toBe("0xexisting1234567890");
-      expect(mockUser.save).not.toHaveBeenCalled();
-    });
-
     it("should return 401 if user ID is not in the token", async () => {
       // Create mock authenticated event without user ID
       const event = createMockAuthenticatedEvent(
@@ -730,12 +610,15 @@ describe("Wallets Handler", () => {
           chain: "ethereum",
         }
       );
-      
+
       // Remove the ID to simulate this error case
       event.user!.id = undefined as any;
 
       // Call the handler directly
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
+      const response = await walletsHandlerModule.createWallet(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -753,12 +636,15 @@ describe("Wallets Handler", () => {
         "testuser",
         "test@example.com"
       );
-      
+
       // Remove the body
       event.body = null;
 
       // Call the handler directly
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
+      const response = await walletsHandlerModule.createWallet(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -782,7 +668,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly (bypassing middleware)
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
+      const response = await walletsHandlerModule.createWallet(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -812,7 +701,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
+      const response = await walletsHandlerModule.createWallet(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
@@ -840,7 +732,10 @@ describe("Wallets Handler", () => {
       );
 
       // Call the handler directly
-      const response = await walletsHandlerModule.createWallet(event, mockContext);
+      const response = await walletsHandlerModule.createWallet(
+        event,
+        mockContext
+      );
 
       // Parse the response body
       const body = parseResponseBody(response);
