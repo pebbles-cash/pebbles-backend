@@ -2,7 +2,7 @@ import type { AWS } from "@serverless/typescript";
 
 const serverlessConfiguration: AWS = {
   service: "payment-platform-api",
-  frameworkVersion: "3",
+  frameworkVersion: "^4.0.0",
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
@@ -496,6 +496,8 @@ const serverlessConfiguration: AWS = {
       httpPort: 3000,
       lambdaPort: 3002,
       useChildProcesses: true,
+      websocketPort: 3001,
+      noPrependStageInUrl: true,
     },
     customDomain: {
       domainName: "api-${self:provider.stage}.payment-platform.com",

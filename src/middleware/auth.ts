@@ -37,7 +37,7 @@ export const requireAuth = <T extends Handler>(
         event.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        return error("Authorization required", 401);
+        return error("Middleware: Authorization required", 401);
       }
 
       // Verify token
@@ -50,7 +50,7 @@ export const requireAuth = <T extends Handler>(
 
         decoded = jwt.verify(token, secret) as IDecodedToken;
       } catch (err) {
-        return error("Invalid or expired token", 401);
+        return error("Middleware: Invalid or expired token", 401);
       }
 
       // Check if token has been invalidated (logged out)
