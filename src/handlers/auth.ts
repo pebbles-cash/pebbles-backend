@@ -10,19 +10,21 @@ import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 
 // Initialize JWKS client for Dynamic
-const environmentId = process.env.DYNAMIC_ENVIRONMENT_ID;
-if (!environmentId) {
-  throw new Error("DYNAMIC_ENVIRONMENT_ID is not defined");
-}
+function getJwksClient() {
+  const environmentId = process.env.DYNAMIC_ENVIRONMENT_ID;
+  if (!environmentId) {
+    throw new Error("DYNAMIC_ENVIRONMENT_ID is not defined");
+  }
 
-const jwksUri = `https://app.dynamic.xyz/api/v0/sdk/${environmentId}/.well-known/jwks`;
-const client = jwksClient({
-  jwksUri,
-  cache: true,
-  cacheMaxAge: 86400000, // 1 day
-  rateLimit: true,
-  jwksRequestsPerMinute: 10,
-});
+  const jwksUri = `https://app.dynamic.xyz/api/v0/sdk/${environmentId}/.well-known/jwks`;
+  return jwksClient({
+    jwksUri,
+    cache: true,
+    cacheMaxAge: 86400000, // 1 day
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+  });
+}
 
 /**
  * Verify Dynamic token using JWKS
@@ -42,13 +44,28 @@ async function verifyDynamicToken(token: string): Promise<any> {
       throw new Error("Invalid token structure");
     }
 
-    // Get the signing key from Dynamic's JWKS
-    const key = await client.getSigningKey(decoded.header.kid);
-    const signingKey = key.getPublicKey();
+    try {
+      // Get the signing key from Dynamic's JWKS
+      const client = getJwksClient();
+      const key = await client.getSigningKey(decoded.header.kid);
+      
+      if (!key) {
+        throw new Error("Unable to get signing key from JWKS");
+      }
+      
+      const signingKey = key.getPublicKey();
+      
+      if (!signingKey) {
+        throw new Error("Unable to get public key");
+      }
 
-    // Verify the token
-    const verifiedToken = jwt.verify(token, signingKey);
-    return verifiedToken;
+      // Verify the token
+      const verifiedToken = jwt.verify(token, signingKey);
+      return verifiedToken;
+    } catch (jwksErr) {
+      console.error("JWKS key retrieval error:", jwksErr);
+      throw new Error("Failed to retrieve signing key");
+    }
   } catch (err) {
     console.error("Token verification error:", err);
     throw new Error("Token verification failed");
@@ -256,49 +273,51 @@ export const verifyToken = async (
 };
 
 /**
+ * Logout handler implementation
+ * Extracted for easier testing
+ */
+export const logoutHandler = async (
+  event: AuthenticatedAPIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // User is provided by the auth middleware
+    const userId = event.user?.id;
+
+    if (!userId) {
+      return error("User ID not found in token", 401);
+    }
+
+    // Extract token from Authorization header
+    const token =
+      event.headers.Authorization?.split(" ")[1] ||
+      event.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return error("Authorization token not found", 401);
+    }
+
+    // Invalidate the token by updating its status in the database
+    await mongoose.connection.db.collection("userSessions").updateOne(
+      { userId: new mongoose.Types.ObjectId(userId), token },
+      {
+        $set: {
+          invalidated: true,
+          loggedOutAt: new Date(),
+        },
+      }
+    );
+
+    return success({
+      message: "Logged out successfully",
+    });
+  } catch (err) {
+    console.error("Logout error:", err);
+    return error("Logout failed", 500);
+  }
+};
+
+/**
  * Logout user
  * POST /api/auth/logout
  */
-export const logout = requireAuth(
-  async (
-    event: AuthenticatedAPIGatewayProxyEvent
-  ): Promise<APIGatewayProxyResult> => {
-    try {
-      // Database connection is handled in requireAuth middleware
-
-      // User is provided by the auth middleware
-      const userId = event.user?.id;
-
-      if (!userId) {
-        return error("User ID not found in token", 401);
-      }
-
-      // Extract token from Authorization header
-      const token =
-        event.headers.Authorization?.split(" ")[1] ||
-        event.headers.authorization?.split(" ")[1];
-
-      if (!token) {
-        return error("Authorization token not found", 401);
-      }
-
-      // Invalidate the token by updating its status in the database
-      await mongoose.connection.db.collection("userSessions").updateOne(
-        { userId: new mongoose.Types.ObjectId(userId), token },
-        {
-          $set: {
-            invalidated: true,
-            loggedOutAt: new Date(),
-          },
-        }
-      );
-
-      return success({
-        message: "Logged out successfully",
-      });
-    } catch (err) {
-      console.error("Logout error:", err);
-      return error("Logout failed", 500);
-    }
-  }
-);
+export const logout = requireAuth(logoutHandler);
