@@ -45,6 +45,9 @@ const serverlessConfiguration: AWS = {
             Resource: [
               "arn:aws:ssm:${self:provider.region}:*:parameter/payment-platform/${self:provider.stage}/*",
             ],
+            serverlessPluginTypescript: {
+              tsConfigFilePath: "./tsconfig.json",
+            },
           },
           {
             Effect: "Allow",
@@ -378,43 +381,6 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    // Tip Jar Handlers
-    createOrUpdateTipJar: {
-      handler: "src/handlers/tips.createOrUpdateTipJar",
-      events: [
-        {
-          http: {
-            path: "/api/tips/jar",
-            method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getTipJarDetails: {
-      handler: "src/handlers/tips.getTipJarDetails",
-      events: [
-        {
-          http: {
-            path: "/api/tips/jar/{username}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    sendTip: {
-      handler: "src/handlers/tips.sendTip",
-      events: [
-        {
-          http: {
-            path: "/api/tips/send",
-            method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
     // Assistant Handlers
     sendAssistantMessage: {
       handler: "src/handlers/assistant.sendMessage",
@@ -478,24 +444,11 @@ const serverlessConfiguration: AWS = {
     },
   },
 
-  plugins: [
-    // "serverless-esbuild",
-    "serverless-offline",
-    "serverless-domain-manager",
-  ],
+  plugins: ["serverless-offline", "serverless-domain-manager"],
   custom: {
-    // esbuild: {
-    //   bundle: true,
-    //   minify: false,
-    //   sourcemap: true,
-    //   exclude: ["aws-sdk"],
-    //   target: "node18",
-    //   define: {
-    //     "require.resolve": undefined,
-    //   },
-    //   platform: "node",
-    //   concurrency: 10,
-    // },
+    serverlessPluginTypescript: {
+      tsConfigFilePath: "./tsconfig.json",
+    },
     serverlessOffline: {
       httpPort: 3000,
       lambdaPort: 3002,

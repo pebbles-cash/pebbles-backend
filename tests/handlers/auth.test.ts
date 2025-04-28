@@ -1,12 +1,10 @@
 import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import jwt from "jsonwebtoken";
-import axios from "axios";
 import mongoose from "mongoose";
 import { authenticate, verifyToken, logout } from "../../src/handlers/auth";
 import { connectToDatabase } from "../../src/services/mongoose";
 import { User } from "../../src/models";
 import jwksClient from "jwks-rsa";
-import { mock } from "node:test";
 
 // Mock dependencies
 jest.mock("../../src/services/mongoose");
