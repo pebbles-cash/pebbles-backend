@@ -3,6 +3,20 @@ import type { AWS } from "@serverless/typescript";
 const serverlessConfiguration: AWS = {
   service: "payment-platform-api",
   frameworkVersion: "^4.0.0",
+  build: {
+    esbuild: {
+      bundle: true,
+      minify: false,
+      sourcemap: true,
+      exclude: ["aws-sdk"],
+      target: "node18",
+      define: {
+        "require.resolve": undefined,
+      },
+      platform: "node",
+      concurrency: 10,
+    },
+  },
   provider: {
     name: "aws",
     runtime: "nodejs18.x",
@@ -11,26 +25,16 @@ const serverlessConfiguration: AWS = {
     memorySize: 256,
     timeout: 30,
     environment: {
-      MONGODB_URI:
-        "${ssm:/payment-platform/${self:provider.stage}/mongodb/uri~true}",
-      MONGODB_DATABASE: "payment_platform_${self:provider.stage}",
-      JWT_SECRET:
-        "${ssm:/payment-platform/${self:provider.stage}/jwt/secret~true}",
-      DYNAMIC_API_KEY:
-        "${ssm:/payment-platform/${self:provider.stage}/dynamic/api-key~true}",
-      DYNAMIC_API_URL:
-        "${ssm:/payment-platform/${self:provider.stage}/dynamic/api-url}",
-      AUTH_REDIRECT_URL:
-        "${ssm:/payment-platform/${self:provider.stage}/auth/redirect-url}",
-      PAYMENT_BASE_URL:
-        "${ssm:/payment-platform/${self:provider.stage}/payment/base-url}",
-      LLM_PROVIDER: '${env:LLM_PROVIDER, "openai"}',
-      OPENAI_API_KEY:
-        "${ssm:/payment-platform/${self:provider.stage}/openai/api-key~true}",
-      OPENAI_MODEL: '${env:OPENAI_MODEL, "gpt-4"}',
-      ANTHROPIC_API_KEY:
-        "${ssm:/payment-platform/${self:provider.stage}/anthropic/api-key~true}",
-      ANTHROPIC_MODEL: '${env:ANTHROPIC_MODEL, "claude-3-opus-20240229"}',
+      JWT_SECRET: "${env:JWT_SECRET, ''}",
+      DYNAMIC_API_KEY: "${env:DYNAMIC_API_KEY, ''}",
+      DYNAMIC_API_URL: "${env:DYNAMIC_API_URL, ''}",
+      AUTH_REDIRECT_URL: "${env:AUTH_REDIRECT_URL, ''}",
+      PAYMENT_BASE_URL: "${env:PAYMENT_BASE_URL, ''}",
+      LLM_PROVIDER: "${env:LLM_PROVIDER, 'openai'}",
+      OPENAI_API_KEY: "${env:OPENAI_API_KEY, ''}",
+      OPENAI_MODEL: "${env:OPENAI_MODEL, 'gpt-4'}",
+      ANTHROPIC_API_KEY: "${env:ANTHROPIC_API_KEY, ''}",
+      ANTHROPIC_MODEL: "${env:ANTHROPIC_MODEL, 'claude-3-opus-20240229'}",
     },
     iam: {
       role: {
@@ -475,23 +479,23 @@ const serverlessConfiguration: AWS = {
   },
 
   plugins: [
-    "serverless-esbuild",
+    // "serverless-esbuild",
     "serverless-offline",
     "serverless-domain-manager",
   ],
   custom: {
-    esbuild: {
-      bundle: true,
-      minify: false,
-      sourcemap: true,
-      exclude: ["aws-sdk"],
-      target: "node18",
-      define: {
-        "require.resolve": undefined,
-      },
-      platform: "node",
-      concurrency: 10,
-    },
+    // esbuild: {
+    //   bundle: true,
+    //   minify: false,
+    //   sourcemap: true,
+    //   exclude: ["aws-sdk"],
+    //   target: "node18",
+    //   define: {
+    //     "require.resolve": undefined,
+    //   },
+    //   platform: "node",
+    //   concurrency: 10,
+    // },
     serverlessOffline: {
       httpPort: 3000,
       lambdaPort: 3002,

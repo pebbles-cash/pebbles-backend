@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "serverless offline start",
+    "start:local": "serverless offline start --stage local",
+    "start:dev": "serverless offline start --stage dev",
     "build": "tsc",
     "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
     "dev": "nodemon --exec serverless offline",
     "lint": "eslint . --ext .ts",
