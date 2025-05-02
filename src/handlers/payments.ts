@@ -315,8 +315,7 @@ export const processPayment = optionalAuth(
           sender = await User.findById(event.user.id);
         }
 
-        // TODO: Actual payment processing with Dynamic or other payment provider
-        // This is where you would implement the actual blockchain or payment processing
+        // TODO: Implement blockchain transaction listener or payment processing here
 
         // For this example, we'll just create a transaction record
         const transaction = new Transaction({
@@ -376,8 +375,7 @@ export const processPayment = optionalAuth(
           sender = await User.findById(event.user.id);
         }
 
-        // TODO: Actual payment processing with Dynamic or other payment provider
-        // This is where you would implement the actual blockchain or payment processing
+        // TODO: Implement blockchain transaction listener or payment processing here
 
         // For this example, we'll just create a transaction record
         const transaction = new Transaction({

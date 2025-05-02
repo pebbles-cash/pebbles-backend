@@ -195,7 +195,7 @@ export const getSubscriptionDetails = requireAuth(
     event: AuthenticatedAPIGatewayProxyEvent
   ): Promise<APIGatewayProxyResult> => {
     try {
-      // Database connection is handled in requireAuth middleware
+      // Database connection handled in requireAuth middleware
 
       // Get subscription ID from path parameters
       if (!event.pathParameters?.subscriptionId) {
@@ -504,8 +504,7 @@ export const subscribeToPlan = requireAuth(
           break;
       }
 
-      // TODO: Actual payment processing with Dynamic or other payment provider
-      // This is where you would implement the actual blockchain or payment processing
+      // TODO: Implement blockchain transaction listener or payment processing here
 
       // Create transaction record
       const transaction = new Transaction({

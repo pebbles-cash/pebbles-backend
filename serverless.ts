@@ -381,6 +381,20 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+
+    // Database Health Check
+    checkDbConnection: {
+      handler: "src/handlers/health.checkDbConnection",
+      events: [
+        {
+          http: {
+            path: "/api/health/db",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     // Assistant Handlers
     sendAssistantMessage: {
       handler: "src/handlers/assistant.sendMessage",
@@ -437,19 +451,6 @@ const serverlessConfiguration: AWS = {
           http: {
             path: "/api/assistant/generate-invoice",
             method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
-    // Database Health Check
-    checkDbConnection: {
-      handler: "src/handlers/health.checkDbConnection",
-      events: [
-        {
-          http: {
-            path: "/api/health/db",
-            method: "get",
             cors: true,
           },
         },

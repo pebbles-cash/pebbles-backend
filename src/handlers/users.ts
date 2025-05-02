@@ -1,3 +1,91 @@
+import { APIGatewayProxyResult } from "aws-lambda";
+import { connectToDatabase } from "../services/mongoose";
+import { success, error } from "../utils/response";
+import { User, Wallet } from "../models";
+import { requireAuth } from "../middleware/auth";
+import {
+  AuthenticatedAPIGatewayProxyEvent,
+  UpdateUserRequestBody,
+  SocialStatsRequestBody,
+} from "../types";
+
+/**
+ * Create user profile
+ * POST /api/users/:username
+ */
+
+export const createUser = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body: UpdateUserRequestBody = JSON.parse(event.body);
+      const { username, displayName, bio } = body;
+
+      // Basic validation
+      if (username && (username.length < 3 || username.length > 15)) {
+        return error("Username must be between 3 and 15 characters", 400);
+      }
+
+      // Check if username is taken (if changing)
+      if (username) {
+        const existingUser = await User.findOne({
+          username,
+          _id: { $ne: userId },
+        });
+
+        if (existingUser) {
+          return error("Username is already taken", 409);
+        }
+      }
+
+      // Update fields
+      const updateData: Partial<UpdateUserRequestBody> & { updatedAt: Date } = {
+        updatedAt: new Date(),
+      };
+
+      if (username) updateData.username = username;
+      if (displayName) updateData.displayName = displayName;
+      if (bio) updateData.bio = bio;
+
+      // Update user in database
+      await User.findByIdAndUpdate(userId, { $set: updateData });
+
+      // Get updated user
+      const updatedUser = await User.findById(userId);
+
+      if (!updatedUser) {
+        return error("User not found after update", 404);
+      }
+
+      return success({
+        id: updatedUser._id,
+        username: updatedUser.username,
+        displayName: updatedUser.displayName,
+        bio: bio,
+        email: updatedUser.email,
+        updatedAt: updatedUser.updatedAt,
+      });
+    } catch (err) {
+      console.error("Update user error:", err);
+      return error("Could not update user profile", 500);
+    }
+  }
+);
+
 /**
  * Get user profile by username
  * GET /api/users/:username
@@ -120,16 +208,6 @@ export const updateSocialStats = requireAuth(
     }
   }
 );
-import { APIGatewayProxyResult } from "aws-lambda";
-import { connectToDatabase } from "../services/mongoose";
-import { success, error } from "../utils/response";
-import { User, Wallet } from "../models";
-import { requireAuth } from "../middleware/auth";
-import {
-  AuthenticatedAPIGatewayProxyEvent,
-  UpdateUserRequestBody,
-  SocialStatsRequestBody,
-} from "../types";
 
 /**
  * Get current user profile

@@ -8,6 +8,7 @@ import {
 import mongoose from "mongoose";
 import { User, Order, Transaction } from "../../src/models";
 import QRCode from "qrcode";
+import * as paymentsHandlerModule from "../../src/handlers/payments";
 
 // Mock dependencies
 jest.mock("qrcode");
@@ -43,9 +44,6 @@ jest.mock("../../src/models", () => ({
     mockSave: jest.fn().mockResolvedValue(undefined),
   },
 }));
-
-// Import the handlers directly - we're mocking the middleware separately
-import * as paymentsHandlerModule from "../../src/handlers/payments";
 
 // Mock the requireAuth and optionalAuth middleware
 jest.mock("../../src/middleware/auth", () => ({

@@ -1,3 +1,5 @@
+// TODO: unit tests
+
 import { APIGatewayProxyResult } from "aws-lambda";
 import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";

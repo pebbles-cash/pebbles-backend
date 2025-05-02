@@ -150,11 +150,8 @@ export const getWalletBalance = requireAuth(
         return error("Wallet not found", 404);
       }
 
-      // If we need to get the latest balance from the blockchain
-      // Here we would call a blockchain provider API to get the latest balance
       try {
-        // This would be the call to your blockchain provider
-        // For example, Alchemy, Infura, etc.
+        // TODO: call blockchain provider API to get the latest balance e.g. Alchemy, Infura, etc.
         // const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
         // const balance = await provider.getBalance(wallet.address);
 
@@ -234,6 +231,8 @@ export const getWalletBalance = requireAuth(
  * Create a new wallet
  * POST /api/wallets/create
  */
+
+// TODO: check Dynamic return data for wallet creation and format accordingly (may be redundant if only User model needs to be added)
 export const createWallet = requireAuth(
   async (
     event: AuthenticatedAPIGatewayProxyEvent
@@ -274,10 +273,8 @@ export const createWallet = requireAuth(
       const existingWallets = await Wallet.countDocuments({ userId });
       const isDefault = existingWallets === 0;
 
-      // Call Dynamic API to create a new wallet
-      // Note: In a real implementation, you would integrate with your wallet provider
       try {
-        // This would be the call to your wallet creation service
+        // Example if calling Dynamic API to create a new wallet
         // const walletResponse = await axios.post(
         //   `${process.env.DYNAMIC_API_URL}/wallets/create`,
         //   {
@@ -288,7 +285,7 @@ export const createWallet = requireAuth(
         //   }
         // );
 
-        // Mock wallet creation for example - in a real app, this would come from your provider
+        // Mock wallet creation
         const walletAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
 
         // Create the wallet in our database

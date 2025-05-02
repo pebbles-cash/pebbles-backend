@@ -1,13 +1,30 @@
 import * as dotenv from "dotenv";
-dotenv.config();
 
-function getEnv(name: string): string {
+// Load environment-specific .env file based on NODE_ENV
+const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : ".env";
+
+console.log(`Loading environment from ${envFile}`);
+dotenv.config({ path: envFile });
+
+// Fallback to .env if specific environment file doesn't exist
+if (!process.env.MONGODB_URI) {
+  console.log("Falling back to default .env file");
+  dotenv.config();
+}
+
+function getEnv(name: string, required: boolean = true): string | undefined {
   const value = process.env[name];
-  if (!value) {
+  if (required && !value) {
     throw new Error(`Environment variable ${name} is missing.`);
   }
   return value;
 }
+
+// Deployment environment
+export const NODE_ENV = process.env.NODE_ENV || "development";
+export const IS_PRODUCTION = NODE_ENV === "production";
+export const IS_STAGING = NODE_ENV === "staging";
+export const IS_DEVELOPMENT = NODE_ENV === "development";
 
 // MongoDB configuration
 export const MONGODB_URI = getEnv("MONGODB_URI");
@@ -35,3 +52,9 @@ export const OPENAI_MODEL = process.env.OPENAI_MODEL; // optional
 // Anthropic
 export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // optional
 export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL; // optional
+
+// Log configuration (without sensitive values)
+console.log(`Environment: ${NODE_ENV}`);
+console.log(`Database: ${MONGODB_DATABASE}`);
+console.log(`Payment Base URL: ${PAYMENT_BASE_URL}`);
+console.log(`LLM Provider: ${LLM_PROVIDER}`);
