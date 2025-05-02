@@ -1,0 +1,145 @@
+name: Deploy Pebbles Payment Platform API
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+      - run: npm test
+
+  deploy-dev:
+    name: Deploy to Development
+    needs: test
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+
+      # Create .env.dev file from secrets
+      - name: Create .env.development file
+        run: |
+          cat > .env.development << EOF
+          MONGODB_URI=${{ secrets.DEV_MONGODB_URI }}
+          MONGODB_DATABASE=${{ secrets.DEV_MONGODB_DATABASE }}
+          JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}
+          DYNAMIC_API_KEY=${{ secrets.DEV_DYNAMIC_API_KEY }}
+          DYNAMIC_API_URL=${{ secrets.DEV_DYNAMIC_API_URL }}
+          DYNAMIC_ENVIRONMENT_ID=${{ secrets.DEV_DYNAMIC_ENVIRONMENT_ID }}
+          AUTH_REDIRECT_URL=${{ secrets.DEV_AUTH_REDIRECT_URL }}
+          PAYMENT_BASE_URL=${{ secrets.DEV_PAYMENT_BASE_URL }}
+          LLM_PROVIDER=${{ secrets.DEV_LLM_PROVIDER }}
+          OPENAI_API_KEY=${{ secrets.DEV_OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ secrets.DEV_OPENAI_MODEL }}
+          ANTHROPIC_API_KEY=${{ secrets.DEV_ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL=${{ secrets.DEV_ANTHROPIC_MODEL }}
+          EOF
+
+      - name: Deploy to AWS - Development
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
+        run: npx serverless deploy --stage dev --region us-east-1
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: test
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+
+      # Create .env.staging file from secrets
+      - name: Create .env.staging file
+        run: |
+          cat > .env.staging << EOF
+          MONGODB_URI=${{ secrets.STAGING_MONGODB_URI }}
+          MONGODB_DATABASE=${{ secrets.STAGING_MONGODB_DATABASE }}
+          JWT_SECRET=${{ secrets.STAGING_JWT_SECRET }}
+          DYNAMIC_API_KEY=${{ secrets.STAGING_DYNAMIC_API_KEY }}
+          DYNAMIC_API_URL=${{ secrets.STAGING_DYNAMIC_API_URL }}
+          DYNAMIC_ENVIRONMENT_ID=${{ secrets.STAGING_DYNAMIC_ENVIRONMENT_ID }}
+          AUTH_REDIRECT_URL=${{ secrets.STAGING_AUTH_REDIRECT_URL }}
+          PAYMENT_BASE_URL=${{ secrets.STAGING_PAYMENT_BASE_URL }}
+          LLM_PROVIDER=${{ secrets.STAGING_LLM_PROVIDER }}
+          OPENAI_API_KEY=${{ secrets.STAGING_OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ secrets.STAGING_OPENAI_MODEL }}
+          ANTHROPIC_API_KEY=${{ secrets.STAGING_ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL=${{ secrets.STAGING_ANTHROPIC_MODEL }}
+          EOF
+
+      - name: Deploy to AWS - Staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+        run: npx serverless deploy --stage staging --region us-east-1
+
+  deploy-prod:
+    name: Deploy to Production
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production # Requires approval for production
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+
+      # Create .env.production file from secrets
+      - name: Create .env.production file
+        run: |
+          cat > .env.production << EOF
+          MONGODB_URI=${{ secrets.PROD_MONGODB_URI }}
+          MONGODB_DATABASE=${{ secrets.PROD_MONGODB_DATABASE }}
+          JWT_SECRET=${{ secrets.PROD_JWT_SECRET }}
+          DYNAMIC_API_KEY=${{ secrets.PROD_DYNAMIC_API_KEY }}
+          DYNAMIC_API_URL=${{ secrets.PROD_DYNAMIC_API_URL }}
+          DYNAMIC_ENVIRONMENT_ID=${{ secrets.PROD_DYNAMIC_ENVIRONMENT_ID }}
+          AUTH_REDIRECT_URL=${{ secrets.PROD_AUTH_REDIRECT_URL }}
+          PAYMENT_BASE_URL=${{ secrets.PROD_PAYMENT_BASE_URL }}
+          LLM_PROVIDER=${{ secrets.PROD_LLM_PROVIDER }}
+          OPENAI_API_KEY=${{ secrets.PROD_OPENAI_API_KEY }}
+          OPENAI_MODEL=${{ secrets.PROD_OPENAI_MODEL }}
+          ANTHROPIC_API_KEY=${{ secrets.PROD_ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL=${{ secrets.PROD_ANTHROPIC_MODEL }}
+          EOF
+
+      - name: Deploy to AWS - Production
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+        run: npx serverless deploy --stage prod --region us-east-1
