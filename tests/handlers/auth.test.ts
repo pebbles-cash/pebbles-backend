@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import {
-  authenticate,
+  callback,
   verifyToken,
   logout,
   logoutHandler,
@@ -49,8 +49,8 @@ jest.mock("jwks-rsa", () => {
   return jest.fn().mockImplementation(() => {
     return {
       getSigningKey: jest.fn().mockResolvedValue({
-        getPublicKey: jest.fn().mockReturnValue("mock-public-key")
-      })
+        getPublicKey: jest.fn().mockReturnValue("mock-public-key"),
+      }),
     };
   });
 });
@@ -101,7 +101,7 @@ describe("Auth Handlers", () => {
       };
       (User.findOne as jest.Mock).mockResolvedValue(mockUser);
 
-      const response = await authenticate(mockEvent);
+      const response = await callback(mockEvent);
 
       // Check response
       expect(response.statusCode).toBe(200);
@@ -126,7 +126,7 @@ describe("Auth Handlers", () => {
       expect(mongoose.connection.db.collection).toHaveBeenCalledWith(
         "userSessions"
       );
-      
+
       // Restore console.warn
       console.warn = originalWarn;
     });
@@ -166,14 +166,14 @@ describe("Auth Handlers", () => {
       (User as any).findOne = originalUser.findOne;
       (User as any).findById = originalUser.findById;
 
-      const response = await authenticate(mockEvent);
+      const response = await callback(mockEvent);
 
       // Check response
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.body).success).toBe(true);
       // Verify user data is returned
       expect(JSON.parse(response.body).data.user).toBeDefined();
-      
+
       // Restore console.warn
       console.warn = originalWarn;
     });
@@ -183,7 +183,7 @@ describe("Auth Handlers", () => {
         body: JSON.stringify({}),
       } as unknown as APIGatewayProxyEvent;
 
-      const response = await authenticate(invalidEvent);
+      const response = await callback(invalidEvent);
 
       expect(response.statusCode).toBe(400);
       expect(JSON.parse(response.body).success).toBe(false);
@@ -193,13 +193,13 @@ describe("Auth Handlers", () => {
     it("should handle invalid token structure", async () => {
       // Mock JWT decode to return something that will trigger the Invalid token structure error
       (jwt.decode as jest.Mock).mockReturnValue(null);
-      
+
       // Mock console.error to prevent error logs in test output
       const originalError = console.error;
       console.error = jest.fn();
-      
-      const response = await authenticate(mockEvent);
-      
+
+      const response = await callback(mockEvent);
+
       // Restore console.error
       console.error = originalError;
 

@@ -143,7 +143,10 @@ describe("Payments Handler", () => {
       };
 
       // Mock constructor for Order
-      (Order as any) = jest.fn().mockImplementation(() => mockOrder);
+      (Order as any) = Object.assign(
+        jest.fn().mockImplementation(() => mockOrder),
+        Order
+      );
 
       // Mock QRCode.toDataURL
       (QRCode.toDataURL as jest.Mock).mockResolvedValue(
