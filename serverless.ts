@@ -14,7 +14,7 @@ const serverlessConfiguration: AWS = {
         "require.resolve": undefined,
       },
       platform: "node",
-      concurrency: 10,
+      // concurrency: 10,
     },
   },
   provider: {
@@ -23,7 +23,11 @@ const serverlessConfiguration: AWS = {
     stage: '${opt:stage, "dev"}',
     region: "us-east-1",
     memorySize: 256,
-    timeout: 30,
+    timeout: 29,
+    deploymentBucket: {
+      name: "pebbles-dev-deploy",
+      serverSideEncryption: "AES256",
+    },
     environment: {
       JWT_SECRET: "${env:JWT_SECRET, ''}",
       DYNAMIC_API_KEY: "${env:DYNAMIC_API_KEY, ''}",
@@ -45,9 +49,9 @@ const serverlessConfiguration: AWS = {
             Resource: [
               "arn:aws:ssm:${self:provider.region}:*:parameter/payment-platform/${self:provider.stage}/*",
             ],
-            serverlessPluginTypescript: {
-              tsConfigFilePath: "./tsconfig.json",
-            },
+            // serverlessPluginTypescript: {
+            //   tsConfigFilePath: "./tsconfig.json",
+            // },
           },
           {
             Effect: "Allow",
@@ -472,6 +476,7 @@ const serverlessConfiguration: AWS = {
       dotenv: true,
     },
     customDomain: {
+      enabled: false,
       domainName: "api-${self:provider.stage}.payment-platform.com",
       basePath: "",
       stage: "${self:provider.stage}",

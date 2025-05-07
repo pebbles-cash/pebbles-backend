@@ -27,56 +27,42 @@ function getJwksClient() {
 }
 
 /**
- * Verify Dynamic token using JWKS
- * @param token JWT token from Dynamic
- * @returns Decoded token payload if valid
+ * Get Dynamic authentication configuration
+ * POST /api/auth/login
  */
-async function verifyDynamicToken(token: string): Promise<any> {
+export const login = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   try {
-    // Get the JWT header
-    const decoded = jwt.decode(token, { complete: true });
-    if (
-      !decoded ||
-      typeof decoded === "string" ||
-      !decoded.header ||
-      !decoded.header.kid
-    ) {
-      throw new Error("Invalid token structure");
+    // Simple check for API availability
+    const environmentId = process.env.DYNAMIC_ENVIRONMENT_ID;
+    const redirectUrl = process.env.AUTH_REDIRECT_URL;
+
+    if (!environmentId) {
+      throw new Error("DYNAMIC_ENVIRONMENT_ID is not defined");
     }
 
-    try {
-      // Get the signing key from Dynamic's JWKS
-      const client = getJwksClient();
-      const key = await client.getSigningKey(decoded.header.kid);
-      
-      if (!key) {
-        throw new Error("Unable to get signing key from JWKS");
-      }
-      
-      const signingKey = key.getPublicKey();
-      
-      if (!signingKey) {
-        throw new Error("Unable to get public key");
-      }
-
-      // Verify the token
-      const verifiedToken = jwt.verify(token, signingKey);
-      return verifiedToken;
-    } catch (jwksErr) {
-      console.error("JWKS key retrieval error:", jwksErr);
-      throw new Error("Failed to retrieve signing key");
+    if (!redirectUrl) {
+      throw new Error("AUTH_REDIRECT_URL is not defined");
     }
+
+    // Return Dynamic configuration data to the frontend
+    return success({
+      environmentId,
+      redirectUrl,
+      // Any other configuration the frontend might need
+    });
   } catch (err) {
-    console.error("Token verification error:", err);
-    throw new Error("Token verification failed");
+    console.error("Login configuration error:", err);
+    return error("Failed to get login configuration", 500);
   }
-}
+};
 
 /**
  * Authenticate a user with a Dynamic-issued JWT
- * POST /api/auth/authenticate
+ * POST /api/auth/callback
  */
-export const authenticate = async (
+export const callback = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -271,6 +257,52 @@ export const verifyToken = async (
     return error("Token verification failed", 500);
   }
 };
+
+/**
+ * Verify Dynamic token using JWKS
+ * @param token JWT token from Dynamic
+ * @returns Decoded token payload if valid
+ */
+async function verifyDynamicToken(token: string): Promise<any> {
+  try {
+    // Get the JWT header
+    const decoded = jwt.decode(token, { complete: true });
+    if (
+      !decoded ||
+      typeof decoded === "string" ||
+      !decoded.header ||
+      !decoded.header.kid
+    ) {
+      throw new Error("Invalid token structure");
+    }
+
+    try {
+      // Get the signing key from Dynamic's JWKS
+      const client = getJwksClient();
+      const key = await client.getSigningKey(decoded.header.kid);
+
+      if (!key) {
+        throw new Error("Unable to get signing key from JWKS");
+      }
+
+      const signingKey = key.getPublicKey();
+
+      if (!signingKey) {
+        throw new Error("Unable to get public key");
+      }
+
+      // Verify the token
+      const verifiedToken = jwt.verify(token, signingKey);
+      return verifiedToken;
+    } catch (jwksErr) {
+      console.error("JWKS key retrieval error:", jwksErr);
+      throw new Error("Failed to retrieve signing key");
+    }
+  } catch (err) {
+    console.error("Token verification error:", err);
+    throw new Error("Token verification failed");
+  }
+}
 
 /**
  * Logout handler implementation
