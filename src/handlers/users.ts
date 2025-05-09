@@ -244,7 +244,7 @@ export const getCurrentUser = requireAuth(
         email: user.email,
         displayName: user.displayName,
         avatar: user.avatar,
-        walletAddresses: wallets.map((w) => w.address),
+        walletAddresses: wallets.map((w: any) => w.address),
         socialProfiles: user.socialProfiles,
         preferences: user.preferences,
         createdAt: user.createdAt,

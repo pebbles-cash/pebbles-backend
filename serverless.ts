@@ -141,55 +141,7 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    // Wallet Management Handlers
-    getUserWallets: {
-      handler: "src/handlers/wallets.getUserWallets",
-      events: [
-        {
-          http: {
-            path: "/api/wallets",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getWalletDetails: {
-      handler: "src/handlers/wallets.getWalletDetails",
-      events: [
-        {
-          http: {
-            path: "/api/wallets/{walletId}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getWalletBalance: {
-      handler: "src/handlers/wallets.getWalletBalance",
-      events: [
-        {
-          http: {
-            path: "/api/wallets/{walletId}/balance",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    createWallet: {
-      handler: "src/handlers/wallets.createWallet",
-      events: [
-        {
-          http: {
-            path: "/api/wallets/create",
-            method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
+
     // Payment & QR Code Handlers
     generateQRCode: {
       handler: "src/handlers/payments.generateQRCode",
