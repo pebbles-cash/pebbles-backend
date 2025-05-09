@@ -252,6 +252,30 @@ const serverlessConfiguration: AWS = {
       ],
     },
     // Transaction Handlers
+    createTransaction: {
+      handler: "src/handlers/transactions.createTransaction",
+      events: [
+        {
+          http: {
+            path: "/api/transactions",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    updateTransaction: {
+      handler: "src/handlers/transactions.updateTransaction",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/{transactionId}",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
     getUserTransactions: {
       handler: "src/handlers/transactions.getUserTransactions",
       events: [

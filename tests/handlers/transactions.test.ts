@@ -3,7 +3,10 @@ import {
   getTransactionDetails,
   getTransactionStats,
   filterTransactions,
+  createTransaction,
+  updateTransaction,
 } from "../../src/handlers/transactions";
+
 import {
   createMockAuthenticatedEvent,
   parseResponseBody,
@@ -59,7 +62,421 @@ describe("Transactions Handler", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+  // Add these test cases to tests/handlers/transactions.test.ts
 
+  // Additional tests for the new endpoints
+  describe("createTransaction", () => {
+    it("should create a new transaction successfully", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const recipientId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c86"
+      );
+
+      // Mock User.findById
+      (User.findById as jest.Mock).mockResolvedValue({
+        _id: recipientId,
+        username: "recipient",
+        email: "recipient@example.com",
+      });
+
+      // Mock transaction data
+      const mockTransaction = {
+        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c87"),
+        type: "payment",
+        fromUserId: userId,
+        toUserId: recipientId,
+        fromAddress: "0xsender1234",
+        toAddress: "0xrecipient1234",
+        amount: "100",
+        tokenAddress: "0x0",
+        sourceChain: "ethereum",
+        destinationChain: "ethereum",
+        status: "pending",
+        category: "design",
+        tags: ["logo"],
+        client: "acme-corp",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        save: jest.fn().mockResolvedValue(undefined),
+      };
+
+      // Mock Transaction constructor
+      (Transaction as any) = jest
+        .fn()
+        .mockImplementation(() => mockTransaction);
+
+      // Create mock authenticated event
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          type: "payment",
+          toUserId: recipientId.toString(),
+          fromAddress: "0xsender1234",
+          toAddress: "0xrecipient1234",
+          amount: "100",
+          sourceChain: "ethereum",
+          destinationChain: "ethereum",
+          category: "design",
+          tags: ["logo"],
+          client: "acme-corp",
+        }
+      );
+
+      // Call the handler
+      const response = await createTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(201);
+      expect(body.success).toBe(true);
+      expect(body.data).toHaveProperty("id", mockTransaction._id.toString());
+      expect(body.data).toHaveProperty("type", "payment");
+      expect(body.data).toHaveProperty("amount", "100");
+      expect(body.data).toHaveProperty("status", "pending");
+      expect(body.data).toHaveProperty("category", "design");
+      expect(body.data).toHaveProperty("tags", ["logo"]);
+      expect(body.data).toHaveProperty("client", "acme-corp");
+
+      // Verify Transaction constructor was called with correct data
+      expect(Transaction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "payment",
+          fromUserId: userId.toString(),
+          toUserId: recipientId.toString(),
+          fromAddress: "0xsender1234",
+          toAddress: "0xrecipient1234",
+          amount: "100",
+          sourceChain: "ethereum",
+          destinationChain: "ethereum",
+          category: "design",
+          tags: ["logo"],
+          client: "acme-corp",
+        })
+      );
+
+      // Verify transaction was saved
+      expect(mockTransaction.save).toHaveBeenCalled();
+    });
+
+    it("should return 400 for missing required fields", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+
+      // Create mock authenticated event with missing fields
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          // Missing 'type', 'toUserId', 'toAddress'
+          amount: "100",
+          sourceChain: "ethereum",
+          destinationChain: "ethereum",
+        }
+      );
+
+      // Call the handler
+      const response = await createTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe(
+        "Valid transaction type is required (payment, tip, subscription)"
+      );
+    });
+
+    it("should return 404 if recipient user not found", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const recipientId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c86"
+      );
+
+      // Mock User.findById to return null (user not found)
+      (User.findById as jest.Mock).mockResolvedValue(null);
+
+      // Create mock authenticated event
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          type: "payment",
+          toUserId: recipientId.toString(),
+          toAddress: "0xrecipient1234",
+          amount: "100",
+          sourceChain: "ethereum",
+          destinationChain: "ethereum",
+        }
+      );
+
+      // Call the handler
+      const response = await createTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(404);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("Recipient user not found");
+
+      // Verify no transaction was created
+      expect(Transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("updateTransaction", () => {
+    it("should update transaction successfully", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const recipientId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c86"
+      );
+      const transactionId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c87"
+      );
+
+      // Mock existing transaction
+      const mockTransaction = {
+        _id: transactionId,
+        type: "payment",
+        fromUserId: userId,
+        toUserId: recipientId,
+        fromAddress: "0xsender1234",
+        toAddress: "0xrecipient1234",
+        amount: "100",
+        tokenAddress: "0x0",
+        sourceChain: "ethereum",
+        destinationChain: "ethereum",
+        status: "pending",
+        category: "uncategorized",
+        tags: [],
+        metadata: {
+          note: "Original note",
+        },
+      };
+
+      // Mock updated transaction
+      const mockUpdatedTransaction = {
+        ...mockTransaction,
+        status: "completed",
+        category: "design",
+        tags: ["logo", "branding"],
+        client: "acme-corp",
+        metadata: {
+          note: "Original note",
+          completedBy: "John Doe",
+        },
+        updatedAt: new Date(),
+      };
+
+      // Mock Transaction.findById
+      (Transaction.findById as jest.Mock)
+        .mockResolvedValueOnce(mockTransaction) // First call returns existing transaction
+        .mockResolvedValueOnce(mockUpdatedTransaction); // Second call returns updated transaction
+
+      // Mock Transaction.findByIdAndUpdate
+      (Transaction.findByIdAndUpdate as jest.Mock).mockResolvedValue({
+        modifiedCount: 1,
+      });
+
+      // Create mock authenticated event
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          status: "completed",
+          category: "design",
+          tags: ["logo", "branding"],
+          client: "acme-corp",
+          metadata: {
+            completedBy: "John Doe",
+          },
+        },
+        { transactionId: transactionId.toString() }
+      );
+
+      // Call the handler
+      const response = await updateTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(200);
+      expect(body.success).toBe(true);
+      expect(body.data).toHaveProperty("id", transactionId.toString());
+      expect(body.data).toHaveProperty("status", "completed");
+      expect(body.data).toHaveProperty("category", "design");
+      expect(body.data).toHaveProperty("tags", ["logo", "branding"]);
+      expect(body.data).toHaveProperty("client", "acme-corp");
+      expect(body.data).toHaveProperty("metadata");
+      expect(body.data.metadata).toHaveProperty("note", "Original note");
+      expect(body.data.metadata).toHaveProperty("completedBy", "John Doe");
+
+      // Verify findByIdAndUpdate was called with correct data
+      expect(Transaction.findByIdAndUpdate).toHaveBeenCalledWith(
+        transactionId.toString(),
+        {
+          $set: expect.objectContaining({
+            status: "completed",
+            category: "design",
+            tags: ["logo", "branding"],
+            client: "acme-corp",
+            metadata: {
+              note: "Original note",
+              completedBy: "John Doe",
+            },
+            updatedAt: expect.any(Date),
+          }),
+        }
+      );
+    });
+
+    it("should return 404 if transaction not found", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const transactionId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c87"
+      );
+
+      // Mock Transaction.findById to return null (transaction not found)
+      (Transaction.findById as jest.Mock).mockResolvedValue(null);
+
+      // Create mock authenticated event
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          status: "completed",
+        },
+        { transactionId: transactionId.toString() }
+      );
+
+      // Call the handler
+      const response = await updateTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(404);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("Transaction not found");
+
+      // Verify findByIdAndUpdate was not called
+      expect(Transaction.findByIdAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should return 403 if user is not authorized", async () => {
+      // Mock user ID (different from transaction's fromUserId and toUserId)
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const transactionId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c87"
+      );
+      const otherUser1 = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c88"
+      );
+      const otherUser2 = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c89"
+      );
+
+      // Mock existing transaction (with different users)
+      const mockTransaction = {
+        _id: transactionId,
+        fromUserId: otherUser1,
+        toUserId: otherUser2,
+        // Other transaction properties...
+        status: "pending",
+      };
+
+      // Mock Transaction.findById
+      (Transaction.findById as jest.Mock).mockResolvedValue(mockTransaction);
+
+      // Create mock authenticated event
+      const event = createMockAuthenticatedEvent(
+        userId.toString(), // Different from transaction users
+        "testuser",
+        "test@example.com",
+        {
+          status: "completed",
+        },
+        { transactionId: transactionId.toString() }
+      );
+
+      // Call the handler
+      const response = await updateTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(403);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("Unauthorized to update this transaction");
+
+      // Verify findByIdAndUpdate was not called
+      expect(Transaction.findByIdAndUpdate).not.toHaveBeenCalled();
+    });
+
+    it("should prevent changing completed transaction status", async () => {
+      // Mock user ID
+      const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
+      const transactionId = new mongoose.Types.ObjectId(
+        "60d21b4667d0d8992e610c87"
+      );
+
+      // Mock existing transaction (already completed)
+      const mockTransaction = {
+        _id: transactionId,
+        fromUserId: userId,
+        toUserId: new mongoose.Types.ObjectId(),
+        status: "completed", // Already completed
+      };
+
+      // Mock Transaction.findById
+      (Transaction.findById as jest.Mock).mockResolvedValue(mockTransaction);
+
+      // Create mock authenticated event trying to change status to pending
+      const event = createMockAuthenticatedEvent(
+        userId.toString(),
+        "testuser",
+        "test@example.com",
+        {
+          status: "pending", // Trying to change back to pending
+        },
+        { transactionId: transactionId.toString() }
+      );
+
+      // Call the handler
+      const response = await updateTransaction(event, mockContext);
+
+      // Parse the response body
+      const body = parseResponseBody(response);
+
+      // Assert
+      expect(response.statusCode).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toBe(
+        "Cannot change status of a completed transaction"
+      );
+
+      // Verify findByIdAndUpdate was not called
+      expect(Transaction.findByIdAndUpdate).not.toHaveBeenCalled();
+    });
+  });
   describe("getUserTransactions", () => {
     it("should return a list of user transactions", async () => {
       // Mock user ID

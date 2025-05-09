@@ -44,6 +44,7 @@ export const createSubscriptionPlan = requireAuth(
         price,
         billingCycle,
         features,
+        smartContractId,
         active = true,
       } = body;
 
@@ -69,6 +70,7 @@ export const createSubscriptionPlan = requireAuth(
         billingCycle,
         features: features || [],
         active,
+        smartContractId,
       });
 
       await subscription.save();

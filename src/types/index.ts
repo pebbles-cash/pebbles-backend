@@ -59,6 +59,7 @@ export interface IWallet extends Document {
 }
 
 // Transaction-related types
+
 export interface ITransactionMetadata {
   orderId?: Types.ObjectId;
   subscriptionId?: Types.ObjectId;
@@ -86,6 +87,31 @@ export interface ITransaction extends Document {
   tags: string[]; // user-defined tags
   client?: string; // for freelancers to tag client-specific work
   projectId?: string; // to group transactions by project
+}
+
+export interface CreateTransactionRequestBody {
+  type: "payment" | "tip" | "subscription";
+  toUserId: string;
+  fromAddress?: string;
+  toAddress: string;
+  amount: string | number;
+  tokenAddress?: string;
+  sourceChain: string;
+  destinationChain: string;
+  category?: string;
+  tags?: string[];
+  client?: string;
+  projectId?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateTransactionRequestBody {
+  status?: "pending" | "completed" | "failed";
+  category?: string;
+  tags?: string[];
+  client?: string;
+  projectId?: string;
+  metadata?: Record<string, any>;
 }
 
 // Order-related types
@@ -232,6 +258,7 @@ export interface SubscriptionPlanRequestBody {
   billingCycle: IBillingCycle;
   features?: string[];
   active?: boolean;
+  smartContractId?: string;
 }
 
 export interface SubscribeRequestBody {

@@ -7,6 +7,233 @@ import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 import * as analyticsService from "../services/analytics-service";
 
 /**
+ * Create a new transaction
+ * POST /api/transactions
+ */
+export const createTransaction = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body = JSON.parse(event.body);
+      const {
+        type,
+        toUserId,
+        fromAddress,
+        toAddress,
+        amount,
+        tokenAddress,
+        sourceChain,
+        destinationChain,
+        category,
+        tags,
+        client,
+        projectId,
+        metadata,
+      } = body;
+
+      // Validate required fields
+      if (!type || !["payment", "tip", "subscription"].includes(type)) {
+        return error(
+          "Valid transaction type is required (payment, tip, subscription)",
+          400
+        );
+      }
+
+      if (!toUserId) {
+        return error("Recipient user ID (toUserId) is required", 400);
+      }
+
+      if (!toAddress) {
+        return error("Recipient wallet address (toAddress) is required", 400);
+      }
+
+      if (!amount || isNaN(parseFloat(amount))) {
+        return error("Valid amount is required", 400);
+      }
+
+      if (!sourceChain || !destinationChain) {
+        return error("Source and destination chains are required", 400);
+      }
+
+      // Check if recipient user exists
+      const recipientUser = await User.findById(toUserId);
+      if (!recipientUser) {
+        return error("Recipient user not found", 404);
+      }
+
+      // Create new transaction
+      const transaction = new Transaction({
+        type,
+        fromUserId: userId, // Current authenticated user is the sender
+        toUserId,
+        fromAddress: fromAddress || "0x0", // Default if not provided
+        toAddress,
+        amount: amount.toString(),
+        tokenAddress: tokenAddress || "0x0", // Default to native token if not specified
+        sourceChain,
+        destinationChain,
+        status: "pending", // Default status for new transactions
+        category: category || "uncategorized",
+        tags: tags || [],
+        client,
+        projectId,
+        metadata: metadata || {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await transaction.save();
+
+      // Format response
+      return success(
+        {
+          id: transaction._id,
+          type: transaction.type,
+          fromUserId: transaction.fromUserId,
+          toUserId: transaction.toUserId,
+          amount: transaction.amount,
+          status: transaction.status,
+          createdAt: transaction.createdAt,
+          category: transaction.category,
+          tags: transaction.tags,
+          client: transaction.client,
+          projectId: transaction.projectId,
+        },
+        201
+      );
+    } catch (err) {
+      console.error("Create transaction error:", err);
+      return error("Could not create transaction", 500);
+    }
+  }
+);
+
+/**
+ * Update an existing transaction
+ * PUT /api/transactions/:transactionId
+ */
+export const updateTransaction = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get transaction ID from path parameters
+      if (!event.pathParameters?.transactionId) {
+        return error("Transaction ID parameter is required", 400);
+      }
+
+      const transactionId = event.pathParameters.transactionId;
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body = JSON.parse(event.body);
+
+      // Fields that can be updated
+      const { status, category, tags, client, projectId, metadata } = body;
+
+      // Get the transaction
+      const transaction = await Transaction.findById(transactionId);
+
+      if (!transaction) {
+        return error("Transaction not found", 404);
+      }
+
+      // Check if user is authorized to update this transaction
+      // User must be either the sender or recipient
+      if (
+        transaction.fromUserId?.toString() !== userId &&
+        transaction.toUserId.toString() !== userId
+      ) {
+        return error("Unauthorized to update this transaction", 403);
+      }
+
+      // Only allow updating certain fields
+      // Cannot change fundamental transaction details like amount, addresses, etc.
+      const updateData: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+
+      // Only add fields that are provided in the request
+      if (status && ["pending", "completed", "failed"].includes(status)) {
+        // Only allow specific status transitions based on current status
+        // e.g., prevent changing from 'completed' to 'pending'
+        if (transaction.status === "completed" && status !== "completed") {
+          return error("Cannot change status of a completed transaction", 400);
+        }
+        updateData.status = status;
+      }
+
+      if (category) updateData.category = category;
+      if (tags) updateData.tags = tags;
+      if (client) updateData.client = client;
+      if (projectId) updateData.projectId = projectId;
+
+      // For metadata, merge with existing metadata rather than replacing
+      if (metadata) {
+        updateData.metadata = {
+          ...(transaction.metadata || {}),
+          ...metadata,
+        };
+      }
+
+      // Update the transaction
+      await Transaction.findByIdAndUpdate(transactionId, { $set: updateData });
+
+      // Get updated transaction
+      const updatedTransaction = await Transaction.findById(transactionId);
+
+      if (!updatedTransaction) {
+        return error("Transaction not found after update", 404);
+      }
+
+      // Format response
+      return success({
+        id: updatedTransaction._id,
+        type: updatedTransaction.type,
+        fromUserId: updatedTransaction.fromUserId,
+        toUserId: updatedTransaction.toUserId,
+        amount: updatedTransaction.amount,
+        status: updatedTransaction.status,
+        updatedAt: updatedTransaction.updatedAt,
+        category: updatedTransaction.category,
+        tags: updatedTransaction.tags,
+        client: updatedTransaction.client,
+        projectId: updatedTransaction.projectId,
+        metadata: updatedTransaction.metadata,
+      });
+    } catch (err) {
+      console.error("Update transaction error:", err);
+      return error("Could not update transaction", 500);
+    }
+  }
+);
+
+/**
  * Get user's transactions
  * GET /api/transactions
  */
