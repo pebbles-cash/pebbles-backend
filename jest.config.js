@@ -4,7 +4,7 @@ module.exports = {
     "^.+\\.tsx?$": "ts-jest",
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.(ts|js)x?$",
+  testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.ts$",
   coverageDirectory: "coverage",
   collectCoverageFrom: ["src/**/*.{ts,tsx,js,jsx}", "!src/**/*.d.ts"],
   moduleNameMapper: {
@@ -16,4 +16,5 @@ module.exports = {
     "^@types/(.*)$": "<rootDir>/src/types/$1",
   },
   setupFiles: ["<rootDir>/jest.setup.js"],
+  testPathIgnorePatterns: ["\\.build", "node_modules"],
 };

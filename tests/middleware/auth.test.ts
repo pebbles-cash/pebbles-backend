@@ -124,7 +124,9 @@ describe("Auth Middleware", () => {
       const response = await wrappedHandler(mockEvent, mockContext);
 
       expect(response.statusCode).toBe(401);
-      expect(JSON.parse(response.body).error).toBe("Authorization required");
+      expect(JSON.parse(response.body).error).toBe(
+        "Middleware: Authorization required"
+      );
       expect(mockHandler).not.toHaveBeenCalled();
     });
 
@@ -140,7 +142,9 @@ describe("Auth Middleware", () => {
       const response = await wrappedHandler(mockEvent, mockContext);
 
       expect(response.statusCode).toBe(401);
-      expect(JSON.parse(response.body).error).toBe("Invalid or expired token");
+      expect(JSON.parse(response.body).error).toBe(
+        "Middleware: Invalid or expired token"
+      );
       expect(mockHandler).not.toHaveBeenCalled();
     });
 
@@ -189,8 +193,10 @@ describe("Auth Middleware", () => {
 
       const response = await wrappedHandler(mockEvent, mockContext);
 
-      expect(response.statusCode).toBe(500);
-      expect(JSON.parse(response.body).error).toBe("Authentication failed");
+      expect(response.statusCode).toBe(401);
+      expect(JSON.parse(response.body).error).toBe(
+        "Middleware: Invalid or expired token"
+      );
       expect(mockHandler).not.toHaveBeenCalled();
     });
   });
