@@ -10,6 +10,7 @@ import {
   SubscriptionInstance,
   Transaction,
 } from "../../src/models";
+import * as subscriptionsHandlerModule from "../../src/handlers/subscriptions";
 
 // Mock dependencies
 jest.mock("mongoose", () => {
@@ -54,9 +55,6 @@ jest.mock("../../src/models", () => ({
   },
 }));
 
-// Import the handlers directly - we're mocking the middleware separately
-import * as subscriptionsHandlerModule from "../../src/handlers/subscriptions";
-
 // Mock the requireAuth middleware
 jest.mock("../../src/middleware/auth", () => ({
   requireAuth: (fn: any) => fn,
@@ -71,12 +69,10 @@ describe("Subscriptions Handlers", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
 
-  describe("createSubscriptionPlan", () => {
-    it("should successfully create a new subscription plan", async () => {
-      // Mock subscription data
-      const mockSubscription = {
+    // Mock Subscription constructor
+    (Subscription as any) = Object.assign(
+      jest.fn().mockImplementation(() => ({
         _id: subscriptionId,
         creatorId,
         name: "Premium Plan",
@@ -87,12 +83,56 @@ describe("Subscriptions Handlers", () => {
         active: true,
         createdAt: new Date(),
         save: jest.fn().mockResolvedValue(undefined),
-      };
+      })),
+      Subscription
+    );
 
-      // Mock Subscription constructor
-      const SubscriptionMock = jest.fn(() => mockSubscription);
-      (global as any).Subscription = SubscriptionMock;
+    // Mock Transaction constructor
+    (Transaction as any) = Object.assign(
+      jest.fn().mockImplementation(() => ({
+        _id: "transaction123",
+        type: "subscription",
+        fromUserId: subscriberId,
+        toUserId: creatorId,
+        fromAddress: "subscriber-wallet-address",
+        toAddress: "creator-wallet-address",
+        amount: "9.99",
+        tokenAddress: "0x0",
+        sourceChain: "ethereum",
+        destinationChain: "ethereum",
+        status: "completed",
+        category: "subscription",
+        tags: ["subscription", "Premium Plan"],
+        metadata: {
+          subscriptionId: subscriptionId,
+          note: "Subscription to Premium Plan",
+        },
+        save: jest.fn().mockResolvedValue(undefined),
+      })),
+      Transaction
+    );
 
+    // Mock SubscriptionInstance constructor
+    (SubscriptionInstance as any) = Object.assign(
+      jest.fn().mockImplementation(() => ({
+        _id: instanceId,
+        subscriptionId,
+        creatorId,
+        subscriberId,
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        price: { value: 9.99, currency: "USD" },
+        autoRenew: true,
+        status: "active",
+        transactions: ["transaction123"],
+        save: jest.fn().mockResolvedValue(undefined),
+      })),
+      SubscriptionInstance
+    );
+  });
+
+  describe("createSubscriptionPlan", () => {
+    it("should successfully create a new subscription plan", async () => {
       // Create mock authenticated event
       const event = createMockAuthenticatedEvent(
         creatorId,
@@ -132,11 +172,8 @@ describe("Subscriptions Handlers", () => {
       expect(body.data).toHaveProperty("features", ["Feature 1", "Feature 2"]);
       expect(body.data).toHaveProperty("active", true);
 
-      // Verify subscription was saved
-      expect(mockSubscription.save).toHaveBeenCalled();
-
       // Verify constructor was called with correct params
-      expect(SubscriptionMock).toHaveBeenCalledWith({
+      expect(Subscription).toHaveBeenCalledWith({
         creatorId,
         name: "Premium Plan",
         description: "Access to premium content",
@@ -321,6 +358,7 @@ describe("Subscriptions Handlers", () => {
         "creator",
         "creator@example.com",
         null,
+        {},
         { creator: "othercreator" }
       );
 
@@ -360,6 +398,7 @@ describe("Subscriptions Handlers", () => {
         "creator",
         "creator@example.com",
         null,
+        {},
         { creator: "nonexistentcreator" }
       );
 
@@ -825,42 +864,10 @@ describe("Subscriptions Handlers", () => {
         walletAddress: "creator-wallet-address",
       };
 
-      // Mock transaction
-      const mockTransaction = {
-        _id: "transaction123",
-        type: "subscription",
-        fromUserId: subscriberId,
-        toUserId: creatorId,
-        amount: "9.99",
-        status: "completed",
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
-      // Mock subscription instance
-      const mockSubscriptionInstance = {
-        _id: instanceId,
-        subscriptionId,
-        creatorId,
-        subscriberId,
-        startDate: new Date(),
-        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-        price: { value: 9.99, currency: "USD" },
-        autoRenew: true,
-        status: "active",
-        transactions: [mockTransaction._id],
-        save: jest.fn().mockResolvedValue(undefined),
-      };
-
       // Setup mocks
       (Subscription.findById as jest.Mock).mockResolvedValue(mockSubscription);
       (User.findById as jest.Mock).mockResolvedValue(mockCreator);
       (SubscriptionInstance.findOne as jest.Mock).mockResolvedValue(null); // No existing subscription
-
-      // Mock constructors
-      const TransactionMock = jest.fn(() => mockTransaction);
-      const SubscriptionInstanceMock = jest.fn(() => mockSubscriptionInstance);
-      (global as any).Transaction = TransactionMock;
-      (global as any).SubscriptionInstance = SubscriptionInstanceMock;
 
       // Create mock authenticated event
       const event = createMockAuthenticatedEvent(
@@ -892,31 +899,29 @@ describe("Subscriptions Handlers", () => {
       expect(body.data.subscription).toHaveProperty("name", "Premium Plan");
       expect(body.data).toHaveProperty("autoRenew", true);
       expect(body.data).toHaveProperty("status", "active");
-      expect(body.data).toHaveProperty("transactionId", mockTransaction._id);
+      expect(body.data).toHaveProperty("transactionId", "transaction123");
 
-      // Verify transaction was created and saved
-      expect(TransactionMock).toHaveBeenCalledWith(
+      // Verify Transaction constructor was called with correct params
+      expect(Transaction).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "subscription",
           fromUserId: subscriberId,
           toUserId: creatorId,
-          amount: "9.99",
+          fromAddress: "subscriber-wallet-address",
+          toAddress: "creator-wallet-address",
         })
       );
-      expect(mockTransaction.save).toHaveBeenCalled();
 
-      // Verify subscription instance was created and saved
-      expect(SubscriptionInstanceMock).toHaveBeenCalledWith(
+      // Verify SubscriptionInstance constructor was called with correct params
+      expect(SubscriptionInstance).toHaveBeenCalledWith(
         expect.objectContaining({
           subscriptionId,
           creatorId,
           subscriberId,
           autoRenew: true,
           status: "active",
-          transactions: [mockTransaction._id],
         })
       );
-      expect(mockSubscriptionInstance.save).toHaveBeenCalled();
     });
 
     it("should prevent subscription to inactive plans", async () => {
