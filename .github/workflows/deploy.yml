@@ -52,11 +52,6 @@ jobs:
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.DEV_DYNAMIC_ENVIRONMENT_ID }}
           AUTH_REDIRECT_URL=${{ secrets.DEV_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.DEV_PAYMENT_BASE_URL }}
-          LLM_PROVIDER=${{ secrets.DEV_LLM_PROVIDER }}
-          OPENAI_API_KEY=${{ secrets.DEV_OPENAI_API_KEY }}
-          OPENAI_MODEL=${{ secrets.DEV_OPENAI_MODEL }}
-          ANTHROPIC_API_KEY=${{ secrets.DEV_ANTHROPIC_API_KEY }}
-          ANTHROPIC_MODEL=${{ secrets.DEV_ANTHROPIC_MODEL }}
           EOF
 
       - name: Deploy to AWS - Development
@@ -91,11 +86,6 @@ jobs:
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.STAGING_DYNAMIC_ENVIRONMENT_ID }}
           AUTH_REDIRECT_URL=${{ secrets.STAGING_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.STAGING_PAYMENT_BASE_URL }}
-          LLM_PROVIDER=${{ secrets.STAGING_LLM_PROVIDER }}
-          OPENAI_API_KEY=${{ secrets.STAGING_OPENAI_API_KEY }}
-          OPENAI_MODEL=${{ secrets.STAGING_OPENAI_MODEL }}
-          ANTHROPIC_API_KEY=${{ secrets.STAGING_ANTHROPIC_API_KEY }}
-          ANTHROPIC_MODEL=${{ secrets.STAGING_ANTHROPIC_MODEL }}
           EOF
 
       - name: Deploy to AWS - Staging
@@ -131,11 +121,6 @@ jobs:
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.PROD_DYNAMIC_ENVIRONMENT_ID }}
           AUTH_REDIRECT_URL=${{ secrets.PROD_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.PROD_PAYMENT_BASE_URL }}
-          LLM_PROVIDER=${{ secrets.PROD_LLM_PROVIDER }}
-          OPENAI_API_KEY=${{ secrets.PROD_OPENAI_API_KEY }}
-          OPENAI_MODEL=${{ secrets.PROD_OPENAI_MODEL }}
-          ANTHROPIC_API_KEY=${{ secrets.PROD_ANTHROPIC_API_KEY }}
-          ANTHROPIC_MODEL=${{ secrets.PROD_ANTHROPIC_MODEL }}
           EOF
 
       - name: Deploy to AWS - Production
