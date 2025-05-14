@@ -42,19 +42,7 @@ export const DYNAMIC_API_URL = getEnv("DYNAMIC_API_URL");
 export const DYNAMIC_API_KEY = getEnv("DYNAMIC_API_KEY");
 export const DYNAMIC_ENVIRONMENT_ID = getEnv("DYNAMIC_ENVIRONMENT_ID");
 
-// AI Assistant (optional, depending on which LLM you use)
-export const LLM_PROVIDER = getEnv("LLM_PROVIDER"); // Should be 'openai' or 'anthropic'
-
-// OpenAI
-export const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // optional
-export const OPENAI_MODEL = process.env.OPENAI_MODEL; // optional
-
-// Anthropic
-export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // optional
-export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL; // optional
-
 // Log configuration (without sensitive values)
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);
 console.log(`Payment Base URL: ${PAYMENT_BASE_URL}`);
-console.log(`LLM Provider: ${LLM_PROVIDER}`);
