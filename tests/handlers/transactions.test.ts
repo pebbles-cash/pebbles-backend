@@ -672,28 +672,37 @@ describe("Transactions Handler", () => {
       // Mock user ID
       const userId = new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85");
 
-      // Mock Transaction.find to throw an error
-      (Transaction.find as jest.Mock).mockImplementation(() => {
-        throw new Error("Database error");
-      });
+      // Temporarily silence console.error
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
 
-      // Create mock authenticated event
-      const event = createMockAuthenticatedEvent(
-        userId.toString(),
-        "testuser",
-        "test@example.com"
-      );
+      try {
+        // Mock Transaction.find to throw an error
+        (Transaction.find as jest.Mock).mockImplementation(() => {
+          throw new Error("Database error");
+        });
 
-      // Call the handler
-      const response = await getUserTransactions(event, mockContext);
+        // Create mock authenticated event
+        const event = createMockAuthenticatedEvent(
+          userId.toString(),
+          "testuser",
+          "test@example.com"
+        );
 
-      // Parse the response body
-      const body = parseResponseBody(response);
+        // Call the handler
+        const response = await getUserTransactions(event, mockContext);
 
-      // Assert
-      expect(response.statusCode).toBe(500);
-      expect(body.success).toBe(false);
-      expect(body.error).toBe("Could not retrieve transactions");
+        // Parse the response body
+        const body = parseResponseBody(response);
+
+        // Assert
+        expect(response.statusCode).toBe(500);
+        expect(body.success).toBe(false);
+        expect(body.error).toBe("Could not retrieve transactions");
+      } finally {
+        // Restore console.error
+        console.error = originalConsoleError;
+      }
     });
   });
 
