@@ -14,27 +14,20 @@ export interface ISocialProfile {
 
 export interface IUserPreferences {
   defaultCurrency: string;
+  defaultLanguage: string;
   notificationsEnabled: boolean;
   twoFactorEnabled: boolean;
-  aiAssistantPreferences: {
-    defaultCurrency: string;
-    preferredTimeZone: string;
-    preferredReportingPeriod: "week" | "month" | "quarter";
-    reminderSettings: {
-      enabled: boolean;
-      frequency: "daily" | "weekly" | "monthly";
-      time: string; // HH:MM format
-    };
-  };
+  preferredTimeZone: string;
 }
 
 export interface IUser extends Document {
   email: string;
-  username: string;
+  primaryWalletAddress: string;
+  chain: string;
+  username?: string;
   displayName?: string;
   avatar?: string;
   dynamicUserId?: string;
-  walletAddress?: string;
   socialProfiles: ISocialProfile[];
   preferences: IUserPreferences;
   createdAt: Date;

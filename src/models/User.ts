@@ -17,26 +17,10 @@ const socialProfileSchema = new Schema<ISocialProfile>(
 const userPreferencesSchema = new Schema<IUserPreferences>(
   {
     defaultCurrency: { type: String, default: "USD" },
+    defaultLanguage: { type: String, default: "en" },
     notificationsEnabled: { type: Boolean, default: true },
     twoFactorEnabled: { type: Boolean, default: false },
-    aiAssistantPreferences: {
-      defaultCurrency: { type: String, default: "USD" },
-      preferredTimeZone: { type: String, default: "UTC" },
-      preferredReportingPeriod: {
-        type: String,
-        enum: ["week", "month", "quarter"],
-        default: "month",
-      },
-      reminderSettings: {
-        enabled: { type: Boolean, default: false },
-        frequency: {
-          type: String,
-          enum: ["daily", "weekly", "monthly"],
-          default: "weekly",
-        },
-        time: { type: String, default: "09:00" }, // HH:MM format
-      },
-    },
+    preferredTimeZone: { type: String, default: "UTC" },
   },
   { _id: false }
 );
@@ -49,9 +33,16 @@ const userSchema = new Schema<IUser>(
       unique: true,
       trim: true,
     },
+    primaryWalletAddress: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+    },
+    chain: { type: String, required: true, trim: true },
+    dynamicUserId: String,
     username: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
       minlength: 3,
@@ -59,8 +50,6 @@ const userSchema = new Schema<IUser>(
     },
     displayName: String,
     avatar: String,
-    dynamicUserId: String,
-    walletAddress: String,
     socialProfiles: [socialProfileSchema],
     preferences: {
       type: userPreferencesSchema,
