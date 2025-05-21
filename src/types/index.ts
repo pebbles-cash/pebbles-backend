@@ -193,7 +193,7 @@ export interface AuthenticatedAPIGatewayProxyEvent
     username: string;
     email: string;
     displayName?: string;
-    walletAddress?: string;
+    primaryWalletAddress?: string;
   };
 }
 
@@ -208,10 +208,38 @@ export interface CallbackRequestBody {
   state: string;
 }
 
+export interface CreateUserRequestBody {
+  userId: string; // Dynamic user ID
+  email: string;
+  username: string;
+  verifiedCredentials: {
+    address: string;
+    chain: string;
+  }[];
+  primaryWallet: {
+    address: string;
+    chain: string;
+    id?: string; // Optional wallet ID from Dynamic
+  };
+  phoneNumber?: string; // Optional field
+  newUser?: boolean; // Flag indicating if this is a new user
+}
+
 export interface UpdateUserRequestBody {
   username?: string;
   displayName?: string;
-  bio?: string;
+  avatar?: string;
+  primaryWallet?: {
+    address: string;
+    chain: string;
+  };
+  preferences?: {
+    defaultCurrency?: string;
+    defaultLanguage?: string;
+    notificationsEnabled?: boolean;
+    twoFactorEnabled?: boolean;
+    preferredTimeZone?: string;
+  };
 }
 
 export interface SocialStatsRequestBody {

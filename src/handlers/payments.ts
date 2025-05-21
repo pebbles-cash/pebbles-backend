@@ -323,7 +323,8 @@ export const processPayment = optionalAuth(
           fromUserId: sender?._id,
           toUserId: recipient._id,
           fromAddress: senderWalletAddress,
-          toAddress: recipient.walletAddress || "recipient-wallet-address",
+          toAddress:
+            recipient.primaryWalletAddress || "recipient-wallet-address",
           amount: order.amount.value.toString(),
           tokenAddress: "0x0", // Native token
           sourceChain: "ethereum", // Default for example
@@ -383,7 +384,8 @@ export const processPayment = optionalAuth(
           fromUserId: sender?._id,
           toUserId: recipient._id,
           fromAddress: senderWalletAddress,
-          toAddress: recipient.walletAddress || "recipient-wallet-address",
+          toAddress:
+            recipient.primaryWalletAddress || "recipient-wallet-address",
           amount: amount.toString(),
           tokenAddress: "0x0", // Native token
           sourceChain: "ethereum", // Default for example

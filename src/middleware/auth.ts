@@ -81,10 +81,10 @@ export const requireAuth = <T extends Handler>(
       const authenticatedEvent = event as AuthenticatedAPIGatewayProxyEvent;
       authenticatedEvent.user = {
         id: user._id.toString(),
-        username: user.username,
+        username: user.username || "",
         email: user.email,
         displayName: user.displayName,
-        walletAddress: user.walletAddress,
+        primaryWalletAddress: user.primaryWalletAddress,
       };
 
       // Call the original handler
@@ -157,10 +157,10 @@ export const optionalAuth = <T extends Handler>(
           // Add user info to the event object
           authenticatedEvent.user = {
             id: user._id.toString(),
-            username: user.username,
+            username: user.username || "",
             email: user.email,
             displayName: user.displayName,
-            walletAddress: user.walletAddress,
+            primaryWalletAddress: user.primaryWalletAddress,
           };
 
           // Update last activity timestamp

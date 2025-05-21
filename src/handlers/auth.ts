@@ -156,7 +156,8 @@ export const callback = async (
           dynamicUser?.username ||
           user.displayName;
         user.avatar = dynamicUser?.avatar || user.avatar;
-        user.walletAddress = dynamicUser?.walletAddress || user.walletAddress;
+        user.primaryWalletAddress =
+          dynamicUser?.walletAddress || user.primaryWalletAddress;
 
         // Update social profiles if available
         if (dynamicUser?.socialAccounts?.length > 0) {
@@ -210,7 +211,7 @@ export const callback = async (
         email: user.email,
         displayName: user.displayName,
         avatar: user.avatar,
-        walletAddress: user.walletAddress,
+        primaryWalletAddress: user.primaryWalletAddress,
       },
       token: sessionToken,
     });

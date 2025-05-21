@@ -1,90 +1,109 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";
-import { User, Wallet } from "../models";
+import { User } from "../models";
 import { requireAuth } from "../middleware/auth";
 import {
   AuthenticatedAPIGatewayProxyEvent,
+  CreateUserRequestBody,
   UpdateUserRequestBody,
   SocialStatsRequestBody,
 } from "../types";
 
-/**
- * Create user profile
- * POST /api/users/:username
- */
+export const createUser = async (
+  event: AuthenticatedAPIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectToDatabase(); // Make sure to connect to DB
 
-export const createUser = requireAuth(
-  async (
-    event: AuthenticatedAPIGatewayProxyEvent
-  ): Promise<APIGatewayProxyResult> => {
-    try {
-      // Database connection handled in requireAuth middleware
+    const body: CreateUserRequestBody = JSON.parse(event.body || "{}");
 
-      // User is provided by the auth middleware
-      const userId = event.user?.id;
+    const {
+      userId: dynamicUserId,
+      email,
+      username,
+      verifiedCredentials,
+      primaryWallet,
+    } = body;
 
-      if (!userId) {
-        return error("User ID not found in token", 401);
-      }
-
-      if (!event.body) {
-        return error("Missing request body", 400);
-      }
-
-      const body: UpdateUserRequestBody = JSON.parse(event.body);
-      const { username, displayName, bio } = body;
-
-      // Basic validation
-      if (username && (username.length < 3 || username.length > 15)) {
-        return error("Username must be between 3 and 15 characters", 400);
-      }
-
-      // Check if username is taken (if changing)
-      if (username) {
-        const existingUser = await User.findOne({
-          username,
-          _id: { $ne: userId },
-        });
-
-        if (existingUser) {
-          return error("Username is already taken", 409);
-        }
-      }
-
-      // Update fields
-      const updateData: Partial<UpdateUserRequestBody> & { updatedAt: Date } = {
-        updatedAt: new Date(),
-      };
-
-      if (username) updateData.username = username;
-      if (displayName) updateData.displayName = displayName;
-      if (bio) updateData.bio = bio;
-
-      // Update user in database
-      await User.findByIdAndUpdate(userId, { $set: updateData });
-
-      // Get updated user
-      const updatedUser = await User.findById(userId);
-
-      if (!updatedUser) {
-        return error("User not found after update", 404);
-      }
-
-      return success({
-        id: updatedUser._id,
-        username: updatedUser.username,
-        displayName: updatedUser.displayName,
-        bio: bio,
-        email: updatedUser.email,
-        updatedAt: updatedUser.updatedAt,
-      });
-    } catch (err) {
-      console.error("Update user error:", err);
-      return error("Could not update user profile", 500);
+    // Validate required fields
+    if (
+      !dynamicUserId ||
+      !email ||
+      !username ||
+      !verifiedCredentials ||
+      !primaryWallet
+    ) {
+      return error("Missing required fields", 400);
     }
+
+    // Validate username
+    if (username.length < 3 || username.length > 15) {
+      return error("Username must be between 3-15 characters", 400);
+    }
+
+    // Check for existing user
+    const existingUser = await User.findOne({
+      $or: [
+        { email },
+        { username },
+        { dynamicUserId },
+        { primaryWalletAddress: primaryWallet.address },
+      ],
+    });
+
+    if (existingUser) {
+      return error(
+        "User with this email, username, wallet address or Dynamic ID already exists",
+        409
+      );
+    }
+
+    // Create new user with all required fields from schema
+    const user = new User({
+      email,
+      username,
+      dynamicUserId,
+      primaryWalletAddress: primaryWallet.address, // Correct field name
+      chain: primaryWallet.chain.toLowerCase(), // Add required chain field
+      displayName: username, // Default display name to username
+      avatar: null, // Initialize with null
+      socialProfiles: [], // Initialize with empty array
+      preferences: {
+        defaultCurrency: "USD",
+        defaultLanguage: "en",
+        notificationsEnabled: true,
+        twoFactorEnabled: false,
+        preferredTimeZone: "UTC",
+      },
+    });
+
+    await user.save();
+
+    return success(
+      {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        dynamicUserId: user.dynamicUserId,
+        primaryWalletAddress: user.primaryWalletAddress,
+        chain: user.chain,
+        displayName: user.displayName,
+        preferences: user.preferences,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      201
+    );
+  } catch (err) {
+    console.error("Error creating user:", err);
+    return error(
+      "Error creating user: " +
+        (err instanceof Error ? err.message : "Unknown error"),
+      500
+    );
   }
-);
+};
 
 /**
  * Get user profile by username
@@ -190,7 +209,7 @@ export const updateSocialStats = requireAuth(
         user.socialProfiles.push({
           platform,
           profileId: `manual-${platform}-${Date.now()}`,
-          username: user.username,
+          username: user.username || "",
           followerCount: followers || 0,
           lastUpdated: new Date(),
         });
@@ -234,20 +253,19 @@ export const getCurrentUser = requireAuth(
         return error("User not found", 404);
       }
 
-      // Get wallet information
-      const wallets = await Wallet.find({ userId: user._id });
-
-      // Format response
+      // Format response to match schema fields
       const userProfile = {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         displayName: user.displayName,
         avatar: user.avatar,
-        walletAddresses: wallets.map((w: any) => w.address),
+        primaryWalletAddress: user.primaryWalletAddress, // Correct field name
+        chain: user.chain, // Include chain
         socialProfiles: user.socialProfiles,
         preferences: user.preferences,
         createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       };
 
       return success(userProfile);
@@ -281,7 +299,13 @@ export const updateCurrentUser = requireAuth(
       }
 
       const body: UpdateUserRequestBody = JSON.parse(event.body);
-      const { username, displayName, bio } = body;
+      const {
+        username,
+        displayName,
+        avatar,
+        primaryWallet, // New field for wallet updates
+        preferences, // User preferences
+      } = body;
 
       // Basic validation
       if (username && (username.length < 3 || username.length > 15)) {
@@ -300,14 +324,54 @@ export const updateCurrentUser = requireAuth(
         }
       }
 
+      // Check if new wallet address is already used
+      if (primaryWallet && primaryWallet.address) {
+        const existingWallet = await User.findOne({
+          primaryWalletAddress: primaryWallet.address,
+          _id: { $ne: userId },
+        });
+
+        if (existingWallet) {
+          return error(
+            "Wallet address is already associated with another account",
+            409
+          );
+        }
+      }
+
       // Update fields
-      const updateData: Partial<UpdateUserRequestBody> & { updatedAt: Date } = {
+      const updateData: Record<string, any> = {
         updatedAt: new Date(),
       };
 
       if (username) updateData.username = username;
       if (displayName) updateData.displayName = displayName;
-      if (bio) updateData.bio = bio;
+      if (avatar) updateData.avatar = avatar;
+
+      // Update wallet if provided
+      if (primaryWallet && primaryWallet.address) {
+        updateData.primaryWalletAddress = primaryWallet.address;
+        if (primaryWallet.chain) {
+          updateData.chain = primaryWallet.chain.toLowerCase();
+        }
+      }
+
+      // Update specific preferences if provided
+      if (preferences) {
+        for (const [key, value] of Object.entries(preferences)) {
+          if (
+            [
+              "defaultCurrency",
+              "defaultLanguage",
+              "notificationsEnabled",
+              "twoFactorEnabled",
+              "preferredTimeZone",
+            ].includes(key)
+          ) {
+            updateData[`preferences.${key}`] = value;
+          }
+        }
+      }
 
       // Update user in database
       await User.findByIdAndUpdate(userId, { $set: updateData });
@@ -320,11 +384,14 @@ export const updateCurrentUser = requireAuth(
       }
 
       return success({
-        id: updatedUser._id,
+        _id: updatedUser._id,
         username: updatedUser.username,
-        displayName: updatedUser.displayName,
-        bio: bio,
         email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        avatar: updatedUser.avatar,
+        primaryWalletAddress: updatedUser.primaryWalletAddress,
+        chain: updatedUser.chain,
+        preferences: updatedUser.preferences,
         updatedAt: updatedUser.updatedAt,
       });
     } catch (err) {

@@ -93,6 +93,18 @@ const serverlessConfiguration: AWS = {
       ],
     },
     // User Management Handlers
+    createUser: {
+      handler: "src/handlers/users.createUser",
+      events: [
+        {
+          http: {
+            path: "/api/users",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
     getCurrentUser: {
       handler: "src/handlers/users.getCurrentUser",
       events: [
