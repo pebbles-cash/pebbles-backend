@@ -33,6 +33,51 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+// Dynamic User interfaces
+export interface IDynamicUserAccount {
+  provider: string;
+  id: string;
+  username: string;
+  followerCount?: number;
+  followingCount?: number;
+  postCount?: number;
+}
+
+export interface IDynamicUser {
+  username?: string;
+  email?: string;
+  displayName?: string;
+  avatar?: string;
+  walletAddress?: string; // Note: This maps to primaryWalletAddress in our system
+  chain?: string;
+  socialAccounts?: IDynamicUserAccount[];
+
+  // Allow for additional properties
+  [key: string]: any;
+}
+
+// Frontend request body interface
+export interface IUserData {
+  // Basic user information
+  username?: string;
+  email?: string;
+  displayName?: string;
+  avatar?: string;
+
+  // Wallet information
+  primaryWalletAddress?: string;
+  chain?: string;
+
+  // User preferences
+  preferences?: {
+    defaultCurrency?: string;
+    defaultLanguage?: string;
+    notificationsEnabled?: boolean;
+    twoFactorEnabled?: boolean;
+    preferredTimeZone?: string;
+  };
+  [key: string]: any;
+}
 
 // Wallet-related types
 export interface IWalletBalance {
@@ -194,6 +239,14 @@ export interface AuthenticatedAPIGatewayProxyEvent
     email: string;
     displayName?: string;
     primaryWalletAddress?: string;
+    chain?: string;
+    preferences?: {
+      defaultCurrency?: string;
+      defaultLanguage?: string;
+      notificationsEnabled?: boolean;
+      twoFactorEnabled?: boolean;
+      preferredTimeZone?: string;
+    };
   };
 }
 

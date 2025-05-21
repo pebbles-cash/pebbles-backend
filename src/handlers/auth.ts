@@ -7,7 +7,11 @@ import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";
 import { User } from "../models";
 import { requireAuth } from "../middleware/auth";
-import { AuthenticatedAPIGatewayProxyEvent } from "../types";
+import {
+  AuthenticatedAPIGatewayProxyEvent,
+  IUserData,
+  IDynamicUser,
+} from "../types";
 
 // Initialize JWKS client for Dynamic
 function getJwksClient() {
@@ -27,205 +31,10 @@ function getJwksClient() {
 }
 
 /**
- * Get Dynamic authentication configuration
+ * Main authentication endpoint - Validates Dynamic token and issues app JWT
  * POST /api/auth/login
  */
 export const login = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  try {
-    // Simple check for API availability
-    const environmentId = process.env.DYNAMIC_ENVIRONMENT_ID;
-    const redirectUrl = process.env.AUTH_REDIRECT_URL;
-
-    if (!environmentId) {
-      throw new Error("DYNAMIC_ENVIRONMENT_ID is not defined");
-    }
-
-    if (!redirectUrl) {
-      throw new Error("AUTH_REDIRECT_URL is not defined");
-    }
-
-    // Return Dynamic configuration data to the frontend
-    return success({
-      environmentId,
-      redirectUrl,
-      // Any other configuration the frontend might need
-    });
-  } catch (err) {
-    console.error("Login configuration error:", err);
-    return error("Failed to get login configuration", 500);
-  }
-};
-
-/**
- * Authenticate a user with a Dynamic-issued JWT
- * POST /api/auth/callback
- */
-export const callback = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  try {
-    // Connect to database
-    await connectToDatabase();
-
-    if (!event.body) {
-      return error("Missing request body", 400);
-    }
-
-    const { dynamicToken } = JSON.parse(event.body);
-
-    if (!dynamicToken) {
-      return error("Dynamic token is required", 400);
-    }
-
-    // Verify the Dynamic token
-    const decodedToken = await verifyDynamicToken(dynamicToken);
-
-    // Extract user info from token
-    const { sub: dynamicUserId, email, name } = decodedToken;
-
-    if (!dynamicUserId) {
-      return error("Invalid token: missing user ID", 401);
-    }
-
-    // Get user details from Dynamic (optional, if more details needed)
-    let dynamicUser;
-    try {
-      const dynamicApiUrl = process.env.DYNAMIC_API_URL;
-      const dynamicApiKey = process.env.DYNAMIC_API_KEY;
-
-      if (dynamicApiUrl && dynamicApiKey) {
-        const userResponse = await axios.get(
-          `${dynamicApiUrl}/users/${dynamicUserId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${dynamicApiKey}`,
-            },
-          }
-        );
-        dynamicUser = userResponse.data;
-      }
-    } catch (err) {
-      console.warn(
-        "Could not fetch additional user details from Dynamic:",
-        err
-      );
-      // Continue with just the token data
-    }
-
-    // Find or create user in our database
-    let user = await User.findOne({ dynamicUserId });
-
-    if (!user) {
-      // Create new user
-      const username = (
-        dynamicUser?.username || `user_${Date.now()}`
-      ).toLowerCase();
-
-      // Check if username is taken
-      const usernameExists = await User.findOne({ username });
-      const finalUsername = usernameExists
-        ? `${username}_${Date.now().toString().substring(9)}`
-        : username;
-
-      user = new User({
-        email: email || dynamicUser?.email,
-        username: finalUsername,
-        displayName: name || dynamicUser?.displayName || dynamicUser?.username,
-        avatar: dynamicUser?.avatar,
-        dynamicUserId: dynamicUserId,
-        walletAddress: dynamicUser?.walletAddress,
-        socialProfiles:
-          dynamicUser?.socialAccounts?.map((account: any) => ({
-            platform: account.provider,
-            profileId: account.id,
-            username: account.username,
-            lastUpdated: new Date(),
-          })) || [],
-      });
-
-      await user.save();
-    } else {
-      // Update existing user with latest info if available
-      if (dynamicUser || email || name) {
-        user.email = email || dynamicUser?.email || user.email;
-        user.displayName =
-          name ||
-          dynamicUser?.displayName ||
-          dynamicUser?.username ||
-          user.displayName;
-        user.avatar = dynamicUser?.avatar || user.avatar;
-        user.primaryWalletAddress =
-          dynamicUser?.walletAddress || user.primaryWalletAddress;
-
-        // Update social profiles if available
-        if (dynamicUser?.socialAccounts?.length > 0) {
-          user.socialProfiles = dynamicUser.socialAccounts.map(
-            (account: any) => ({
-              platform: account.provider,
-              profileId: account.id,
-              username: account.username,
-              lastUpdated: new Date(),
-            })
-          );
-        }
-
-        await user.save();
-      }
-    }
-
-    // Generate our application session token
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-
-    const sessionToken = jwt.sign(
-      {
-        userId: user._id.toString(),
-        dynamicId: user.dynamicUserId,
-      },
-      jwtSecret,
-      { expiresIn: "7d" }
-    );
-
-    // Record the login
-    await mongoose.connection.db.collection("userSessions").insertOne({
-      userId: user._id,
-      token: sessionToken,
-      createdAt: new Date(),
-      lastActivity: new Date(),
-      dynamicToken: {
-        issued: new Date(),
-        expiresAt: new Date(
-          Date.now() + (decodedToken.exp - decodedToken.iat) * 1000
-        ),
-      },
-    });
-
-    return success({
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName,
-        avatar: user.avatar,
-        primaryWalletAddress: user.primaryWalletAddress,
-      },
-      token: sessionToken,
-    });
-  } catch (err) {
-    console.error("Authentication error:", err);
-    return error("Authentication failed", 500);
-  }
-};
-
-/**
- * Verify token validity
- * GET /api/auth/verify
- */
-export const verifyToken = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -233,29 +42,240 @@ export const verifyToken = async (
     await connectToDatabase();
 
     // Extract JWT from Authorization header
-    const token =
+    const dynamicToken =
       event.headers.Authorization?.split(" ")[1] ||
       event.headers.authorization?.split(" ")[1];
 
-    if (!token) {
+    if (!dynamicToken) {
       return error("Authorization required", 401);
     }
 
-    // Verify token
+    // Parse body for any additional user data
+    let userData: IUserData = {};
+    if (event.body) {
+      try {
+        userData = JSON.parse(event.body);
+      } catch (e) {
+        console.warn("Could not parse request body as JSON", e);
+      }
+    }
+
     try {
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
+      // Verify the Dynamic token
+      const decodedToken = await verifyDynamicToken(dynamicToken);
+
+      // Extract user info from token
+      const { sub: dynamicUserId, email, name } = decodedToken;
+
+      if (!dynamicUserId) {
+        return error("Invalid token: missing user ID", 401);
+      }
+
+      // Get user details from Dynamic (optional, if more details needed)
+      let dynamicUser: IDynamicUser | undefined;
+      try {
+        const dynamicApiUrl = process.env.DYNAMIC_API_URL;
+        const dynamicApiKey = process.env.DYNAMIC_API_KEY;
+
+        if (dynamicApiUrl && dynamicApiKey) {
+          const userResponse = await axios.get(
+            `${dynamicApiUrl}/users/${dynamicUserId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${dynamicApiKey}`,
+              },
+            }
+          );
+          dynamicUser = userResponse.data;
+        }
+      } catch (err) {
+        console.warn(
+          "Could not fetch additional user details from Dynamic:",
+          err
+        );
+        // Continue with just the token data
+      }
+
+      // Find or create user in our database
+      let user = await User.findOne({ dynamicUserId });
+
+      // Get wallet address from Dynamic or user data
+      const walletAddress =
+        dynamicUser?.walletAddress || userData?.walletAddress;
+
+      // Determine chain (defaulting to "ethereum" if not provided)
+      const chain = userData?.chain || dynamicUser?.chain || "ethereum";
+
+      if (!user) {
+        // Create new user
+        const username = (
+          dynamicUser?.username ||
+          userData?.username ||
+          `user_${Date.now()}`
+        ).toLowerCase();
+
+        // Check if username is taken
+        const usernameExists = await User.findOne({ username });
+        const finalUsername = usernameExists
+          ? `${username}_${Date.now().toString().substring(9)}`
+          : username;
+
+        // Ensure wallet address is available
+        if (!walletAddress) {
+          return error("Wallet address is required", 400);
+        }
+
+        user = new User({
+          email: email || dynamicUser?.email || userData?.email,
+          username: finalUsername,
+          displayName:
+            name ||
+            dynamicUser?.displayName ||
+            dynamicUser?.username ||
+            userData?.displayName,
+          avatar: dynamicUser?.avatar || userData?.avatar,
+          dynamicUserId: dynamicUserId,
+          primaryWalletAddress: walletAddress,
+          chain: chain,
+          socialProfiles:
+            dynamicUser?.socialAccounts?.map((account: any) => ({
+              platform: account.provider,
+              profileId: account.id,
+              username: account.username,
+              lastUpdated: new Date(),
+            })) || [],
+          preferences: {
+            defaultCurrency: userData?.preferences?.defaultCurrency || "USD",
+            defaultLanguage: userData?.preferences?.defaultLanguage || "en",
+            notificationsEnabled:
+              userData?.preferences?.notificationsEnabled !== undefined
+                ? userData.preferences.notificationsEnabled
+                : true,
+            twoFactorEnabled:
+              userData?.preferences?.twoFactorEnabled !== undefined
+                ? userData.preferences.twoFactorEnabled
+                : false,
+            preferredTimeZone:
+              userData?.preferences?.preferredTimeZone || "UTC",
+          },
+        });
+
+        await user.save();
+      } else {
+        // Update existing user with latest info if available
+        if (dynamicUser || email || name || Object.keys(userData).length > 0) {
+          user.email =
+            email || dynamicUser?.email || userData?.email || user.email;
+          user.displayName =
+            name ||
+            dynamicUser?.displayName ||
+            dynamicUser?.username ||
+            userData?.displayName ||
+            user.displayName;
+          user.avatar = dynamicUser?.avatar || userData?.avatar || user.avatar;
+
+          // Only update wallet address if provided and different
+          if (walletAddress && walletAddress !== user.primaryWalletAddress) {
+            user.primaryWalletAddress = walletAddress;
+          }
+
+          // Only update chain if provided
+          if (chain && chain !== user.chain) {
+            user.chain = chain;
+          }
+
+          // Update social profiles if available
+          if (dynamicUser?.socialAccounts?.length) {
+            user.socialProfiles = dynamicUser.socialAccounts.map(
+              (account: any) => ({
+                platform: account.provider,
+                profileId: account.id,
+                username: account.username,
+                followerCount: account.followerCount,
+                followingCount: account.followingCount,
+                postCount: account.postCount,
+                lastUpdated: new Date(),
+              })
+            );
+          }
+
+          // Update preferences if available
+          if (userData?.preferences) {
+            if (userData.preferences.defaultCurrency) {
+              user.preferences.defaultCurrency =
+                userData.preferences.defaultCurrency;
+            }
+            if (userData.preferences.defaultLanguage) {
+              user.preferences.defaultLanguage =
+                userData.preferences.defaultLanguage;
+            }
+            if (userData.preferences.notificationsEnabled !== undefined) {
+              user.preferences.notificationsEnabled =
+                userData.preferences.notificationsEnabled;
+            }
+            if (userData.preferences.twoFactorEnabled !== undefined) {
+              user.preferences.twoFactorEnabled =
+                userData.preferences.twoFactorEnabled;
+            }
+            if (userData.preferences.preferredTimeZone) {
+              user.preferences.preferredTimeZone =
+                userData.preferences.preferredTimeZone;
+            }
+          }
+
+          await user.save();
+        }
+      }
+
+      // Generate our application session token
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
         throw new Error("JWT_SECRET is not defined");
       }
 
-      const decoded = jwt.verify(token, secret);
-      return success({ valid: true, decoded });
+      const sessionToken = jwt.sign(
+        {
+          userId: user._id.toString(),
+          dynamicId: user.dynamicUserId,
+        },
+        jwtSecret,
+        { expiresIn: "7d" }
+      );
+
+      // Record the login
+      await mongoose.connection.db.collection("userSessions").insertOne({
+        userId: user._id,
+        token: sessionToken,
+        createdAt: new Date(),
+        lastActivity: new Date(),
+        dynamicToken: {
+          issued: new Date(),
+          expiresAt: new Date(
+            Date.now() + (decodedToken.exp - decodedToken.iat) * 1000
+          ),
+        },
+      });
+
+      return success({
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          displayName: user.displayName,
+          avatar: user.avatar,
+          primaryWalletAddress: user.primaryWalletAddress,
+          chain: user.chain,
+          preferences: user.preferences,
+        },
+        token: sessionToken,
+      });
     } catch (err) {
-      return success({ valid: false, message: "Invalid or expired token" });
+      console.error("Token verification error:", err);
+      return error("Invalid or expired token", 401);
     }
   } catch (err) {
-    console.error("Token verification error:", err);
-    return error("Token verification failed", 500);
+    console.error("Authentication error:", err);
+    return error("Authentication failed", 500);
   }
 };
 
@@ -304,6 +324,76 @@ async function verifyDynamicToken(token: string): Promise<any> {
     throw new Error("Token verification failed");
   }
 }
+
+/**
+ * Get Dynamic authentication configuration
+ * GET /api/auth/config
+ */
+export const getConfig = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Simple check for API availability
+    const environmentId = process.env.DYNAMIC_ENVIRONMENT_ID;
+    const redirectUrl = process.env.AUTH_REDIRECT_URL;
+
+    if (!environmentId) {
+      throw new Error("DYNAMIC_ENVIRONMENT_ID is not defined");
+    }
+
+    if (!redirectUrl) {
+      throw new Error("AUTH_REDIRECT_URL is not defined");
+    }
+
+    // Return Dynamic configuration data to the frontend
+    return success({
+      environmentId,
+      redirectUrl,
+      // Any other configuration the frontend might need
+    });
+  } catch (err) {
+    console.error("Login configuration error:", err);
+    return error("Failed to get login configuration", 500);
+  }
+};
+
+/**
+ * Verify token validity
+ * GET /api/auth/verify
+ */
+export const verifyToken = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Connect to database
+    await connectToDatabase();
+
+    // Extract JWT from Authorization header
+    const token =
+      event.headers.Authorization?.split(" ")[1] ||
+      event.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return error("Authorization required", 401);
+    }
+
+    // Verify token
+    try {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        throw new Error("JWT_SECRET is not defined");
+      }
+
+      const decoded = jwt.verify(token, secret);
+      return success({ valid: true, decoded });
+    } catch (err) {
+      return success({ valid: false, message: "Invalid or expired token" });
+    }
+  } catch (err) {
+    console.error("Token verification error:", err);
+    return error("Token verification failed", 500);
+  }
+};
 
 /**
  * Logout handler implementation

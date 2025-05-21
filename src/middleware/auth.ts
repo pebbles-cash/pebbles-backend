@@ -85,6 +85,8 @@ export const requireAuth = <T extends Handler>(
         email: user.email,
         displayName: user.displayName,
         primaryWalletAddress: user.primaryWalletAddress,
+        chain: user.chain,
+        preferences: user.preferences,
       };
 
       // Call the original handler
@@ -161,8 +163,9 @@ export const optionalAuth = <T extends Handler>(
             email: user.email,
             displayName: user.displayName,
             primaryWalletAddress: user.primaryWalletAddress,
+            chain: user.chain,
+            preferences: user.preferences,
           };
-
           // Update last activity timestamp
           await mongoose.connection.db
             .collection("userSessions")
