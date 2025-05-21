@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, Context } from "aws-lambda";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import {
-  callback,
+  login, // Updated from callback to login
   verifyToken,
   logout,
   logoutHandler,
@@ -62,7 +62,7 @@ describe("Auth Handlers", () => {
     process.env.DYNAMIC_ENVIRONMENT_ID = "test-env-id";
   });
 
-  describe("authenticate", () => {
+  describe("login", () => {
     const mockDynamicToken = "mock-dynamic-token";
     const mockDecodedToken = {
       sub: "dynamic-user-123",
@@ -70,9 +70,20 @@ describe("Auth Handlers", () => {
       name: "Test User",
     };
 
-    // Create mock event
+    // Create mock event with token in header instead of body
     const mockEvent = {
-      body: JSON.stringify({ dynamicToken: mockDynamicToken }),
+      headers: {
+        Authorization: `Bearer ${mockDynamicToken}`,
+      },
+      body: JSON.stringify({
+        preferences: {
+          defaultCurrency: "EUR",
+          defaultLanguage: "en",
+          notificationsEnabled: true,
+          twoFactorEnabled: false,
+          preferredTimeZone: "UTC",
+        },
+      }),
     } as unknown as APIGatewayProxyEvent;
 
     it("should authenticate a user with valid Dynamic token - existing user", async () => {
@@ -91,30 +102,44 @@ describe("Auth Handlers", () => {
       // Mock JWT sign for our app token
       (jwt.sign as jest.Mock).mockReturnValue("new-session-token");
 
-      // Mock user exists
+      // Mock user exists with updated schema
       const mockUser = {
         _id: "user-123",
         email: "test@example.com",
         username: "testuser",
         displayName: "Test User",
+        primaryWalletAddress: "0x1234567890",
+        chain: "ethereum",
+        preferences: {
+          defaultCurrency: "USD",
+          defaultLanguage: "en",
+          notificationsEnabled: true,
+          twoFactorEnabled: false,
+          preferredTimeZone: "UTC",
+        },
         save: jest.fn().mockResolvedValue(true),
       };
       (User.findOne as jest.Mock).mockResolvedValue(mockUser);
 
-      const response = await callback(mockEvent);
+      const response = await login(mockEvent);
 
       // Check response
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.body).success).toBe(true);
       expect(JSON.parse(response.body).data.token).toBe("new-session-token");
 
+      // Check user data returned includes the new fields
+      const userData = JSON.parse(response.body).data.user;
+      expect(userData.primaryWalletAddress).toBe("0x1234567890");
+      expect(userData.chain).toBe("ethereum");
+      expect(userData.preferences).toBeDefined();
+      expect(userData.preferences.defaultCurrency).toBe("USD");
+
       // Verify function calls
       expect(connectToDatabase).toHaveBeenCalled();
       expect(jwt.decode).toHaveBeenCalledWith(mockDynamicToken, {
         complete: true,
       });
-      // The mock is now in the closure of jest.mock, so we can't directly access it
-      // We can verify other aspects of the flow instead
       expect(jwt.verify).toHaveBeenCalledWith(
         mockDynamicToken,
         "mock-public-key"
@@ -155,6 +180,15 @@ describe("Auth Handlers", () => {
         username: "testuser",
         displayName: "Test User",
         dynamicUserId: "dynamic-user-123",
+        primaryWalletAddress: "0x1234567890",
+        chain: "ethereum",
+        preferences: {
+          defaultCurrency: "USD",
+          defaultLanguage: "en",
+          notificationsEnabled: true,
+          twoFactorEnabled: false,
+          preferredTimeZone: "UTC",
+        },
         save: jest.fn().mockResolvedValue(true),
       };
 
@@ -166,13 +200,17 @@ describe("Auth Handlers", () => {
       (User as any).findOne = originalUser.findOne;
       (User as any).findById = originalUser.findById;
 
-      const response = await callback(mockEvent);
+      const response = await login(mockEvent);
 
       // Check response
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.body).success).toBe(true);
       // Verify user data is returned
-      expect(JSON.parse(response.body).data.user).toBeDefined();
+      const userData = JSON.parse(response.body).data.user;
+      expect(userData).toBeDefined();
+      expect(userData.primaryWalletAddress).toBe("0x1234567890");
+      expect(userData.chain).toBe("ethereum");
+      expect(userData.preferences).toBeDefined();
 
       // Restore console.warn
       console.warn = originalWarn;
@@ -180,14 +218,15 @@ describe("Auth Handlers", () => {
 
     it("should return error with missing token", async () => {
       const invalidEvent = {
+        headers: {},
         body: JSON.stringify({}),
       } as unknown as APIGatewayProxyEvent;
 
-      const response = await callback(invalidEvent);
+      const response = await login(invalidEvent);
 
-      expect(response.statusCode).toBe(400);
+      expect(response.statusCode).toBe(401);
       expect(JSON.parse(response.body).success).toBe(false);
-      expect(JSON.parse(response.body).error).toBe("Dynamic token is required");
+      expect(JSON.parse(response.body).error).toBe("Authorization required");
     });
 
     it("should handle invalid token structure", async () => {
@@ -198,7 +237,7 @@ describe("Auth Handlers", () => {
       const originalError = console.error;
       console.error = jest.fn();
 
-      const response = await callback(mockEvent);
+      const response = await login(mockEvent);
 
       // Restore console.error
       console.error = originalError;
@@ -295,7 +334,7 @@ describe("Auth Handlers", () => {
         findOne: jest.fn().mockResolvedValue(null),
       });
 
-      // Create authenticated event
+      // Create authenticated event with updated user fields
       const authenticatedEvent = {
         headers: {
           Authorization: "Bearer valid-token",
@@ -304,6 +343,16 @@ describe("Auth Handlers", () => {
           id: "user-123",
           username: "testuser",
           email: "test@example.com",
+          displayName: "Test User",
+          primaryWalletAddress: "0x1234567890",
+          chain: "ethereum",
+          preferences: {
+            defaultCurrency: "USD",
+            defaultLanguage: "en",
+            notificationsEnabled: true,
+            twoFactorEnabled: false,
+            preferredTimeZone: "UTC",
+          },
         },
       };
 

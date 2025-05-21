@@ -272,10 +272,10 @@ export interface CreateUserRequestBody {
   primaryWallet: {
     address: string;
     chain: string;
-    id?: string; // Optional wallet ID from Dynamic
+    id?: string;
   };
-  phoneNumber?: string; // Optional field
-  newUser?: boolean; // Flag indicating if this is a new user
+  phoneNumber?: string;
+  newUser?: boolean;
 }
 
 export interface UpdateUserRequestBody {

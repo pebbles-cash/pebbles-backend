@@ -64,11 +64,11 @@ export const createUser = async (
       email,
       username,
       dynamicUserId,
-      primaryWalletAddress: primaryWallet.address, // Correct field name
-      chain: primaryWallet.chain.toLowerCase(), // Add required chain field
-      displayName: username, // Default display name to username
-      avatar: null, // Initialize with null
-      socialProfiles: [], // Initialize with empty array
+      primaryWalletAddress: primaryWallet.address,
+      chain: primaryWallet.chain.toLowerCase(),
+      displayName: username,
+      avatar: null,
+      socialProfiles: [],
       preferences: {
         defaultCurrency: "USD",
         defaultLanguage: "en",

@@ -4,6 +4,7 @@ import { requireAuth, optionalAuth } from "../../src/middleware/auth";
 import { connectToDatabase } from "../../src/services/mongoose";
 import { User } from "../../src/models";
 import { APIGatewayProxyEvent, Context } from "aws-lambda";
+import { IUserPreferences } from "../../src/types";
 
 // Mock dependencies
 jest.mock("../../src/services/mongoose");
@@ -32,13 +33,24 @@ describe("Auth Middleware", () => {
   // Test data
   const mockToken = "valid-jwt-token";
   const mockDecodedToken = { userId: "user-123", dynamicId: "dynamic-456" };
+
+  // Updated mock user to match new model
   const mockUser = {
     _id: "user-123",
     username: "testuser",
     email: "test@example.com",
     displayName: "Test User",
-    walletAddress: "0x123456789",
+    primaryWalletAddress: "0x123456789",
+    chain: "ethereum",
+    preferences: {
+      defaultCurrency: "USD",
+      defaultLanguage: "en",
+      notificationsEnabled: true,
+      twoFactorEnabled: false,
+      preferredTimeZone: "UTC",
+    } as IUserPreferences,
   };
+
   const mockContext = {} as Context;
 
   // Create mock events
@@ -91,7 +103,7 @@ describe("Auth Middleware", () => {
       expect(jwt.verify).toHaveBeenCalledWith(mockToken, "test-secret");
       expect(User.findById).toHaveBeenCalledWith("user-123");
 
-      // Verify user was added to event and handler was called
+      // Verify user was added to event and handler was called with updated user fields
       expect(mockHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           user: {
@@ -99,7 +111,15 @@ describe("Auth Middleware", () => {
             username: "testuser",
             email: "test@example.com",
             displayName: "Test User",
-            walletAddress: "0x123456789",
+            primaryWalletAddress: "0x123456789",
+            chain: "ethereum",
+            preferences: {
+              defaultCurrency: "USD",
+              defaultLanguage: "en",
+              notificationsEnabled: true,
+              twoFactorEnabled: false,
+              preferredTimeZone: "UTC",
+            },
           },
         }),
         mockContext
@@ -212,7 +232,7 @@ describe("Auth Middleware", () => {
       expect(jwt.verify).toHaveBeenCalledWith(mockToken, "test-secret");
       expect(User.findById).toHaveBeenCalledWith("user-123");
 
-      // Verify user was added to event and handler was called
+      // Verify user was added to event and handler was called with updated user fields
       expect(mockHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           user: {
@@ -220,7 +240,15 @@ describe("Auth Middleware", () => {
             username: "testuser",
             email: "test@example.com",
             displayName: "Test User",
-            walletAddress: "0x123456789",
+            primaryWalletAddress: "0x123456789",
+            chain: "ethereum",
+            preferences: {
+              defaultCurrency: "USD",
+              defaultLanguage: "en",
+              notificationsEnabled: true,
+              twoFactorEnabled: false,
+              preferredTimeZone: "UTC",
+            },
           },
         }),
         mockContext
