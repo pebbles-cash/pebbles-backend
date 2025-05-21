@@ -27,29 +27,24 @@ export const createUser = async (
     } = body;
 
     // Validate required fields
-    if (
-      !dynamicUserId ||
-      !email ||
-      !username ||
-      !verifiedCredentials ||
-      !primaryWallet
-    ) {
+    if (!dynamicUserId || !email || !verifiedCredentials || !primaryWallet) {
       return error("Missing required fields", 400);
     }
 
     // Validate username
-    if (username.length < 3 || username.length > 15) {
+    if (username !== null && (username.length < 3 || username.length > 15)) {
       return error("Username must be between 3-15 characters", 400);
     }
 
     // Check for existing user
+    const queryConditions = [
+      { email },
+      { dynamicUserId },
+      { primaryWalletAddress: primaryWallet.address },
+    ];
+
     const existingUser = await User.findOne({
-      $or: [
-        { email },
-        { username },
-        { dynamicUserId },
-        { primaryWalletAddress: primaryWallet.address },
-      ],
+      $or: queryConditions,
     });
 
     if (existingUser) {
@@ -62,7 +57,7 @@ export const createUser = async (
     // Create new user with all required fields from schema
     const user = new User({
       email,
-      username,
+      username: username || null,
       dynamicUserId,
       primaryWalletAddress: primaryWallet.address,
       chain: primaryWallet.chain.toLowerCase(),

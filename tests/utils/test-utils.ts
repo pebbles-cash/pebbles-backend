@@ -83,7 +83,7 @@ export const createMockAuthenticatedEvent = (
     username,
     email,
     displayName: "Test User",
-    walletAddress: "0xtest1234567890",
+    primaryWalletAddress: "0xtest1234567890",
   };
 
   return mockEvent;

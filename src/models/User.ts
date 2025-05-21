@@ -44,10 +44,11 @@ const userSchema = new Schema<IUser>(
     username: {
       type: String,
       unique: true,
-      required: true,
+      required: false,
       trim: true,
       minlength: 3,
       maxlength: 15,
+      sparse: true,
     },
     displayName: String,
     avatar: String,
