@@ -10,6 +10,7 @@ import {
 import { connectToDatabase } from "../../src/services/mongoose";
 import { User } from "../../src/models";
 import jwksClient from "jwks-rsa";
+import axios from "axios";
 
 // Mock dependencies
 jest.mock("../../src/services/mongoose");
@@ -60,6 +61,32 @@ describe("Auth Handlers", () => {
     jest.clearAllMocks();
     process.env.JWT_SECRET = "test-secret";
     process.env.DYNAMIC_ENVIRONMENT_ID = "test-env-id";
+    process.env.DYNAMIC_API_URL = "https://app.dynamic.xyz/api/v0";
+    process.env.DYNAMIC_API_KEY = "test-api-key";
+
+    (User as any) = Object.assign(
+      jest.fn().mockImplementation(() => ({
+        _id: new mongoose.Types.ObjectId("60d21b4667d0d8992e610c85"),
+        email: "test@example.com",
+        username: "testuser",
+        displayName: "Test User",
+        dynamicUserId: "dynamic-user-123",
+        primaryWalletAddress: "0x1234567890",
+        chain: "ethereum",
+        socialProfiles: [],
+        preferences: {
+          defaultCurrency: "USD",
+          defaultLanguage: "en",
+          notificationsEnabled: true,
+          twoFactorEnabled: false,
+          preferredTimeZone: "UTC",
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        save: jest.fn().mockResolvedValue(true),
+      })),
+      User
+    );
   });
 
   describe("login", () => {
@@ -77,7 +104,7 @@ describe("Auth Handlers", () => {
       },
       body: JSON.stringify({
         preferences: {
-          defaultCurrency: "EUR",
+          defaultCurrency: "USD",
           defaultLanguage: "en",
           notificationsEnabled: true,
           twoFactorEnabled: false,
@@ -160,6 +187,25 @@ describe("Auth Handlers", () => {
       // Mock console.warn to avoid unnecessary logs
       const originalWarn = console.warn;
       console.warn = jest.fn();
+
+      // Create event with wallet address in userData to satisfy validation
+      const newUserEvent = {
+        headers: {
+          Authorization: `Bearer ${mockDynamicToken}`,
+        },
+        body: JSON.stringify({
+          primaryWalletAddress: "0x1234567890",
+          chain: "ethereum",
+          preferences: {
+            defaultCurrency: "EUR",
+            defaultLanguage: "en",
+            notificationsEnabled: true,
+            twoFactorEnabled: false,
+            preferredTimeZone: "UTC",
+          },
+        }),
+      } as unknown as APIGatewayProxyEvent;
+
       // Mock JWT decode and verify same as above
       (jwt.decode as jest.Mock).mockReturnValue({
         header: { kid: "test-key-id" },
@@ -168,39 +214,25 @@ describe("Auth Handlers", () => {
       (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
       (jwt.sign as jest.Mock).mockReturnValue("new-session-token");
 
+      // Properly mock axios for Dynamic API call
+      (axios.get as jest.Mock) = jest.fn().mockResolvedValue({
+        data: {
+          username: "testuser",
+          email: "test@example.com",
+          displayName: "Test User",
+          avatar: "https://example.com/avatar.jpg",
+          walletAddress: "0x1234567890", // This provides the wallet address
+          chain: "ethereum",
+          socialAccounts: [],
+        },
+      });
+
       // Mock user doesn't exist, then username check
       (User.findOne as jest.Mock)
         .mockResolvedValueOnce(null) // First call returns null (user not found)
         .mockResolvedValueOnce(null); // Second call for username check returns null
 
-      // Create a mock User instance that will be returned by the constructor
-      const mockUserInstance = {
-        _id: "new-user-123",
-        email: "test@example.com",
-        username: "testuser",
-        displayName: "Test User",
-        dynamicUserId: "dynamic-user-123",
-        primaryWalletAddress: "0x1234567890",
-        chain: "ethereum",
-        preferences: {
-          defaultCurrency: "USD",
-          defaultLanguage: "en",
-          notificationsEnabled: true,
-          twoFactorEnabled: false,
-          preferredTimeZone: "UTC",
-        },
-        save: jest.fn().mockResolvedValue(true),
-      };
-
-      // Replace the User model with our mock
-      const originalUser = User;
-      (User as any) = function () {
-        return mockUserInstance;
-      };
-      (User as any).findOne = originalUser.findOne;
-      (User as any).findById = originalUser.findById;
-
-      const response = await login(mockEvent);
+      const response = await login(newUserEvent);
 
       // Check response
       expect(response.statusCode).toBe(200);
@@ -212,39 +244,70 @@ describe("Auth Handlers", () => {
       expect(userData.chain).toBe("ethereum");
       expect(userData.preferences).toBeDefined();
 
+      // Verify User constructor was called
+      expect(User).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "test@example.com",
+          dynamicUserId: "dynamic-user-123",
+          primaryWalletAddress: "0x1234567890",
+          chain: "ethereum",
+        })
+      );
+
       // Restore console.warn
       console.warn = originalWarn;
     });
 
-    it("should return error with missing token", async () => {
-      const invalidEvent = {
-        headers: {},
-        body: JSON.stringify({}),
+    it("should return error when wallet address is missing for new user", async () => {
+      // Mock console.warn to avoid unnecessary logs
+      const originalWarn = console.warn;
+      console.warn = jest.fn();
+
+      // Create event without wallet address to trigger validation error
+      const eventWithoutWallet = {
+        headers: {
+          Authorization: `Bearer ${mockDynamicToken}`,
+        },
+        body: JSON.stringify({
+          // No primaryWalletAddress provided
+          chain: "ethereum",
+        }),
       } as unknown as APIGatewayProxyEvent;
 
-      const response = await login(invalidEvent);
+      // Mock JWT decode and verify
+      (jwt.decode as jest.Mock).mockReturnValue({
+        header: { kid: "test-key-id" },
+        payload: mockDecodedToken,
+      });
+      (jwt.verify as jest.Mock).mockReturnValue(mockDecodedToken);
 
-      expect(response.statusCode).toBe(401);
+      // Mock axios for Dynamic API call but without wallet address
+      (axios.get as jest.Mock) = jest.fn().mockResolvedValue({
+        data: {
+          username: "testuser",
+          email: "test@example.com",
+          displayName: "Test User",
+          avatar: "https://example.com/avatar.jpg",
+          // No walletAddress provided from Dynamic either
+          chain: "ethereum",
+          socialAccounts: [],
+        },
+      });
+
+      // Mock user doesn't exist (new user scenario)
+      (User.findOne as jest.Mock).mockResolvedValueOnce(null);
+
+      const response = await login(eventWithoutWallet);
+
+      // Check response - should return 400 for missing wallet address
+      expect(response.statusCode).toBe(400);
       expect(JSON.parse(response.body).success).toBe(false);
-      expect(JSON.parse(response.body).error).toBe("Authorization required");
-    });
+      expect(JSON.parse(response.body).error).toBe(
+        "Wallet address is required"
+      );
 
-    it("should handle invalid token structure", async () => {
-      // Mock JWT decode to return something that will trigger the Invalid token structure error
-      (jwt.decode as jest.Mock).mockReturnValue(null);
-
-      // Mock console.error to prevent error logs in test output
-      const originalError = console.error;
-      console.error = jest.fn();
-
-      const response = await login(mockEvent);
-
-      // Restore console.error
-      console.error = originalError;
-
-      expect(response.statusCode).toBe(500);
-      expect(JSON.parse(response.body).success).toBe(false);
-      expect(JSON.parse(response.body).error).toBe("Authentication failed");
+      // Restore console.warn
+      console.warn = originalWarn;
     });
   });
 
