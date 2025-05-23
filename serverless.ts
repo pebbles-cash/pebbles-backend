@@ -14,7 +14,6 @@ const serverlessConfiguration: AWS = {
         "require.resolve": undefined,
       },
       platform: "node",
-      // concurrency: 10,
     },
   },
   provider: {
@@ -32,8 +31,11 @@ const serverlessConfiguration: AWS = {
       JWT_SECRET: "${env:JWT_SECRET, ''}",
       DYNAMIC_API_KEY: "${env:DYNAMIC_API_KEY, ''}",
       DYNAMIC_API_URL: "${env:DYNAMIC_API_URL, ''}",
+      DYNAMIC_ENVIRONMENT_ID: "${env:DYNAMIC_ENVIRONMENT_ID, ''}", // Added missing env var
       AUTH_REDIRECT_URL: "${env:AUTH_REDIRECT_URL, ''}",
       PAYMENT_BASE_URL: "${env:PAYMENT_BASE_URL, ''}",
+      MONGODB_URI: "${env:MONGODB_URI, ''}", // Added missing env var
+      MONGODB_DATABASE: "${env:MONGODB_DATABASE, ''}", // Added missing env var
       LLM_PROVIDER: "${env:LLM_PROVIDER, 'openai'}",
       OPENAI_API_KEY: "${env:OPENAI_API_KEY, ''}",
       OPENAI_MODEL: "${env:OPENAI_MODEL, 'gpt-4'}",
@@ -80,18 +82,47 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    authCallback: {
-      handler: "src/handlers/auth.callback",
+    // ADDED: Get authentication configuration
+    authGetConfig: {
+      handler: "src/handlers/auth.getConfig",
       events: [
         {
           http: {
-            path: "/api/auth/callback",
+            path: "/api/auth/config",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    // ADDED: Verify token endpoint
+    authVerifyToken: {
+      handler: "src/handlers/auth.verifyToken",
+      events: [
+        {
+          http: {
+            path: "/api/auth/verify",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    // ADDED: Logout endpoint
+    authLogout: {
+      handler: "src/handlers/auth.logout",
+      events: [
+        {
+          http: {
+            path: "/api/auth/logout",
             method: "post",
             cors: true,
           },
         },
       ],
     },
+    // REMOVED: authCallback (handler doesn't exist)
+
     // User Management Handlers
     createUser: {
       handler: "src/handlers/users.createUser",
