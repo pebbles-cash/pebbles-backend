@@ -113,7 +113,7 @@ payment-platform-api/
 ### User Management
 
 - `GET /api/users/me` - Get current user profile
-- `PUT /api/users/me` - Update user profile
+- `PUT /api/users/update` - Update user profile
 - `GET /api/users/:username` - Get user profile by username
 - `POST /api/users/social-stats` - Update user social media statistics
 

@@ -121,15 +121,13 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    // REMOVED: authCallback (handler doesn't exist)
-
     // User Management Handlers
     createUser: {
       handler: "src/handlers/users.createUser",
       events: [
         {
           http: {
-            path: "/api/users",
+            path: "/api/users/new",
             method: "post",
             cors: true,
           },
@@ -153,7 +151,7 @@ const serverlessConfiguration: AWS = {
       events: [
         {
           http: {
-            path: "/api/users/me",
+            path: "/api/users/update",
             method: "put",
             cors: true,
           },

@@ -55,6 +55,9 @@ export const connectToDatabase = async (): Promise<
       // Keep the connection alive between invocations
       keepAlive: true,
       keepAliveInitialDelay: 300000,
+      ssl: true,
+      sslValidate: true,
+      authSource: "admin",
     };
 
     // Non-production settings

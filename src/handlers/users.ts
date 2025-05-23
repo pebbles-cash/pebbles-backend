@@ -10,6 +10,10 @@ import {
   SocialStatsRequestBody,
 } from "../types";
 
+/**
+ * Create new user profile
+ * GET /api/users/new
+ */
 export const createUser = async (
   event: AuthenticatedAPIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -225,7 +229,7 @@ export const updateSocialStats = requireAuth(
 
 /**
  * Get current user profile
- * GET /api/users/me
+ * GET /api/users/update
  */
 export const getCurrentUser = requireAuth(
   async (
