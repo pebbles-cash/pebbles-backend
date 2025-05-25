@@ -83,6 +83,27 @@ A serverless API for a payment platform built for freelancers, content creators,
    npm run deploy:prod
    ```
 
+### Monitoring 
+```
+# View logs for a specific function
+serverless logs -f authLogin --stage dev
+
+# Follow logs in real-time (tail)
+serverless logs -f authLogin --stage dev --tail
+
+# View logs with timestamp
+serverless logs -f authLogin --stage dev --startTime 2024-01-01
+
+# View logs for the last hour
+serverless logs -f authLogin --stage dev --startTime 1h
+
+# View logs for multiple functions
+serverless logs -f createUser --stage dev
+serverless logs -f processPayment --stage dev
+
+```
+
+
 ## Project Structure
 
 ```

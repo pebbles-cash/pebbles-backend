@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 import axios from "axios";
 import mongoose from "mongoose";
@@ -24,9 +24,9 @@ function getJwksClient() {
   return jwksClient({
     jwksUri,
     cache: true,
+    cacheMaxEntries: 5,
     cacheMaxAge: 86400000, // 1 day
     rateLimit: true,
-    jwksRequestsPerMinute: 10,
   });
 }
 
@@ -71,40 +71,18 @@ export const login = async (
         return error("Invalid token: missing user ID", 401);
       }
 
-      // Get user details from Dynamic (optional, if more details needed)
       let dynamicUser: IDynamicUser | undefined;
-      try {
-        const dynamicApiUrl = process.env.DYNAMIC_API_URL;
-        const dynamicApiKey = process.env.DYNAMIC_API_KEY;
-
-        if (dynamicApiUrl && dynamicApiKey) {
-          const userResponse = await axios.get(
-            `${dynamicApiUrl}/users/${dynamicUserId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${dynamicApiKey}`,
-              },
-            }
-          );
-          dynamicUser = userResponse.data;
-        }
-      } catch (err) {
-        console.warn(
-          "Could not fetch additional user details from Dynamic:",
-          err
-        );
-        // Continue with just the token data
-      }
 
       // Find or create user in our database
       let user = await User.findOne({ dynamicUserId });
 
       // Get wallet address from Dynamic or user data
       const walletAddress =
-        dynamicUser?.walletAddress || userData?.walletAddress;
+        dynamicUser?.walletAddress || userData?.primaryWallet.address;
 
       // Determine chain (defaulting to "ethereum" if not provided)
-      const chain = userData?.chain || dynamicUser?.chain || "ethereum";
+      const chain =
+        userData?.primaryWallet.chain || dynamicUser?.chain || "ethereum";
 
       if (!user) {
         // Create new user
@@ -173,55 +151,6 @@ export const login = async (
             userData?.displayName ||
             user.displayName;
           user.avatar = dynamicUser?.avatar || userData?.avatar || user.avatar;
-
-          // Only update wallet address if provided and different
-          if (walletAddress && walletAddress !== user.primaryWalletAddress) {
-            user.primaryWalletAddress = walletAddress;
-          }
-
-          // Only update chain if provided
-          if (chain && chain !== user.chain) {
-            user.chain = chain;
-          }
-
-          // Update social profiles if available
-          if (dynamicUser?.socialAccounts?.length) {
-            user.socialProfiles = dynamicUser.socialAccounts.map(
-              (account: any) => ({
-                platform: account.provider,
-                profileId: account.id,
-                username: account.username,
-                followerCount: account.followerCount,
-                followingCount: account.followingCount,
-                postCount: account.postCount,
-                lastUpdated: new Date(),
-              })
-            );
-          }
-
-          // Update preferences if available
-          if (userData?.preferences) {
-            if (userData.preferences.defaultCurrency) {
-              user.preferences.defaultCurrency =
-                userData.preferences.defaultCurrency;
-            }
-            if (userData.preferences.defaultLanguage) {
-              user.preferences.defaultLanguage =
-                userData.preferences.defaultLanguage;
-            }
-            if (userData.preferences.notificationsEnabled !== undefined) {
-              user.preferences.notificationsEnabled =
-                userData.preferences.notificationsEnabled;
-            }
-            if (userData.preferences.twoFactorEnabled !== undefined) {
-              user.preferences.twoFactorEnabled =
-                userData.preferences.twoFactorEnabled;
-            }
-            if (userData.preferences.preferredTimeZone) {
-              user.preferences.preferredTimeZone =
-                userData.preferences.preferredTimeZone;
-            }
-          }
 
           await user.save();
         }
@@ -306,14 +235,17 @@ async function verifyDynamicToken(token: string): Promise<any> {
         throw new Error("Unable to get signing key from JWKS");
       }
 
-      const signingKey = key.getPublicKey();
+      const publicKey = key.getPublicKey();
 
-      if (!signingKey) {
+      if (!publicKey) {
         throw new Error("Unable to get public key");
       }
 
       // Verify the token
-      const verifiedToken = jwt.verify(token, signingKey);
+      const verifiedToken: JwtPayload = jwt.verify(token, publicKey, {
+        ignoreExpiration: false,
+      }) as JwtPayload;
+      console.log("verified token:", verifiedToken);
       return verifiedToken;
     } catch (jwksErr) {
       console.error("JWKS key retrieval error:", jwksErr);

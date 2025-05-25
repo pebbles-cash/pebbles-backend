@@ -284,8 +284,6 @@ export const updateCurrentUser = requireAuth(
     event: AuthenticatedAPIGatewayProxyEvent
   ): Promise<APIGatewayProxyResult> => {
     try {
-      // Database connection is handled in requireAuth middleware
-
       // User is provided by the auth middleware
       const userId = event.user?.id;
 
