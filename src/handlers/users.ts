@@ -36,8 +36,8 @@ export const createUser = async (
     }
 
     // Validate username
-    if (username !== null && (username.length < 3 || username.length > 15)) {
-      return error("Username must be between 3-15 characters", 400);
+    if (username !== null && (username.length < 3 || username.length > 50)) {
+      return error("Username must be between 3-50 characters", 400);
     }
 
     // Check for existing user
@@ -305,8 +305,8 @@ export const updateCurrentUser = requireAuth(
       } = body;
 
       // Basic validation
-      if (username && (username.length < 3 || username.length > 15)) {
-        return error("Username must be between 3 and 15 characters", 400);
+      if (username && (username.length < 3 || username.length > 50)) {
+        return error("Username must be between 3 and 50 characters", 400);
       }
 
       // Check if username is taken (if changing)

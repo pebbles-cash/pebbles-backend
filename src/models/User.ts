@@ -47,7 +47,7 @@ const userSchema = new Schema<IUser>(
       required: false,
       trim: true,
       minlength: 3,
-      maxlength: 15,
+      maxlength: 50,
       sparse: true,
     },
     displayName: String,

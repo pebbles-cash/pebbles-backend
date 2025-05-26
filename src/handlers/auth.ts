@@ -55,6 +55,7 @@ export const login = async (
     if (event.body) {
       try {
         userData = JSON.parse(event.body);
+        console.log("Parsed user data:", userData.username);
       } catch (e) {
         console.warn("Could not parse request body as JSON", e);
       }
