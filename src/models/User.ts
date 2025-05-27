@@ -25,6 +25,28 @@ const userPreferencesSchema = new Schema<IUserPreferences>(
   { _id: false }
 );
 
+const fcmTokenSchema = new Schema(
+  {
+    token: { type: String, required: true },
+    device: { type: String, default: "web" },
+    lastUsed: { type: Date, default: Date.now },
+    active: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+const notificationPreferencesSchema = new Schema(
+  {
+    payments: { type: Boolean, default: true },
+    tips: { type: Boolean, default: true },
+    subscriptions: { type: Boolean, default: true },
+    security: { type: Boolean, default: true },
+    marketing: { type: Boolean, default: false },
+    pushEnabled: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema<IUser>(
   {
     email: {
@@ -55,6 +77,11 @@ const userSchema = new Schema<IUser>(
     socialProfiles: [socialProfileSchema],
     preferences: {
       type: userPreferencesSchema,
+      default: () => ({}),
+    },
+    fcmTokens: [fcmTokenSchema],
+    notificationPreferences: {
+      type: notificationPreferencesSchema,
       default: () => ({}),
     },
   },

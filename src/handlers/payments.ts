@@ -10,6 +10,10 @@ import {
   PaymentRequestBody,
   ProcessPaymentRequestBody,
 } from "../types";
+import {
+  sendPaymentReceivedNotification,
+  sendTipReceivedNotification,
+} from "../services/notification-service";
 
 /**
  * Generate regular payment QR code
@@ -315,7 +319,7 @@ export const processPayment = optionalAuth(
           sender = await User.findById(event.user.id);
         }
 
-        // TODO: Implement blockchain transaction listener or payment processing here
+        // TODO: Implement blockchain transaction listener
 
         // For this example, we'll just create a transaction record
         const transaction = new Transaction({
@@ -343,6 +347,21 @@ export const processPayment = optionalAuth(
         order.status = "completed";
         order.transactionId = transaction._id;
         await order.save();
+
+        // Send notification to recipient
+        try {
+          await sendPaymentReceivedNotification(
+            recipient._id.toString(),
+            order.amount.value.toString(),
+            sender?.displayName || sender?.username || "Anonymous"
+          );
+        } catch (notificationError) {
+          console.error(
+            "Failed to send payment notification:",
+            notificationError
+          );
+          // Don't fail the payment if notification fails
+        }
 
         return success({
           transactionId: transaction._id,
@@ -398,6 +417,28 @@ export const processPayment = optionalAuth(
         });
 
         await transaction.save();
+
+        try {
+          if (transaction.type === "tip") {
+            await sendTipReceivedNotification(
+              recipient._id.toString(),
+              amount.toString(),
+              sender?.displayName || sender?.username
+            );
+          } else {
+            await sendPaymentReceivedNotification(
+              recipient._id.toString(),
+              amount.toString(),
+              sender?.displayName || sender?.username || "Anonymous"
+            );
+          }
+        } catch (notificationError) {
+          console.error(
+            "Failed to send payment notification:",
+            notificationError
+          );
+          // Don't fail the payment if notification fails
+        }
 
         return success({
           transactionId: transaction._id,

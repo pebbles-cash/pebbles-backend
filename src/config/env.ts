@@ -42,6 +42,15 @@ export const DYNAMIC_API_URL = getEnv("DYNAMIC_API_URL");
 export const DYNAMIC_API_KEY = getEnv("DYNAMIC_API_KEY");
 export const DYNAMIC_ENVIRONMENT_ID = getEnv("DYNAMIC_ENVIRONMENT_ID");
 
+// Firebase configuration
+export const FIREBASE_PROJECT_ID = getEnv("FIREBASE_PROJECT_ID");
+export const FIREBASE_PRIVATE_KEY = getEnv("FIREBASE_PRIVATE_KEY", false);
+export const FIREBASE_CLIENT_EMAIL = getEnv("FIREBASE_CLIENT_EMAIL", false);
+export const FIREBASE_SERVICE_ACCOUNT_JSON = getEnv(
+  "FIREBASE_SERVICE_ACCOUNT_JSON",
+  false
+);
+
 // Log configuration (without sensitive values)
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);

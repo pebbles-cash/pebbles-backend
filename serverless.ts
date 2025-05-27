@@ -36,11 +36,10 @@ const serverlessConfiguration: AWS = {
       PAYMENT_BASE_URL: "${env:PAYMENT_BASE_URL, ''}",
       MONGODB_URI: "${env:MONGODB_URI, ''}", // Added missing env var
       MONGODB_DATABASE: "${env:MONGODB_DATABASE, ''}", // Added missing env var
-      LLM_PROVIDER: "${env:LLM_PROVIDER, 'openai'}",
-      OPENAI_API_KEY: "${env:OPENAI_API_KEY, ''}",
-      OPENAI_MODEL: "${env:OPENAI_MODEL, 'gpt-4'}",
-      ANTHROPIC_API_KEY: "${env:ANTHROPIC_API_KEY, ''}",
-      ANTHROPIC_MODEL: "${env:ANTHROPIC_MODEL, 'claude-3-opus-20240229'}",
+      FIREBASE_PROJECT_ID: "${env:FIREBASE_PROJECT_ID, ''}",
+      FIREBASE_PRIVATE_KEY: "${env:FIREBASE_PRIVATE_KEY, ''}",
+      FIREBASE_CLIENT_EMAIL: "${env:FIREBASE_CLIENT_EMAIL, ''}",
+      FIREBASE_SERVICE_ACCOUNT_JSON: "${env:FIREBASE_SERVICE_ACCOUNT_JSON, ''}",
     },
     iam: {
       role: {
@@ -410,6 +409,68 @@ const serverlessConfiguration: AWS = {
         {
           http: {
             path: "/api/health/db",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+
+    // Notifications Handlers
+    subscribeToNotifications: {
+      handler: "src/handlers/notifications.subscribe",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/register-token",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    unsubscribeToNotifications: {
+      handler: "src/handlers/notifications.unsubscribe",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/unregister-token",
+            method: "delete",
+            cors: true,
+          },
+        },
+      ],
+    },
+    updateNotificationPreferences: {
+      handler: "src/handlers/notifications.updatePreferences",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/preferences",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getNotificationPreferences: {
+      handler: "src/handlers/notifications.getPreferences",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/preferences",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getNotificationHistory: {
+      handler: "src/handlers/notifications.getHistory",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/history",
             method: "get",
             cors: true,
           },

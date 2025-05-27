@@ -20,6 +20,36 @@ export interface IUserPreferences {
   preferredTimeZone: string;
 }
 
+export interface IFCMToken {
+  token: string;
+  device: string;
+  lastUsed: Date;
+  active: boolean;
+}
+
+export interface INotificationPreferences {
+  payments: boolean;
+  tips: boolean;
+  subscriptions: boolean;
+  security: boolean;
+  marketing: boolean;
+  pushEnabled: boolean;
+}
+
+export interface RegisterFCMTokenRequestBody {
+  token: string;
+  device?: string;
+}
+
+export interface UpdateNotificationPreferencesRequestBody {
+  payments?: boolean;
+  tips?: boolean;
+  subscriptions?: boolean;
+  security?: boolean;
+  marketing?: boolean;
+  pushEnabled?: boolean;
+}
+
 export interface IUser extends Document {
   email: string;
   primaryWalletAddress: string;
@@ -30,6 +60,8 @@ export interface IUser extends Document {
   dynamicUserId?: string;
   socialProfiles: ISocialProfile[];
   preferences: IUserPreferences;
+  fcmTokens: IFCMToken[];
+  notificationPreferences: INotificationPreferences;
   createdAt: Date;
   updatedAt: Date;
 }

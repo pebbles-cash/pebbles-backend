@@ -14,6 +14,10 @@ import {
   SubscribeRequestBody,
   ManageSubscriptionRequestBody,
 } from "../types";
+import {
+  sendNewSubscriberNotification,
+  sendSubscriptionRenewalNotification,
+} from "../services/notification-service";
 
 /**
  * Create a new subscription plan
@@ -514,7 +518,7 @@ export const subscribeToPlan = requireAuth(
         fromUserId: userId,
         toUserId: subscription.creatorId,
         fromAddress: walletAddress || "subscriber-wallet-address",
-        toAddress: creator.walletAddress || "creator-wallet-address",
+        toAddress: creator.primaryWalletAddress || "creator-wallet-address",
         amount: subscription.price.value.toString(),
         tokenAddress: "0x0", // Native token
         sourceChain: "ethereum", // Default for example
@@ -544,6 +548,24 @@ export const subscribeToPlan = requireAuth(
       });
 
       await subscriptionInstance.save();
+
+      // Send notification to creator about new subscriber
+      try {
+        const subscriber = await User.findById(userId);
+        if (subscriber) {
+          await sendNewSubscriberNotification(
+            subscription.creatorId.toString(),
+            subscription.name,
+            subscriber.displayName || subscriber.username || "Anonymous"
+          );
+        }
+      } catch (notificationError) {
+        console.error(
+          "Failed to send new subscriber notification:",
+          notificationError
+        );
+        // Don't fail the subscription if notification fails
+      }
 
       return success({
         id: subscriptionInstance._id,
@@ -617,6 +639,8 @@ export const manageSubscriptionInstance = requireAuth(
         return error("Unauthorized to manage this subscription", 403);
       }
 
+      const subscription = await Subscription.findById(instance.subscriptionId);
+
       // Apply the requested action
       switch (action) {
         case "cancel":
@@ -648,6 +672,21 @@ export const manageSubscriptionInstance = requireAuth(
           }
           instance.autoRenew = true;
           await instance.save();
+
+          if (subscription) {
+            try {
+              await sendSubscriptionRenewalNotification(
+                userId,
+                subscription.name,
+                subscription.price.value.toString()
+              );
+            } catch (notificationError) {
+              console.error(
+                "Failed to send renewal notification:",
+                notificationError
+              );
+            }
+          }
           return success({
             id: instance._id,
             status: instance.status,
