@@ -24,7 +24,7 @@ const serverlessConfiguration: AWS = {
     memorySize: 256,
     timeout: 29,
     deploymentBucket: {
-      name: "pebbles-dev-deploy",
+      name: "pebbles-org-dev-deploy",
       serverSideEncryption: "AES256",
     },
     environment: {
