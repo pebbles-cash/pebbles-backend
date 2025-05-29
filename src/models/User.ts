@@ -37,12 +37,12 @@ const fcmTokenSchema = new Schema(
 
 const notificationPreferencesSchema = new Schema(
   {
-    payments: { type: Boolean, default: true },
-    tips: { type: Boolean, default: true },
-    subscriptions: { type: Boolean, default: true },
-    security: { type: Boolean, default: true },
+    payments: { type: Boolean, default: false },
+    tips: { type: Boolean, default: false },
+    subscriptions: { type: Boolean, default: false },
+    security: { type: Boolean, default: false },
     marketing: { type: Boolean, default: false },
-    pushEnabled: { type: Boolean, default: true },
+    pushEnabled: { type: Boolean, default: false },
   },
   { _id: false }
 );
