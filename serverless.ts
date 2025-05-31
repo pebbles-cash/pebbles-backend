@@ -24,7 +24,8 @@ const serverlessConfiguration: AWS = {
     memorySize: 256,
     timeout: 29,
     deploymentBucket: {
-      name: "pebbles-org-dev-deploy",
+      // Dynamic bucket name based on stage
+      name: "pebbles-org-${self:provider.stage}-deploy",
       serverSideEncryption: "AES256",
     },
     environment: {
@@ -40,6 +41,8 @@ const serverlessConfiguration: AWS = {
       FIREBASE_PRIVATE_KEY: "${env:FIREBASE_PRIVATE_KEY, ''}",
       FIREBASE_CLIENT_EMAIL: "${env:FIREBASE_CLIENT_EMAIL, ''}",
       FIREBASE_SERVICE_ACCOUNT_JSON: "${env:FIREBASE_SERVICE_ACCOUNT_JSON, ''}",
+      CORS_ORIGIN: "${self:custom.corsOrigin.${self:provider.stage}, '*'}",
+      API_DOMAIN: "${self:custom.domain.${self:provider.stage}}",
     },
     iam: {
       role: {
@@ -554,18 +557,32 @@ const serverlessConfiguration: AWS = {
       dotenv: true,
     },
     customDomain: {
-      enabled: false,
-      domainName: "api-${self:provider.stage}.payment-platform.com",
+      enabled: true,
+      domainName: "${self:custom.domain.${self:provider.stage}}",
       basePath: "",
       stage: "${self:provider.stage}",
-      createRoute53Record: true,
+      createRoute53Record: false,
       certificateName: "*.payment-platform.com",
-      endpointType: "edge",
+      endpointType: "regional",
       securityPolicy: "tls_1_2",
       apiType: "rest",
-      autoDomain: true,
+      autoDomain: false,
+      certificateArn: "${env:CERTIFICATE_ARN}",
+      hostedZoneId: false, // Disable Route53 validation
+      validationDomain: "pebbles.cash",
+    },
+    domain: {
+      dev: "dev-api.pebbles.cash",
+      staging: "staging-api.pebbles.cash",
+      prod: "api.pebbles.cash",
     },
   },
+};
+
+const corsOrigins = {
+  dev: "http://localhost:3000",
+  staging: "https://dev.pebbles.cash",
+  prod: "https://app.pebbles.cash",
 };
 
 module.exports = serverlessConfiguration;
