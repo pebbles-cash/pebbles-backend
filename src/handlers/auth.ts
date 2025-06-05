@@ -67,7 +67,12 @@ export const login = async (
       const decodedToken = await verifyDynamicToken(dynamicToken);
 
       // Extract user info from token
-      const { sub: dynamicUserId, email, name } = decodedToken;
+      const {
+        sub: dynamicUserId,
+        email,
+        name,
+        verified_credentials: verifiedCredentials,
+      } = decodedToken;
 
       if (!dynamicUserId) {
         return error("Invalid token: missing user ID", 401);
@@ -112,6 +117,8 @@ export const login = async (
           avatar: userData?.avatar,
           dynamicUserId: dynamicUserId,
           primaryWalletAddress: walletAddress,
+          walletName: verifiedCredentials[0].wallet_name,
+          walletProvider: verifiedCredentials[0].wallet_provider,
           chain: chain,
           socialProfiles: [],
           preferences: {

@@ -61,6 +61,8 @@ const userSchema = new Schema<IUser>(
       required: true,
       trim: true,
     },
+    walletName: String,
+    walletProvider: String,
     chain: { type: String, required: true, trim: true },
     dynamicUserId: String,
     username: {

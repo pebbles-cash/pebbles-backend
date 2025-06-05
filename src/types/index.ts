@@ -53,6 +53,8 @@ export interface UpdateNotificationPreferencesRequestBody {
 export interface IUser extends Document {
   email: string;
   primaryWalletAddress: string;
+  walletName: string;
+  walletProvider: string;
   chain: string;
   username?: string;
   displayName?: string;
