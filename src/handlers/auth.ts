@@ -79,7 +79,7 @@ export const login = async (
 
       // Get wallet address from Dynamic or user data
       const walletAddress =
-        dynamicUser?.walletAddress || userData?.primaryWallet.address;
+        dynamicUser?.walletAddress || userData?.primaryWalletAddress;
 
       // Determine chain (defaulting to "ethereum" if not provided)
       const chain =
