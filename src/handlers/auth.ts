@@ -34,6 +34,7 @@ function getJwksClient() {
  * Main authentication endpoint - Validates Dynamic token and issues app JWT
  * POST /api/auth/login
  */
+
 export const login = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -72,31 +73,32 @@ export const login = async (
         return error("Invalid token: missing user ID", 401);
       }
 
-      let dynamicUser: IDynamicUser | undefined;
-
       // Find or create user in our database
       let user = await User.findOne({ dynamicUserId });
 
-      // Get wallet address from Dynamic or user data
-      const walletAddress =
-        dynamicUser?.walletAddress || userData?.primaryWalletAddress;
+      // Get wallet address from user data
+      const walletAddress = userData?.primaryWalletAddress;
 
       // Determine chain (defaulting to "ethereum" if not provided)
-      const chain = userData?.chain || dynamicUser?.chain || "ethereum";
+      const chain = userData?.chain || "EVM";
 
       if (!user) {
         // Create new user
-        const username = (
-          dynamicUser?.username ||
-          userData?.username ||
-          `user_${Date.now()}`
-        ).toLowerCase();
+        let username: string | null = null;
 
-        // Check if username is taken
-        const usernameExists = await User.findOne({ username });
-        const finalUsername = usernameExists
-          ? `${username}_${Date.now().toString().substring(9)}`
-          : username;
+        // If userData has username property and it's not undefined, use it (even if null)
+        // Otherwise, set to null
+        if ("username" in userData && userData.username !== undefined) {
+          username = userData.username;
+        }
+
+        // If username is provided and not null, check if it's taken
+        if (username !== null) {
+          const usernameExists = await User.findOne({ username });
+          if (usernameExists) {
+            return error("Username is already taken", 400);
+          }
+        }
 
         // Ensure wallet address is available
         if (!walletAddress) {
@@ -104,24 +106,14 @@ export const login = async (
         }
 
         user = new User({
-          email: email || dynamicUser?.email || userData?.email,
-          username: finalUsername,
-          displayName:
-            name ||
-            dynamicUser?.displayName ||
-            dynamicUser?.username ||
-            userData?.displayName,
-          avatar: dynamicUser?.avatar || userData?.avatar,
+          email: email || userData?.email,
+          username: username,
+          displayName: name || userData?.displayName,
+          avatar: userData?.avatar,
           dynamicUserId: dynamicUserId,
           primaryWalletAddress: walletAddress,
           chain: chain,
-          socialProfiles:
-            dynamicUser?.socialAccounts?.map((account: any) => ({
-              platform: account.provider,
-              profileId: account.id,
-              username: account.username,
-              lastUpdated: new Date(),
-            })) || [],
+          socialProfiles: [],
           preferences: {
             defaultCurrency: userData?.preferences?.defaultCurrency || "USD",
             defaultLanguage: userData?.preferences?.defaultLanguage || "en",
@@ -141,16 +133,10 @@ export const login = async (
         await user.save();
       } else {
         // Update existing user with latest info if available
-        if (dynamicUser || email || name || Object.keys(userData).length > 0) {
-          user.email =
-            email || dynamicUser?.email || userData?.email || user.email;
-          user.displayName =
-            name ||
-            dynamicUser?.displayName ||
-            dynamicUser?.username ||
-            userData?.displayName ||
-            user.displayName;
-          user.avatar = dynamicUser?.avatar || userData?.avatar || user.avatar;
+        if (email || name || Object.keys(userData).length > 0) {
+          user.email = email || userData?.email || user.email;
+          user.displayName = name || userData?.displayName || user.displayName;
+          user.avatar = userData?.avatar || user.avatar;
 
           await user.save();
         }
