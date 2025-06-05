@@ -77,7 +77,7 @@ A serverless API for a payment platform built for freelancers, content creators,
 2. Deploy to AWS:
    ```bash
    # Deploy to development environment
-   npm run deploy
+   npm run deploy:dev
    
    # Deploy to production environment
    npm run deploy:prod

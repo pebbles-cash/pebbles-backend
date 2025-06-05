@@ -82,8 +82,7 @@ export const login = async (
         dynamicUser?.walletAddress || userData?.primaryWalletAddress;
 
       // Determine chain (defaulting to "ethereum" if not provided)
-      const chain =
-        userData?.primaryWallet.chain || dynamicUser?.chain || "ethereum";
+      const chain = userData?.chain || dynamicUser?.chain || "ethereum";
 
       if (!user) {
         // Create new user
