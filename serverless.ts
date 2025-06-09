@@ -425,7 +425,7 @@ const serverlessConfiguration: AWS = {
       events: [
         {
           http: {
-            path: "/api/notifications/register-token",
+            path: "/api/notifications/subscribe",
             method: "post",
             cors: true,
           },
@@ -437,7 +437,7 @@ const serverlessConfiguration: AWS = {
       events: [
         {
           http: {
-            path: "/api/notifications/unregister-token",
+            path: "/api/notifications/unsubscribe",
             method: "delete",
             cors: true,
           },

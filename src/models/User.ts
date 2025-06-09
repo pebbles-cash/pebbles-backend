@@ -67,12 +67,10 @@ const userSchema = new Schema<IUser>(
     dynamicUserId: String,
     username: {
       type: String,
-      unique: true,
       required: false,
       trim: true,
       minlength: 3,
       maxlength: 50,
-      sparse: true,
     },
     displayName: String,
     avatar: String,
@@ -94,5 +92,7 @@ const userSchema = new Schema<IUser>(
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ dynamicUserId: 1 }, { sparse: true });
+// Create a sparse unique index on username
+userSchema.index({ username: 1 }, { unique: true, sparse: true });
 
 export const User = model<IUser>("User", userSchema);
