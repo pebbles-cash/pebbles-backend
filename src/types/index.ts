@@ -113,6 +113,17 @@ export interface IUserData {
   [key: string]: any;
 }
 
+// Login Cache Types
+export interface ICachedJWKSKey {
+  key: any;
+  expiry: number;
+}
+
+export interface ICachedUser {
+  user: any;
+  expiry: number;
+}
+
 // Wallet-related types
 export interface IWalletBalance {
   amount: string;

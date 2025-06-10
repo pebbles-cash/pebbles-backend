@@ -136,6 +136,7 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+
     getCurrentUser: {
       handler: "src/handlers/users.getCurrentUser",
       events: [
@@ -481,66 +482,66 @@ const serverlessConfiguration: AWS = {
       ],
     },
     // Assistant Handlers
-    sendAssistantMessage: {
-      handler: "src/handlers/assistant.sendMessage",
-      events: [
-        {
-          http: {
-            path: "/api/assistant/message",
-            method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getAssistantSessions: {
-      handler: "src/handlers/assistant.getSessions",
-      events: [
-        {
-          http: {
-            path: "/api/assistant/sessions",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getAssistantSession: {
-      handler: "src/handlers/assistant.getSession",
-      events: [
-        {
-          http: {
-            path: "/api/assistant/sessions/{sessionId}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    deleteAssistantSession: {
-      handler: "src/handlers/assistant.deleteSession",
-      events: [
-        {
-          http: {
-            path: "/api/assistant/sessions/{sessionId}",
-            method: "delete",
-            cors: true,
-          },
-        },
-      ],
-    },
-    generateInvoice: {
-      handler: "src/handlers/assistant.generateInvoice",
-      events: [
-        {
-          http: {
-            path: "/api/assistant/generate-invoice",
-            method: "post",
-            cors: true,
-          },
-        },
-      ],
-    },
+    // sendAssistantMessage: {
+    //   handler: "src/handlers/assistant.sendMessage",
+    //   events: [
+    //     {
+    //       http: {
+    //         path: "/api/assistant/message",
+    //         method: "post",
+    //         cors: true,
+    //       },
+    //     },
+    //   ],
+    // },
+    // getAssistantSessions: {
+    //   handler: "src/handlers/assistant.getSessions",
+    //   events: [
+    //     {
+    //       http: {
+    //         path: "/api/assistant/sessions",
+    //         method: "get",
+    //         cors: true,
+    //       },
+    //     },
+    //   ],
+    // },
+    // getAssistantSession: {
+    //   handler: "src/handlers/assistant.getSession",
+    //   events: [
+    //     {
+    //       http: {
+    //         path: "/api/assistant/sessions/{sessionId}",
+    //         method: "get",
+    //         cors: true,
+    //       },
+    //     },
+    //   ],
+    // },
+    // deleteAssistantSession: {
+    //   handler: "src/handlers/assistant.deleteSession",
+    //   events: [
+    //     {
+    //       http: {
+    //         path: "/api/assistant/sessions/{sessionId}",
+    //         method: "delete",
+    //         cors: true,
+    //       },
+    //     },
+    //   ],
+    // },
+    // generateInvoice: {
+    //   handler: "src/handlers/assistant.generateInvoice",
+    //   events: [
+    //     {
+    //       http: {
+    //         path: "/api/assistant/generate-invoice",
+    //         method: "post",
+    //         cors: true,
+    //       },
+    //     },
+    //   ],
+    // },
   },
 
   plugins: ["serverless-offline", "serverless-domain-manager"],

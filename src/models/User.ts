@@ -88,6 +88,12 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
+userSchema.pre("save", function () {
+  if (this.username === null || this.username === "") {
+    this.username = undefined;
+  }
+});
+
 // Create indexes
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ dynamicUserId: 1 }, { sparse: true });
