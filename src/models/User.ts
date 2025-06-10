@@ -89,7 +89,6 @@ const userSchema = new Schema<IUser>(
 );
 
 // Create indexes
-userSchema.index({ username: 1 }, { unique: true });
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ dynamicUserId: 1 }, { sparse: true });
 // Create a sparse unique index on username

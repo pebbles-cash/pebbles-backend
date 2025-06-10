@@ -463,3 +463,96 @@ export interface AnalyticsCacheModel extends Model<IAnalyticsCache> {
     params: Record<string, any>
   ): Promise<IAnalyticsCache | null>;
 }
+
+// Core Fiat Interaction Types
+export interface IFeeBreakdown {
+  serviceFee: {
+    value: number;
+    currency: string;
+  };
+  networkFee: {
+    value: number;
+    currency: string;
+  };
+  totalFees: {
+    value: number;
+    currency: string;
+  };
+}
+
+export interface IAccountDetails {
+  type: "bank_account" | "card" | "crypto_wallet" | "other";
+  identifier: string; // last 4 digits, wallet address, etc.
+  name?: string; // Bank name, card type, wallet name
+  country?: string;
+}
+
+export interface IAmount {
+  value: number;
+  currency: string;
+}
+
+export interface ICryptoAmount extends IAmount {
+  tokenAddress?: string; // For ERC-20 tokens
+}
+
+export interface IDeviceInfo {
+  userAgent?: string;
+  platform?: string;
+  fingerprint?: string;
+}
+
+export interface ILimits {
+  dailyRemaining?: number;
+  monthlyRemaining?: number;
+  transactionLimit?: number;
+}
+
+export interface IWebhookEvent {
+  event: string;
+  timestamp: Date;
+  data: any;
+}
+
+export interface IFiatInteraction extends Document {
+  userId: Types.ObjectId;
+  type: "onramp" | "offramp";
+  status:
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "expired";
+  serviceProvider: "meld" | "moonpay" | "ramp" | "transak" | "other";
+  externalTransactionId: string;
+  fiatAmount: IAmount;
+  cryptoAmount: ICryptoAmount;
+  exchangeRate: number;
+  fees: IFeeBreakdown;
+  sourceAccount: IAccountDetails;
+  destinationAccount: IAccountDetails;
+  blockchain: string;
+  transactionHash?: string;
+  initiatedAt: Date;
+  processingStartedAt?: Date;
+  completedAt?: Date;
+  failedAt?: Date;
+  cancelledAt?: Date;
+  failureReason?: string;
+  ipAddress: string;
+  deviceInfo: IDeviceInfo;
+  kycLevel: "none" | "basic" | "full";
+  limits?: ILimits;
+  metadata: Record<string, any>;
+  webhookEvents: IWebhookEvent[];
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Virtual fields
+  netFiatAmount: number;
+
+  // Instance methods
+  updateStatus(status: string, additionalData?: any): Promise<IFiatInteraction>;
+  addWebhookEvent(event: string, data: any): Promise<IFiatInteraction>;
+}
