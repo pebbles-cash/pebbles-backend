@@ -43,6 +43,9 @@ const serverlessConfiguration: AWS = {
       FIREBASE_SERVICE_ACCOUNT_JSON: "${env:FIREBASE_SERVICE_ACCOUNT_JSON, ''}",
       CORS_ORIGIN: "${self:custom.corsOrigin.${self:provider.stage}, '*'}",
       API_DOMAIN: "${self:custom.domain.${self:provider.stage}}",
+      MELD_WEBHOOK_SECRET: "${env:MELD_WEBHOOK_SECRET, ''}",
+      MELD_API_KEY: "${env:MELD_API_KEY, ''}",
+      MELD_API_URL: "${env:MELD_API_URL, 'https://api.meld.io'}",
     },
     iam: {
       role: {
@@ -476,6 +479,69 @@ const serverlessConfiguration: AWS = {
           http: {
             path: "/api/notifications/history",
             method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    // Webhook Handlers
+    meldWebhook: {
+      handler: "src/handlers/webhooks.handleMeldWebhook",
+      events: [
+        {
+          http: {
+            path: "/api/webhooks/meld",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    // Meld API Handlers
+    getMeldPaymentMethods: {
+      handler: "src/handlers/meld.getPaymentMethods",
+      events: [
+        {
+          http: {
+            path: "/api/meld/payment-methods",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getFiatCurrencies: {
+      handler: "src/handlers/meld.getFiatCurrencies",
+      events: [
+        {
+          http: {
+            path: "/api/meld/fiat-currencies",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+
+    getCryptoQuote: {
+      handler: "src/handlers/meld.getCryptoQuote",
+      events: [
+        {
+          http: {
+            path: "/api/meld/crypto-quote",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    createWidgetSession: {
+      handler: "src/handlers/meld.createWidgetSession",
+      events: [
+        {
+          http: {
+            path: "/api/meld/widget-session",
+            method: "post",
             cors: true,
           },
         },

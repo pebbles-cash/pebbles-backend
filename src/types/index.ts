@@ -567,3 +567,92 @@ export interface IFiatInteraction extends Document {
   updateStatus(status: string, additionalData?: any): Promise<IFiatInteraction>;
   addWebhookEvent(event: string, data: any): Promise<IFiatInteraction>;
 }
+
+// Add these interfaces to your src/types/index.ts file
+
+// Meld API request/response types
+export interface MeldCryptoQuoteRequest {
+  sourceAmount?: number;
+  sourceCurrency?: string;
+  destinationAmount?: number;
+  destinationCurrency?: string;
+  paymentMethod?: string;
+  countryCode?: string;
+  walletAddress?: string;
+}
+
+export interface MeldWidgetSessionRequest {
+  sessionData: {
+    additionalParams?: Record<string, any>;
+    serviceProvider?: string;
+    countryCode?: string;
+    walletAddress?: string;
+    sourceAmount?: number;
+    sourceCurrency?: string;
+    destinationCurrency?: string;
+    paymentMethodId?: string;
+  };
+  sessionType: "BUY" | "SELL";
+  authenticationBypassDetails?: {
+    category: string;
+  };
+}
+
+export interface MeldPaymentMethodsResponse {
+  serviceProviders: Array<{
+    id: string;
+    name: string;
+    status: string;
+    paymentMethods: Array<{
+      id: string;
+      name: string;
+      type: string;
+      currencies: string[];
+      countries: string[];
+      limits: {
+        min: number;
+        max: number;
+        currency: string;
+      };
+      fees: {
+        percentage: number;
+        fixed: number;
+        currency: string;
+      };
+    }>;
+  }>;
+}
+
+export interface MeldCryptoQuoteResponse {
+  quote: {
+    sourceAmount: number;
+    sourceCurrency: string;
+    destinationAmount: number;
+    destinationCurrency: string;
+    exchangeRate: number;
+    fees: {
+      totalFees: number;
+      serviceFee: number;
+      networkFee: number;
+      currency: string;
+    };
+    expiresAt: string;
+    quoteId: string;
+  };
+  paymentMethod: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  serviceProvider: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface MeldWidgetSessionResponse {
+  sessionToken: string;
+  widgetUrl: string;
+  expiresAt: string;
+  sessionId: string;
+}

@@ -132,7 +132,6 @@ export const getConnectionStats = () => {
     host: mongoose.connection.host,
     port: mongoose.connection.port,
     isConnected,
-    poolSize: mongoose.connection.db?.serverConfig?.poolSize || "unknown",
   };
 };
 
