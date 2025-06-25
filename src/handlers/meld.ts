@@ -95,7 +95,6 @@ export const getCryptoQuote = async (
       walletAddress,
     } = body;
 
-    // Basic validation - either source or destination amount should be provided
     if (!sourceAmount && !destinationAmount) {
       return error("Either sourceAmount or destinationAmount is required", 400);
     }
@@ -120,11 +119,6 @@ export const getCryptoQuote = async (
     return success(quote);
   } catch (err) {
     logger.error("Get crypto quote error", err as Error);
-    if (err instanceof AxiosError) {
-      const statusCode = err.response?.status || 500;
-      console.error("Error details:", statusCode);
-      return error("Could not retrieve crypto quote", statusCode);
-    }
     return error("Could not retrieve crypto quote", 500);
   }
 };

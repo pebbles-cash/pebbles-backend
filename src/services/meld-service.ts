@@ -17,15 +17,13 @@ class MeldService {
       throw new Error("MELD_API_KEY environment variable is required");
     }
 
-    const authBase64 = btoa(this.apiKey);
-
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,
       headers: {
         accept: "*/*",
         "Meld-Version": "2025-03-04",
-        Authorization: `BASIC ${authBase64}`,
+        Authorization: `BASIC ${this.apiKey}`,
         "Content-Type": "application/json",
       },
     });

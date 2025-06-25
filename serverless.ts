@@ -21,8 +21,8 @@ const serverlessConfiguration: AWS = {
     runtime: "nodejs18.x",
     stage: '${opt:stage, "dev"}',
     region: "us-east-1",
-    memorySize: 256,
-    timeout: 29,
+    memorySize: 2048,
+    timeout: 15,
     deploymentBucket: {
       // Dynamic bucket name based on stage
       name: "pebbles-org-${self:provider.stage}-deploy",
@@ -46,6 +46,9 @@ const serverlessConfiguration: AWS = {
       MELD_WEBHOOK_SECRET: "${env:MELD_WEBHOOK_SECRET, ''}",
       MELD_API_KEY: "${env:MELD_API_KEY, ''}",
       MELD_API_URL: "${env:MELD_API_URL, 'https://api.meld.io'}",
+      SKIP_FCM_VALIDATION: "${env:SKIP_FCM_VALIDATION, 'false'}",
+      FCM_VALIDATION_TIMEOUT: "${env:FCM_VALIDATION_TIMEOUT, '5000'}",
+      ENABLE_FIREBASE_DEBUG: "${env:ENABLE_FIREBASE_DEBUG, 'false'}",
     },
     iam: {
       role: {

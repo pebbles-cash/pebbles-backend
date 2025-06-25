@@ -51,6 +51,13 @@ export const FIREBASE_SERVICE_ACCOUNT_JSON = getEnv(
   false
 );
 
+export const SKIP_FCM_VALIDATION = process.env.SKIP_FCM_VALIDATION === "true";
+export const FCM_VALIDATION_TIMEOUT = parseInt(
+  process.env.FCM_VALIDATION_TIMEOUT || "5000"
+);
+export const ENABLE_FIREBASE_DEBUG =
+  process.env.ENABLE_FIREBASE_DEBUG === "true";
+
 // Log configuration (without sensitive values)
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);

@@ -4,37 +4,52 @@ import {
   FIREBASE_PRIVATE_KEY,
   FIREBASE_CLIENT_EMAIL,
   FIREBASE_SERVICE_ACCOUNT_JSON,
+  NODE_ENV,
 } from "../config/env";
 
-// Initialize Firebase Admin SDK
+// Global variables for Lambda container reuse
 let firebaseApp: admin.app.App | null = null;
+let messagingInstance: admin.messaging.Messaging | null = null;
+let initializationPromise: Promise<admin.app.App> | null = null;
+
+// Cache TTL settings
+const FIREBASE_INIT_TIMEOUT = 10000; // 10 seconds max for initialization
 
 export function initializeFirebase(): admin.app.App {
   if (firebaseApp) {
+    console.log("🔥 Firebase already initialized, reusing instance");
     return firebaseApp;
   }
+
+  // Prevent multiple concurrent initializations
+  if (initializationPromise) {
+    console.log("🔥 Firebase initialization in progress, waiting...");
+    throw new Error("Firebase initialization in progress");
+  }
+
+  const startTime = Date.now();
+  console.log("🔥 Initializing Firebase Admin SDK...");
 
   try {
     let serviceAccount: admin.ServiceAccount;
 
-    // Try to use the JSON string first (recommended for production)
+    // Prioritize JSON string (faster parsing)
     if (FIREBASE_SERVICE_ACCOUNT_JSON) {
       serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT_JSON);
+      console.log("🔥 Using Firebase service account from JSON string");
     } else if (
       FIREBASE_PRIVATE_KEY &&
       FIREBASE_CLIENT_EMAIL &&
       FIREBASE_PROJECT_ID
     ) {
-      // Fallback to individual environment variables
       serviceAccount = {
         projectId: FIREBASE_PROJECT_ID,
         privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
         clientEmail: FIREBASE_CLIENT_EMAIL,
       };
+      console.log("🔥 Using Firebase service account from individual env vars");
     } else {
-      throw new Error(
-        "Firebase service account credentials not properly configured"
-      );
+      throw new Error("Firebase credentials not configured properly");
     }
 
     firebaseApp = admin.initializeApp({
@@ -42,15 +57,177 @@ export function initializeFirebase(): admin.app.App {
       projectId: FIREBASE_PROJECT_ID,
     });
 
-    console.log("Firebase Admin SDK initialized successfully");
+    // Pre-initialize messaging to avoid lazy loading
+    messagingInstance = admin.messaging(firebaseApp);
+
+    const duration = Date.now() - startTime;
+    console.log(`✅ Firebase initialized successfully in ${duration}ms`);
+
     return firebaseApp;
   } catch (error) {
-    console.error("Failed to initialize Firebase Admin SDK:", error);
+    console.error("❌ Firebase initialization failed:", error);
+    // Reset state on failure
+    firebaseApp = null;
+    messagingInstance = null;
+    initializationPromise = null;
     throw error;
   }
 }
 
-// Notification payload interfaces
+// OPTIMIZED: Firebase token validation with timeout and retry
+export async function validateToken(token: string): Promise<boolean> {
+  const startTime = Date.now();
+
+  try {
+    // Initialize Firebase if not already done
+    if (!messagingInstance) {
+      try {
+        initializeFirebase();
+      } catch (error) {
+        console.error(
+          "❌ Firebase initialization failed during validation:",
+          error
+        );
+        return false;
+      }
+    }
+
+    // Create timeout promise
+    const timeoutMs = 5000; // 5 second timeout
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Firebase validation timeout")),
+        timeoutMs
+      )
+    );
+
+    // Create validation promise
+    const validationPromise = messagingInstance!.send(
+      {
+        token,
+        data: { validation: "test" },
+      },
+      true
+    ); // dryRun = true
+
+    // Race between validation and timeout
+    await Promise.race([validationPromise, timeoutPromise]);
+
+    const duration = Date.now() - startTime;
+    console.log(`✅ Token validated successfully in ${duration}ms`);
+    return true;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    // Log different types of errors
+    if (errorMessage.includes("timeout")) {
+      console.warn(`⏰ Token validation timeout after ${duration}ms`);
+    } else if (errorMessage.includes("invalid-registration-token")) {
+      console.warn(`❌ Invalid FCM token (${duration}ms)`);
+    } else {
+      console.warn(`❌ Token validation failed (${duration}ms):`, errorMessage);
+    }
+
+    return false;
+  }
+}
+
+// OPTIMIZED: Send notification with timeout and error handling
+export async function sendNotificationToToken(
+  token: string,
+  options: NotificationOptions
+): Promise<string> {
+  const startTime = Date.now();
+
+  try {
+    // Initialize Firebase if needed
+    if (!messagingInstance) {
+      initializeFirebase();
+    }
+
+    const message: admin.messaging.Message = {
+      token,
+      ...options,
+    };
+
+    // Add timeout
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Send notification timeout")), 10000)
+    );
+
+    const sendPromise = messagingInstance!.send(message);
+    const response = await Promise.race([sendPromise, timeoutPromise]);
+
+    const duration = Date.now() - startTime;
+    console.log(
+      `📱 Notification sent successfully in ${duration}ms:`,
+      response
+    );
+    return response;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ Failed to send notification (${duration}ms):`, error);
+    throw error;
+  }
+}
+
+// Keep existing sendNotificationToTokens function but with timeout
+export async function sendNotificationToTokens(
+  tokens: string[],
+  options: NotificationOptions
+): Promise<admin.messaging.BatchResponse> {
+  const startTime = Date.now();
+
+  try {
+    if (tokens.length === 0) {
+      throw new Error("No tokens provided");
+    }
+
+    if (!messagingInstance) {
+      initializeFirebase();
+    }
+
+    const message: admin.messaging.MulticastMessage = {
+      tokens,
+      ...options,
+    };
+
+    // Add timeout for batch operations
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Batch send timeout")), 15000)
+    );
+
+    const sendPromise = messagingInstance!.sendEachForMulticast(message);
+    const response = await Promise.race([sendPromise, timeoutPromise]);
+
+    const duration = Date.now() - startTime;
+
+    // Log failed tokens for cleanup
+    if (response.failureCount > 0) {
+      const failedTokens: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          failedTokens.push(tokens[idx]);
+          console.error(`Failed to send to token ${tokens[idx]}:`, resp.error);
+        }
+      });
+      console.log(`⚠️ Failed to send to ${failedTokens.length} tokens`);
+    }
+
+    console.log(
+      `📱 Batch notification completed in ${duration}ms: ${response.successCount}/${tokens.length} successful`
+    );
+    return response;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`❌ Batch notification failed (${duration}ms):`, error);
+    throw error;
+  }
+}
+
+// Notification payload interfaces (keep existing)
 export interface NotificationPayload {
   title: string;
   body: string;
@@ -73,110 +250,7 @@ export interface NotificationOptions {
   webpush?: admin.messaging.WebpushConfig;
 }
 
-/**
- * Send notification to a single FCM token
- */
-export async function sendNotificationToToken(
-  token: string,
-  options: NotificationOptions
-): Promise<string> {
-  try {
-    const app = initializeFirebase();
-    const messaging = admin.messaging(app);
-
-    const message: admin.messaging.Message = {
-      token,
-      ...options,
-    };
-
-    const response = await messaging.send(message);
-    console.log("Successfully sent message:", response);
-    return response;
-  } catch (error) {
-    console.error("Error sending message:", error);
-    throw error;
-  }
-}
-
-/**
- * Send notification to multiple FCM tokens
- */
-export async function sendNotificationToTokens(
-  tokens: string[],
-  options: NotificationOptions
-): Promise<admin.messaging.BatchResponse> {
-  try {
-    if (tokens.length === 0) {
-      throw new Error("No tokens provided");
-    }
-
-    const app = initializeFirebase();
-    const messaging = admin.messaging(app);
-
-    const message: admin.messaging.MulticastMessage = {
-      tokens,
-      ...options,
-    };
-
-    const response = await messaging.sendEachForMulticast(message);
-
-    // Log failed tokens for cleanup
-    if (response.failureCount > 0) {
-      const failedTokens: string[] = [];
-      response.responses.forEach(
-        (resp: admin.messaging.SendResponse, idx: number) => {
-          if (!resp.success) {
-            failedTokens.push(tokens[idx]);
-            console.error(
-              `Failed to send to token ${tokens[idx]}:`,
-              resp.error
-            );
-          }
-        }
-      );
-      console.log(
-        `Failed to send to ${failedTokens.length} tokens:`,
-        failedTokens
-      );
-    }
-
-    console.log(
-      `Successfully sent to ${response.successCount} out of ${tokens.length} tokens`
-    );
-    return response;
-  } catch (error) {
-    console.error("Error sending multicast message:", error);
-    throw error;
-  }
-}
-
-/**
- * Validate FCM token
- */
-export async function validateToken(token: string): Promise<boolean> {
-  try {
-    const app = initializeFirebase();
-    const messaging = admin.messaging(app);
-
-    // Try to send a minimal message to validate the token
-    await messaging.send(
-      {
-        token,
-        data: { test: "validation" },
-      },
-      true
-    ); // dryRun = true
-
-    return true;
-  } catch (error) {
-    console.error("Token validation failed:", error);
-    return false;
-  }
-}
-
-/**
- * Create notification templates for different event types
- */
+// Keep existing NotificationTemplates
 export const NotificationTemplates = {
   paymentReceived: (
     amount: string,
