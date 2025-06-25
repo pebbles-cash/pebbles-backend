@@ -302,6 +302,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getTransactionByMeldId: {
+      handler: "src/handlers/transactions.getTransactionByMeldId",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/meld/{meldTransactionId}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     getTransactionStats: {
       handler: "src/handlers/transactions.getTransactionStats",
       events: [

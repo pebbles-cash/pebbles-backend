@@ -170,6 +170,10 @@ export interface ITransaction extends Document {
   tags: string[]; // user-defined tags
   client?: string; // for freelancers to tag client-specific work
   projectId?: string; // to group transactions by project
+  // Meld-specific fields
+  meldTransactionId?: string; // Store Meld's transaction ID
+  meldStatus?: string; // Store Meld's transaction status
+  meldDetails?: any; // Store full Meld transaction details
 }
 
 export interface CreateTransactionRequestBody {

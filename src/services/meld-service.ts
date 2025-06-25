@@ -188,6 +188,22 @@ class MeldService {
       throw error;
     }
   }
+
+  /**
+   * Get transaction details
+   * GET /transactions/{transactionId}
+   */
+  async getTransaction(transactionId: string): Promise<any> {
+    try {
+      const response = await this.client.get(`/transactions/${transactionId}`);
+      return response.data;
+    } catch (error) {
+      logger.error("Error getting transaction from Meld", error as Error, {
+        transactionId,
+      });
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

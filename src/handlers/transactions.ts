@@ -420,6 +420,10 @@ export const getTransactionDetails = requireAuth(
         txHash: transaction.txHash,
         metadata: transaction.metadata,
         counterparty,
+        // Meld-specific fields
+        meldTransactionId: transaction.meldTransactionId,
+        meldStatus: transaction.meldStatus,
+        meldDetails: transaction.meldDetails,
       };
 
       return success({
@@ -649,6 +653,80 @@ export const filterTransactions = requireAuth(
     } catch (err) {
       console.error("Filter transactions error:", err);
       return error("Could not filter transactions", 500);
+    }
+  }
+);
+
+/**
+ * Get transaction by Meld transaction ID
+ * GET /api/transactions/meld/:meldTransactionId
+ */
+export const getTransactionByMeldId = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get Meld transaction ID from path parameters
+      if (!event.pathParameters?.meldTransactionId) {
+        return error("Meld transaction ID parameter is required", 400);
+      }
+
+      const meldTransactionId = event.pathParameters.meldTransactionId;
+
+      // Get the transaction by Meld transaction ID
+      const transaction = await Transaction.findOne({ meldTransactionId });
+
+      if (!transaction) {
+        return error("Transaction not found", 404);
+      }
+
+      // Check if user is authorized to view this transaction
+      if (
+        transaction.fromUserId?.toString() !== userId &&
+        transaction.toUserId.toString() !== userId
+      ) {
+        return error("Unauthorized to access this transaction", 403);
+      }
+
+      // Format transaction data
+      const isSender = transaction.fromUserId?.toString() === userId;
+      const formattedTransaction = {
+        id: transaction._id,
+        type: transaction.type,
+        direction: isSender ? "outgoing" : "incoming",
+        amount: transaction.amount,
+        currency: "USD", // This would come from tx in a real system
+        status: transaction.status,
+        createdAt: transaction.createdAt,
+        updatedAt: transaction.updatedAt,
+        fromAddress: transaction.fromAddress,
+        toAddress: transaction.toAddress,
+        tokenAddress: transaction.tokenAddress,
+        sourceChain: transaction.sourceChain,
+        destinationChain: transaction.destinationChain,
+        txHash: transaction.txHash,
+        metadata: transaction.metadata,
+        // Meld-specific fields
+        meldTransactionId: transaction.meldTransactionId,
+        meldStatus: transaction.meldStatus,
+        meldDetails: transaction.meldDetails,
+      };
+
+      return success({
+        transaction: formattedTransaction,
+      });
+    } catch (err) {
+      console.error("Get transaction by Meld ID error:", err);
+      return error("Could not retrieve transaction details", 500);
     }
   }
 );

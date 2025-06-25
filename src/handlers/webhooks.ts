@@ -7,6 +7,7 @@ import { User, FiatInteraction, Transaction } from "../models";
 import { logger } from "../utils/logger";
 import { sendNotificationToUser } from "../services/notification-service";
 import { NotificationOptions } from "../services/firebase";
+import { meldService } from "../services/meld-service";
 
 /**
  * Handle Meld webhook events
@@ -172,6 +173,14 @@ async function processMeldWebhook(webhookData: any): Promise<void> {
 
     case "OFFRAMP_FAILED":
       await handleOfframpFailed(data, accountId, eventId);
+      break;
+
+    // Crypto transaction webhooks
+    case "TRANSACTION_CRYPTO_PENDING":
+    case "TRANSACTION_CRYPTO_TRANSFERRING":
+    case "TRANSACTION_CRYPTO_COMPLETE":
+    case "TRANSACTION_CRYPTO_FAILED":
+      await handleCryptoTransactionUpdate(eventType, data, accountId, eventId);
       break;
 
     default:
@@ -773,4 +782,218 @@ async function sendOfframpNotification(
   };
 
   await sendNotificationToUser(userId, notificationOptions, "payments");
+}
+
+/**
+ * Handle crypto transaction webhook updates
+ * This function processes TRANSACTION_CRYPTO_* webhooks from Meld
+ */
+async function handleCryptoTransactionUpdate(
+  eventType: string,
+  data: any,
+  accountId: string,
+  eventId: string
+): Promise<void> {
+  try {
+    logger.info("Processing crypto transaction webhook", {
+      eventType,
+      accountId,
+      eventId,
+      data,
+    });
+
+    const transactionId = data.transactionId;
+    if (!transactionId) {
+      logger.warn("No transactionId in crypto webhook", { eventType, data });
+      return;
+    }
+
+    // 1. Fetch latest transaction details from Meld API
+    let transactionDetails;
+    try {
+      transactionDetails = await meldService.getTransaction(transactionId);
+      logger.info("Fetched transaction details from Meld", {
+        transactionId,
+        status: transactionDetails.status,
+      });
+    } catch (apiError) {
+      logger.error(
+        "Failed to fetch transaction from Meld API",
+        apiError as Error,
+        {
+          transactionId,
+          eventType,
+        }
+      );
+      // Continue processing with webhook data if API call fails
+      transactionDetails = data;
+    }
+
+    // 2. Find user by Meld account ID
+    const user = await findUserByMeldAccountId(accountId);
+    if (!user) {
+      logger.warn("User not found for Meld account", {
+        accountId,
+        transactionId,
+      });
+      return;
+    }
+
+    // 3. Update or create transaction record in database
+    const updateData = {
+      meldTransactionId: transactionId,
+      meldStatus: transactionDetails.status || eventType,
+      meldDetails: transactionDetails,
+      updatedAt: new Date(),
+    };
+
+    // Try to find existing transaction by Meld transaction ID
+    let transaction = await Transaction.findOne({
+      meldTransactionId: transactionId,
+    });
+
+    if (transaction) {
+      // Update existing transaction
+      await Transaction.findByIdAndUpdate(transaction._id, updateData);
+      logger.info("Updated existing transaction", {
+        transactionId,
+        meldTransactionId: transactionId,
+      });
+    } else {
+      // Create new transaction record if it doesn't exist
+      // This might happen if the webhook is received before the transaction is created in your system
+      const newTransaction = new Transaction({
+        type: "payment", // Default type, adjust based on your business logic
+        toUserId: user._id,
+        toAddress:
+          transactionDetails.destinationAddress || user.primaryWalletAddress,
+        amount: transactionDetails.destinationAmount?.toString() || "0",
+        sourceChain: "ethereum", // Default, adjust based on transaction details
+        destinationChain: "ethereum", // Default, adjust based on transaction details
+        status: mapMeldStatusToInternalStatus(
+          transactionDetails.status || eventType
+        ),
+        category: "crypto_deposit",
+        ...updateData,
+      });
+
+      await newTransaction.save();
+      transaction = newTransaction;
+      logger.info("Created new transaction record", {
+        transactionId,
+        meldTransactionId: transactionId,
+      });
+    }
+
+    // 4. Send notification to frontend
+    await sendCryptoTransactionNotification(
+      user._id.toString(),
+      eventType,
+      transactionDetails,
+      transaction._id.toString()
+    );
+
+    logger.info("Successfully processed crypto transaction webhook", {
+      eventType,
+      transactionId,
+      userId: user._id.toString(),
+    });
+  } catch (err) {
+    logger.error("Error handling crypto transaction update", err as Error, {
+      eventType,
+      accountId,
+      eventId,
+      data,
+    });
+  }
+}
+
+/**
+ * Map Meld transaction status to internal status
+ */
+function mapMeldStatusToInternalStatus(
+  meldStatus: string
+): "pending" | "completed" | "failed" {
+  switch (meldStatus) {
+    case "PENDING":
+    case "TRANSFERRING":
+      return "pending";
+    case "COMPLETED":
+    case "SETTLED":
+      return "completed";
+    case "FAILED":
+    case "CANCELLED":
+      return "failed";
+    default:
+      return "pending";
+  }
+}
+
+/**
+ * Send notification for crypto transaction updates
+ */
+async function sendCryptoTransactionNotification(
+  userId: string,
+  eventType: string,
+  transactionDetails: any,
+  transactionId: string
+): Promise<void> {
+  try {
+    const statusMessages = {
+      TRANSACTION_CRYPTO_PENDING: "Your crypto deposit is being processed",
+      TRANSACTION_CRYPTO_TRANSFERRING:
+        "Your crypto deposit is being transferred",
+      TRANSACTION_CRYPTO_COMPLETE: "Your crypto deposit has been completed",
+      TRANSACTION_CRYPTO_FAILED: "Your crypto deposit has failed",
+    };
+
+    const isSuccess = eventType === "TRANSACTION_CRYPTO_COMPLETE";
+    const isFailure = eventType === "TRANSACTION_CRYPTO_FAILED";
+
+    const notificationOptions: NotificationOptions = {
+      notification: {
+        title: isSuccess
+          ? "Deposit Completed"
+          : isFailure
+            ? "Deposit Failed"
+            : "Deposit Update",
+        body:
+          statusMessages[eventType as keyof typeof statusMessages] ||
+          "Your deposit status has been updated",
+        icon: isSuccess
+          ? "/icons/success-icon.png"
+          : isFailure
+            ? "/icons/error-icon.png"
+            : "/icons/info-icon.png",
+        clickAction: "/transactions",
+      },
+      data: {
+        type: "crypto_transaction",
+        eventType,
+        transactionId,
+        status: transactionDetails.status,
+        amount: transactionDetails.destinationAmount?.toString() || "",
+        currency: transactionDetails.destinationCurrency || "",
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    logger.info("Sent crypto transaction notification", {
+      userId,
+      eventType,
+      transactionId,
+    });
+  } catch (err) {
+    logger.error(
+      "Error sending crypto transaction notification",
+      err as Error,
+      {
+        userId,
+        eventType,
+        transactionId,
+      }
+    );
+  }
 }

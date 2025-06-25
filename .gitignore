@@ -47,3 +47,7 @@ temp/
 
 # Package files
 *.tgz
+
+
+MELD_CRYPTO_WEBHOOK_IMPLEMENTATION.md
+WEBHOOK_TESTING.md

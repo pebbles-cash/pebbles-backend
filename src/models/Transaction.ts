@@ -66,6 +66,10 @@ const transactionSchema = new Schema<ITransaction>(
       type: transactionMetadataSchema,
       default: () => ({}),
     },
+    // Meld-specific fields
+    meldTransactionId: String, // Store Meld's transaction ID
+    meldStatus: String, // Store Meld's transaction status
+    meldDetails: Schema.Types.Mixed, // Store full Meld transaction details
   },
   { timestamps: true }
 );
@@ -77,6 +81,7 @@ transactionSchema.index({ status: 1 });
 transactionSchema.index({ createdAt: -1 });
 transactionSchema.index({ "metadata.orderId": 1 }, { sparse: true });
 transactionSchema.index({ "metadata.subscriptionId": 1 }, { sparse: true });
+transactionSchema.index({ meldTransactionId: 1 }, { sparse: true });
 
 // indices for analytics
 transactionSchema.index({ toUserId: 1, createdAt: -1, type: 1 });
