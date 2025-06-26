@@ -663,3 +663,20 @@ export interface FiatInteractionModel extends Model<IFiatInteraction> {
     timeframe: "day" | "week" | "month" | "year"
   ): Promise<any[]>;
 }
+
+export interface ITipGift {
+  emoji: string;
+  label: string;
+  price: number;
+  isCustom?: boolean;
+}
+
+export interface ITipConfig extends Document {
+  userId: Types.ObjectId;
+  statement: string;
+  gifts: ITipGift[];
+  exclusiveContentEnabled: boolean;
+  exclusiveContentMessage: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

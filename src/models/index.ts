@@ -5,5 +5,6 @@ export { Order } from "./Order";
 export { Subscription } from "./Subscription";
 export { SubscriptionInstance } from "./SubscriptionInstance";
 export { FiatInteraction } from "./FiatInteraction";
+export { TipConfig } from "./TipConfig";
 // export { AnalyticsCache } from "./AnalyticsCache";
 // export { ChatSession } from "./ChatSession";

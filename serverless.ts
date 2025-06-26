@@ -599,6 +599,31 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    // Tips Handlers
+    configureTipPage: {
+      handler: "src/handlers/tips.configureTipPage",
+      events: [
+        {
+          http: {
+            path: "/api/tips/configure",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getTipPage: {
+      handler: "src/handlers/tips.getTipPage",
+      events: [
+        {
+          http: {
+            path: "/api/tips/{username}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
   },
 
   plugins: ["serverless-offline", "serverless-domain-manager"],
