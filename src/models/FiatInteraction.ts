@@ -1,5 +1,10 @@
 import { Schema, model } from "mongoose";
-import { IFiatInteraction, IFeeBreakdown, IAccountDetails } from "../types";
+import {
+  IFiatInteraction,
+  IFeeBreakdown,
+  IAccountDetails,
+  FiatInteractionModel,
+} from "../types";
 
 const feeBreakdownSchema = new Schema<IFeeBreakdown>(
   {
@@ -258,7 +263,7 @@ fiatInteractionSchema.statics.getUserStats = async function (
   ]);
 };
 
-export const FiatInteraction = model<IFiatInteraction>(
+export const FiatInteraction = model<IFiatInteraction, FiatInteractionModel>(
   "FiatInteraction",
   fiatInteractionSchema
 );

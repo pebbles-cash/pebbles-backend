@@ -302,18 +302,6 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    getTransactionByMeldId: {
-      handler: "src/handlers/transactions.getTransactionByMeldId",
-      events: [
-        {
-          http: {
-            path: "/api/transactions/meld/{meldTransactionId}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
     getTransactionStats: {
       handler: "src/handlers/transactions.getTransactionStats",
       events: [
@@ -562,67 +550,55 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    // Assistant Handlers
-    // sendAssistantMessage: {
-    //   handler: "src/handlers/assistant.sendMessage",
-    //   events: [
-    //     {
-    //       http: {
-    //         path: "/api/assistant/message",
-    //         method: "post",
-    //         cors: true,
-    //       },
-    //     },
-    //   ],
-    // },
-    // getAssistantSessions: {
-    //   handler: "src/handlers/assistant.getSessions",
-    //   events: [
-    //     {
-    //       http: {
-    //         path: "/api/assistant/sessions",
-    //         method: "get",
-    //         cors: true,
-    //       },
-    //     },
-    //   ],
-    // },
-    // getAssistantSession: {
-    //   handler: "src/handlers/assistant.getSession",
-    //   events: [
-    //     {
-    //       http: {
-    //         path: "/api/assistant/sessions/{sessionId}",
-    //         method: "get",
-    //         cors: true,
-    //       },
-    //     },
-    //   ],
-    // },
-    // deleteAssistantSession: {
-    //   handler: "src/handlers/assistant.deleteSession",
-    //   events: [
-    //     {
-    //       http: {
-    //         path: "/api/assistant/sessions/{sessionId}",
-    //         method: "delete",
-    //         cors: true,
-    //       },
-    //     },
-    //   ],
-    // },
-    // generateInvoice: {
-    //   handler: "src/handlers/assistant.generateInvoice",
-    //   events: [
-    //     {
-    //       http: {
-    //         path: "/api/assistant/generate-invoice",
-    //         method: "post",
-    //         cors: true,
-    //       },
-    //     },
-    //   ],
-    // },
+    // FiatInteraction endpoints
+    getUserFiatInteractions: {
+      handler: "src/handlers/fiat-interactions.getUserFiatInteractions",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getFiatInteractionDetails: {
+      handler: "src/handlers/fiat-interactions.getFiatInteractionDetails",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions/{fiatInteractionId}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getFiatInteractionByExternalId: {
+      handler: "src/handlers/fiat-interactions.getFiatInteractionByExternalId",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions/external/{externalTransactionId}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getFiatInteractionStats: {
+      handler: "src/handlers/fiat-interactions.getFiatInteractionStats",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions/stats",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
   },
 
   plugins: ["serverless-offline", "serverless-domain-manager"],

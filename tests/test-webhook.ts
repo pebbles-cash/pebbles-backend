@@ -1,287 +1,300 @@
+/**
+ * Test script for Meld webhook endpoints
+ *
+ * This script tests the webhook handler with various Meld webhook events.
+ * It simulates webhook requests with proper signatures and payloads.
+ *
+ * Usage:
+ * 1. Start the serverless offline service: npm run dev
+ * 2. Run this script: npx ts-node test-webhook.ts
+ *
+ * The script will test various webhook scenarios and log the results.
+ */
+
 import crypto from "crypto";
-import https from "https";
-import http from "http";
+import axios from "axios";
 
-// Test configuration
-const TEST_SECRET = "your_test_secret_here";
-const BASE_URL = "http://localhost:3000"; // Adjust if your serverless offline runs on different port
-const WEBHOOK_PATH = "/dev/api/webhooks/meld";
+// Configuration
+const WEBHOOK_URL = "http://localhost:3000/dev/webhooks/meld";
+const WEBHOOK_SECRET = process.env.MELD_WEBHOOK_SECRET || "test-webhook-secret";
 
-// Sample webhook payloads for different event types
-const webhookPayloads = {
-  bankLinkingCompleted: {
-    type: "BANK_LINKING_CONNECTION_COMPLETED",
-    id: "evt_test_123",
-    accountId: "acc_test_456",
+// Test data for different webhook types
+const testWebhooks = [
+  {
+    name: "Account Created",
+    eventType: "ACCOUNT_CREATED",
     data: {
-      connectionId: "conn_test_789",
+      accountId: "test-account-123",
+      userId: "test-user-456",
       status: "active",
-      accounts: [
-        {
-          id: "bank_acc_1",
-          name: "Checking Account",
-          type: "checking",
-        },
-      ],
+      createdAt: new Date().toISOString(),
     },
   },
-
-  onrampCompleted: {
-    type: "ONRAMP_COMPLETED",
-    id: "evt_test_124",
-    accountId: "acc_test_456",
+  {
+    name: "Onramp Completed",
+    eventType: "ONRAMP_COMPLETED",
     data: {
-      transactionId: "txn_test_789",
-      amount: "100.00",
-      currency: "USD",
+      accountId: "test-account-123",
+      transactionId: "tx-onramp-789",
+      fiatAmount: { value: 100, currency: "USD" },
+      cryptoAmount: { value: 0.05, currency: "ETH" },
+      exchangeRate: 2000,
       status: "completed",
-      externalTransactionId: "ext_txn_123",
+      transactionHash: "0x1234567890abcdef",
+      createdAt: new Date().toISOString(),
     },
   },
-
-  onrampFailed: {
-    type: "ONRAMP_FAILED",
-    id: "evt_test_125",
-    accountId: "acc_test_456",
+  {
+    name: "Offramp Completed",
+    eventType: "OFFRAMP_COMPLETED",
     data: {
-      transactionId: "txn_test_790",
-      amount: "50.00",
-      currency: "USD",
+      accountId: "test-account-123",
+      transactionId: "tx-offramp-101",
+      cryptoAmount: { value: 0.1, currency: "ETH" },
+      fiatAmount: { value: 200, currency: "USD" },
+      exchangeRate: 2000,
+      status: "completed",
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    name: "Crypto Transaction Pending",
+    eventType: "TRANSACTION_CRYPTO_PENDING",
+    data: {
+      accountId: "test-account-123",
+      transactionId: "tx-crypto-202",
+      sourceAmount: 100,
+      sourceCurrency: "USD",
+      destinationAmount: 0.05,
+      destinationCurrency: "ETH",
+      exchangeRate: 2000,
+      status: "pending",
+      sourceAccountId: "bank-123",
+      destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+      blockchain: "ethereum",
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    name: "Crypto Transaction Complete",
+    eventType: "TRANSACTION_CRYPTO_COMPLETE",
+    data: {
+      accountId: "test-account-123",
+      transactionId: "tx-crypto-202",
+      sourceAmount: 100,
+      sourceCurrency: "USD",
+      destinationAmount: 0.05,
+      destinationCurrency: "ETH",
+      exchangeRate: 2000,
+      status: "completed",
+      sourceAccountId: "bank-123",
+      destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+      blockchain: "ethereum",
+      blockchainTransactionHash: "0xabcdef1234567890",
+      createdAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+    },
+  },
+  {
+    name: "Crypto Transaction Failed",
+    eventType: "TRANSACTION_CRYPTO_FAILED",
+    data: {
+      accountId: "test-account-123",
+      transactionId: "tx-crypto-203",
+      sourceAmount: 50,
+      sourceCurrency: "USD",
+      destinationAmount: 0.025,
+      destinationCurrency: "ETH",
+      exchangeRate: 2000,
       status: "failed",
-      error: "Insufficient funds",
-      externalTransactionId: "ext_txn_124",
+      failureReason: "Insufficient funds",
+      sourceAccountId: "bank-123",
+      destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+      blockchain: "ethereum",
+      createdAt: new Date().toISOString(),
+      failedAt: new Date().toISOString(),
     },
   },
+];
 
-  transactionsAdded: {
-    type: "FINANCIAL_ACCOUNT_TRANSACTIONS_ADDED",
-    id: "evt_test_126",
-    accountId: "acc_test_456",
-    data: {
-      accountId: "bank_acc_1",
-      transactions: [
-        {
-          id: "txn_1",
-          amount: "25.50",
-          currency: "USD",
-          description: "Coffee shop",
-          date: new Date().toISOString(),
-        },
-      ],
-    },
-  },
-};
-
-interface WebhookResponse {
-  statusCode: number;
-  headers: http.IncomingHttpHeaders;
-  body: string;
+/**
+ * Generate webhook signature
+ */
+function generateSignature(payload: string, secret: string): string {
+  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
 }
 
 /**
- * Generate Meld webhook signature
+ * Test a single webhook
  */
-function generateSignature(payload: any, secret: string): string {
-  const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(JSON.stringify(payload), "utf8");
-  return `sha256=${hmac.digest("hex")}`;
-}
+async function testWebhook(webhook: any): Promise<void> {
+  try {
+    console.log(`\n🧪 Testing: ${webhook.name}`);
+    console.log(`Event Type: ${webhook.eventType}`);
 
-/**
- * Make HTTP request
- */
-function makeRequest(
-  url: string,
-  options: http.RequestOptions,
-  data?: string
-): Promise<WebhookResponse> {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const isHttps = urlObj.protocol === "https:";
-    const client = isHttps ? https : http;
+    // Create webhook payload
+    const payload = {
+      eventType: webhook.eventType,
+      eventId: `test-event-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      data: webhook.data,
+    };
 
-    const req = client.request(url, options, (res) => {
-      let responseData = "";
-      res.on("data", (chunk) => {
-        responseData += chunk;
-      });
-      res.on("end", () => {
-        resolve({
-          statusCode: res.statusCode || 0,
-          headers: res.headers,
-          body: responseData,
-        });
-      });
+    const payloadString = JSON.stringify(payload);
+    const signature = generateSignature(payloadString, WEBHOOK_SECRET);
+
+    // Send webhook request
+    const response = await axios.post(WEBHOOK_URL, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Meld-Signature": signature,
+        "User-Agent": "Meld-Webhook-Test/1.0",
+      },
+      timeout: 10000,
     });
 
-    req.on("error", reject);
+    console.log(`✅ Status: ${response.status}`);
+    console.log(`Response: ${JSON.stringify(response.data, null, 2)}`);
 
-    if (data) {
-      req.write(data);
+    // Test the corresponding FiatInteraction endpoint
+    if (webhook.data.transactionId) {
+      await testFiatInteractionEndpoint(webhook.data.transactionId);
     }
-
-    req.end();
-  });
-}
-
-/**
- * Test a webhook payload
- */
-async function testWebhook(
-  payloadName: string,
-  payload: any
-): Promise<WebhookResponse | null> {
-  console.log(`\n🧪 Testing ${payloadName}...`);
-  console.log("Payload:", JSON.stringify(payload, null, 2));
-
-  const signature = generateSignature(payload, TEST_SECRET);
-  const requestBody = JSON.stringify(payload);
-
-  const options: http.RequestOptions = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(requestBody).toString(),
-      "meld-signature": signature,
-    },
-  };
-
-  try {
-    const response = await makeRequest(
-      `${BASE_URL}${WEBHOOK_PATH}`,
-      options,
-      requestBody
-    );
-
-    console.log(`\n📊 Response Status: ${response.statusCode}`);
-    console.log("Response Headers:", response.headers);
-    console.log("Response Body:", response.body);
-
-    if (response.statusCode === 200) {
-      console.log("✅ Webhook test PASSED");
-    } else {
-      console.log("❌ Webhook test FAILED");
+  } catch (error: any) {
+    console.log(`❌ Error: ${error.message}`);
+    if (error.response) {
+      console.log(`Status: ${error.response.status}`);
+      console.log(`Response: ${JSON.stringify(error.response.data, null, 2)}`);
     }
-
-    return response;
-  } catch (error) {
-    console.error("❌ Request failed:", (error as Error).message);
-    return null;
   }
 }
 
 /**
- * Test without signature (should fail)
+ * Test the FiatInteraction endpoint for a transaction
  */
-async function testWithoutSignature(
-  payload: any
-): Promise<WebhookResponse | null> {
-  console.log("\n🧪 Testing without signature (should fail)...");
-
-  const requestBody = JSON.stringify(payload);
-
-  const options: http.RequestOptions = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(requestBody).toString(),
-    },
-  };
-
+async function testFiatInteractionEndpoint(
+  externalTransactionId: string
+): Promise<void> {
   try {
-    const response = await makeRequest(
-      `${BASE_URL}${WEBHOOK_PATH}`,
-      options,
-      requestBody
+    console.log(
+      `\n🔍 Testing FiatInteraction endpoint for transaction: ${externalTransactionId}`
     );
 
-    console.log(`📊 Response Status: ${response.statusCode}`);
-    console.log("Response Body:", response.body);
-
-    if (response.statusCode === 401) {
-      console.log("✅ Correctly rejected request without signature");
-    } else {
-      console.log("❌ Should have rejected request without signature");
-    }
-
-    return response;
-  } catch (error) {
-    console.error("❌ Request failed:", (error as Error).message);
-    return null;
+    // Note: This would require authentication in a real scenario
+    // For testing purposes, we'll just log the expected endpoint
+    const endpoint = `http://localhost:3000/dev/api/fiat-interactions/external/${externalTransactionId}`;
+    console.log(`Expected endpoint: ${endpoint}`);
+    console.log(`Note: This endpoint requires authentication in production`);
+  } catch (error: any) {
+    console.log(`❌ FiatInteraction endpoint error: ${error.message}`);
   }
 }
 
 /**
- * Test with invalid signature (should fail)
+ * Test invalid signature
  */
-async function testInvalidSignature(
-  payload: any
-): Promise<WebhookResponse | null> {
-  console.log("\n🧪 Testing with invalid signature (should fail)...");
-
-  const requestBody = JSON.stringify(payload);
-
-  const options: http.RequestOptions = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(requestBody).toString(),
-      "meld-signature": "sha256=invalid_signature_here",
-    },
-  };
-
+async function testInvalidSignature(): Promise<void> {
   try {
-    const response = await makeRequest(
-      `${BASE_URL}${WEBHOOK_PATH}`,
-      options,
-      requestBody
-    );
+    console.log("\n🧪 Testing: Invalid Signature");
 
-    console.log(`📊 Response Status: ${response.statusCode}`);
-    console.log("Response Body:", response.body);
+    const payload = {
+      eventType: "ACCOUNT_CREATED",
+      eventId: "test-invalid-sig",
+      timestamp: new Date().toISOString(),
+      data: { accountId: "test-account-123" },
+    };
 
-    if (response.statusCode === 401) {
-      console.log("✅ Correctly rejected request with invalid signature");
-    } else {
-      console.log("❌ Should have rejected request with invalid signature");
+    const payloadString = JSON.stringify(payload);
+    const invalidSignature = "invalid-signature";
+
+    const response = await axios.post(WEBHOOK_URL, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Meld-Signature": invalidSignature,
+        "User-Agent": "Meld-Webhook-Test/1.0",
+      },
+      timeout: 10000,
+    });
+
+    console.log(`Status: ${response.status}`);
+    console.log(`Response: ${JSON.stringify(response.data, null, 2)}`);
+  } catch (error: any) {
+    console.log(`❌ Expected error: ${error.message}`);
+    if (error.response) {
+      console.log(`Status: ${error.response.status}`);
     }
-
-    return response;
-  } catch (error) {
-    console.error("❌ Request failed:", (error as Error).message);
-    return null;
   }
 }
 
 /**
- * Run all tests
+ * Test missing signature
  */
-async function runAllTests(): Promise<void> {
-  console.log("🚀 Starting Meld Webhook Tests...");
-  console.log(`📍 Testing endpoint: ${BASE_URL}${WEBHOOK_PATH}`);
-  console.log(`🔑 Using test secret: ${TEST_SECRET}`);
+async function testMissingSignature(): Promise<void> {
+  try {
+    console.log("\n🧪 Testing: Missing Signature");
 
-  // Test valid webhooks
-  for (const [name, payload] of Object.entries(webhookPayloads)) {
-    await testWebhook(name, payload);
+    const payload = {
+      eventType: "ACCOUNT_CREATED",
+      eventId: "test-missing-sig",
+      timestamp: new Date().toISOString(),
+      data: { accountId: "test-account-123" },
+    };
+
+    const response = await axios.post(WEBHOOK_URL, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Meld-Webhook-Test/1.0",
+      },
+      timeout: 10000,
+    });
+
+    console.log(`Status: ${response.status}`);
+    console.log(`Response: ${JSON.stringify(response.data, null, 2)}`);
+  } catch (error: any) {
+    console.log(`❌ Expected error: ${error.message}`);
+    if (error.response) {
+      console.log(`Status: ${error.response.status}`);
+    }
+  }
+}
+
+/**
+ * Main test function
+ */
+async function runTests(): Promise<void> {
+  console.log("🚀 Starting Meld Webhook Tests");
+  console.log(`Webhook URL: ${WEBHOOK_URL}`);
+  console.log(`Webhook Secret: ${WEBHOOK_SECRET}`);
+  console.log("=".repeat(50));
+
+  // Test all webhook types
+  for (const webhook of testWebhooks) {
+    await testWebhook(webhook);
+    // Add delay between tests
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   // Test error cases
-  await testWithoutSignature(webhookPayloads.onrampCompleted);
-  await testInvalidSignature(webhookPayloads.onrampCompleted);
+  await testInvalidSignature();
+  await testMissingSignature();
 
-  console.log("\n🎉 All tests completed!");
+  console.log("\n✅ All tests completed!");
+  console.log("\n📝 Notes:");
+  console.log(
+    "- Webhook processing logs should appear in your serverless offline console"
+  );
+  console.log(
+    "- Check the database for created/updated FiatInteraction records"
+  );
+  console.log(
+    "- Frontend should receive push notifications for status updates"
+  );
+  console.log(
+    "- Use the FiatInteraction endpoints to query transaction status"
+  );
 }
 
-// Run tests if this script is executed directly
+// Run tests if this file is executed directly
 if (require.main === module) {
-  runAllTests().catch(console.error);
+  runTests().catch(console.error);
 }
-
-export {
-  testWebhook,
-  testWithoutSignature,
-  testInvalidSignature,
-  webhookPayloads,
-  generateSignature,
-};

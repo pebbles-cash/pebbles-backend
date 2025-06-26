@@ -3,7 +3,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import crypto from "crypto";
 import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";
-import { User, FiatInteraction, Transaction } from "../models";
+import { User, FiatInteraction } from "../models";
 import { logger } from "../utils/logger";
 import { sendNotificationToUser } from "../services/notification-service";
 import { NotificationOptions } from "../services/firebase";
@@ -157,31 +157,20 @@ async function processMeldWebhook(webhookData: any): Promise<void> {
       await handleTransactionsAdded(data, accountId, eventId);
       break;
 
-    case "TRANSACTION_COMPLETED":
-    case "ONRAMP_COMPLETED":
-      await handleOnrampCompleted(data, accountId, eventId);
-      break;
-
-    case "TRANSACTION_FAILED":
-    case "ONRAMP_FAILED":
-      await handleOnrampFailed(data, accountId, eventId);
-      break;
-
-    case "OFFRAMP_COMPLETED":
-      await handleOfframpCompleted(data, accountId, eventId);
-      break;
-
-    case "OFFRAMP_FAILED":
-      await handleOfframpFailed(data, accountId, eventId);
-      break;
-
-    // Crypto transaction webhooks
+    // Crypto transaction webhooks - handled by FiatInteraction
     case "TRANSACTION_CRYPTO_PENDING":
     case "TRANSACTION_CRYPTO_TRANSFERRING":
     case "TRANSACTION_CRYPTO_COMPLETE":
     case "TRANSACTION_CRYPTO_FAILED":
+    case "ONRAMP_COMPLETED":
+    case "ONRAMP_FAILED":
+    case "OFFRAMP_COMPLETED":
+    case "OFFRAMP_FAILED":
       await handleCryptoTransactionUpdate(eventType, data, accountId, eventId);
       break;
+
+    // Note: ONRAMP/OFFRAMP events are now handled by handleCryptoTransactionUpdate
+    // which creates/updates FiatInteraction records instead of Transaction records
 
     default:
       logger.info("Unhandled Meld webhook event type", { eventType, eventId });
@@ -389,185 +378,6 @@ async function handleTransactionsAdded(
   }
 }
 
-/**
- * Handle onramp (fiat to crypto) completion
- */
-async function handleOnrampCompleted(
-  data: any,
-  accountId: string,
-  eventId: string
-): Promise<void> {
-  try {
-    logger.info("Onramp completed", { accountId, eventId, data });
-
-    const user = await findUserByMeldAccountId(accountId);
-    if (!user) {
-      logger.warn("User not found for completed onramp", {
-        accountId,
-        eventId,
-      });
-      return;
-    }
-
-    // Update FiatInteraction record
-    await updateFiatInteraction(data.transactionId || eventId, {
-      status: "completed",
-      transactionHash: data.transactionHash,
-      completedAt: new Date(),
-    });
-
-    // Create a Transaction record for internal tracking
-    await createInternalTransaction(user._id.toString(), {
-      type: "payment",
-      amount: data.cryptoAmount?.value || data.amount,
-      currency: data.cryptoAmount?.currency || "USD",
-      sourceType: "onramp",
-      externalTransactionId: data.transactionId || eventId,
-      metadata: {
-        provider: "meld",
-        fiatAmount: data.fiatAmount,
-        exchangeRate: data.exchangeRate,
-      },
-    });
-
-    // Send notification to user
-    await sendOnrampNotification(
-      user._id.toString(),
-      "completed",
-      data.cryptoAmount?.value || data.amount,
-      data.cryptoAmount?.currency || "USD"
-    );
-  } catch (err) {
-    logger.error("Error handling onramp completed", err as Error, {
-      accountId,
-      eventId,
-    });
-  }
-}
-
-/**
- * Handle onramp failure
- */
-async function handleOnrampFailed(
-  data: any,
-  accountId: string,
-  eventId: string
-): Promise<void> {
-  try {
-    logger.info("Onramp failed", { accountId, eventId, data });
-
-    const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
-
-    // Update FiatInteraction record
-    await updateFiatInteraction(data.transactionId || eventId, {
-      status: "failed",
-      failureReason: data.error || data.failureReason,
-      failedAt: new Date(),
-    });
-
-    // Send notification to user
-    await sendOnrampNotification(
-      user._id.toString(),
-      "failed",
-      data.fiatAmount?.value || data.amount,
-      data.fiatAmount?.currency || "USD",
-      data.error
-    );
-  } catch (err) {
-    logger.error("Error handling onramp failed", err as Error, {
-      accountId,
-      eventId,
-    });
-  }
-}
-
-/**
- * Handle offramp (crypto to fiat) completion
- */
-async function handleOfframpCompleted(
-  data: any,
-  accountId: string,
-  eventId: string
-): Promise<void> {
-  try {
-    logger.info("Offramp completed", { accountId, eventId, data });
-
-    const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
-
-    // Update FiatInteraction record
-    await updateFiatInteraction(data.transactionId || eventId, {
-      status: "completed",
-      completedAt: new Date(),
-    });
-
-    // Create internal transaction record
-    await createInternalTransaction(user._id.toString(), {
-      type: "payment",
-      amount: data.fiatAmount?.value || data.amount,
-      currency: data.fiatAmount?.currency || "USD",
-      sourceType: "offramp",
-      externalTransactionId: data.transactionId || eventId,
-      metadata: {
-        provider: "meld",
-        cryptoAmount: data.cryptoAmount,
-        exchangeRate: data.exchangeRate,
-      },
-    });
-
-    // Send notification to user
-    await sendOfframpNotification(
-      user._id.toString(),
-      "completed",
-      data.fiatAmount?.value || data.amount,
-      data.fiatAmount?.currency || "USD"
-    );
-  } catch (err) {
-    logger.error("Error handling offramp completed", err as Error, {
-      accountId,
-      eventId,
-    });
-  }
-}
-
-/**
- * Handle offramp failure
- */
-async function handleOfframpFailed(
-  data: any,
-  accountId: string,
-  eventId: string
-): Promise<void> {
-  try {
-    logger.info("Offramp failed", { accountId, eventId, data });
-
-    const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
-
-    // Update FiatInteraction record
-    await updateFiatInteraction(data.transactionId || eventId, {
-      status: "failed",
-      failureReason: data.error || data.failureReason,
-      failedAt: new Date(),
-    });
-
-    // Send notification to user
-    await sendOfframpNotification(
-      user._id.toString(),
-      "failed",
-      data.cryptoAmount?.value || data.amount,
-      data.cryptoAmount?.currency || "USD",
-      data.error
-    );
-  } catch (err) {
-    logger.error("Error handling offramp failed", err as Error, {
-      accountId,
-      eventId,
-    });
-  }
-}
-
 // Helper functions
 
 /**
@@ -596,33 +406,6 @@ async function updateFiatInteraction(
   } catch (err) {
     logger.error("Error updating FiatInteraction", err as Error, {
       externalTransactionId,
-    });
-  }
-}
-
-/**
- * Create internal transaction record
- */
-async function createInternalTransaction(
-  userId: string,
-  transactionData: any
-): Promise<void> {
-  try {
-    const transaction = new Transaction({
-      type: transactionData.type,
-      toUserId: userId,
-      amount: transactionData.amount.toString(),
-      sourceChain: "ethereum", // Default
-      destinationChain: "ethereum", // Default
-      status: "completed",
-      category: transactionData.sourceType,
-      metadata: transactionData.metadata,
-    });
-
-    await transaction.save();
-  } catch (err) {
-    logger.error("Error creating internal transaction", err as Error, {
-      userId,
     });
   }
 }
@@ -722,68 +505,6 @@ async function sendAccountUpdateNotification(userId: string): Promise<void> {
   await sendNotificationToUser(userId, notificationOptions, "security");
 }
 
-async function sendOnrampNotification(
-  userId: string,
-  status: "completed" | "failed",
-  amount: string | number,
-  currency: string,
-  error?: string
-): Promise<void> {
-  const isSuccess = status === "completed";
-
-  const notificationOptions: NotificationOptions = {
-    notification: {
-      title: isSuccess ? "Purchase Completed" : "Purchase Failed",
-      body: isSuccess
-        ? `Successfully purchased ${amount} ${currency}`
-        : `Failed to purchase ${amount} ${currency}${error ? `: ${error}` : ""}`,
-      icon: isSuccess ? "/icons/success-icon.png" : "/icons/error-icon.png",
-      clickAction: "/transactions",
-    },
-    data: {
-      type: "onramp",
-      status,
-      amount: amount.toString(),
-      currency,
-      error: error || "",
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  await sendNotificationToUser(userId, notificationOptions, "payments");
-}
-
-async function sendOfframpNotification(
-  userId: string,
-  status: "completed" | "failed",
-  amount: string | number,
-  currency: string,
-  error?: string
-): Promise<void> {
-  const isSuccess = status === "completed";
-
-  const notificationOptions: NotificationOptions = {
-    notification: {
-      title: isSuccess ? "Withdrawal Completed" : "Withdrawal Failed",
-      body: isSuccess
-        ? `Successfully withdrew ${amount} ${currency} to your bank account`
-        : `Failed to withdraw ${amount} ${currency}${error ? `: ${error}` : ""}`,
-      icon: isSuccess ? "/icons/success-icon.png" : "/icons/error-icon.png",
-      clickAction: "/transactions",
-    },
-    data: {
-      type: "offramp",
-      status,
-      amount: amount.toString(),
-      currency,
-      error: error || "",
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  await sendNotificationToUser(userId, notificationOptions, "payments");
-}
-
 /**
  * Handle crypto transaction webhook updates
  * This function processes TRANSACTION_CRYPTO_* webhooks from Meld
@@ -839,64 +560,169 @@ async function handleCryptoTransactionUpdate(
       return;
     }
 
-    // 3. Update or create transaction record in database
-    const updateData = {
-      meldTransactionId: transactionId,
-      meldStatus: transactionDetails.status || eventType,
-      meldDetails: transactionDetails,
-      updatedAt: new Date(),
+    // 3. Map Meld status to FiatInteraction status
+    const fiatStatus = mapMeldStatusToFiatStatus(
+      transactionDetails.status || eventType
+    );
+
+    // 4. Determine transaction type (onramp/offramp) based on event type
+    const transactionType = determineTransactionType(
+      eventType,
+      transactionDetails
+    );
+
+    // 5. Prepare FiatInteraction data
+    const fiatInteractionData: any = {
+      userId: user._id,
+      type: transactionType,
+      status: fiatStatus,
+      serviceProvider: "meld" as const,
+      externalTransactionId: transactionId,
+      fiatAmount: {
+        value: Number(
+          transactionDetails.sourceAmount || transactionDetails.fiatAmount || 0
+        ),
+        currency: (
+          transactionDetails.sourceCurrency ||
+          transactionDetails.fiatCurrency ||
+          "USD"
+        ).toUpperCase(),
+      },
+      cryptoAmount: {
+        value: Number(
+          transactionDetails.destinationAmount ||
+            transactionDetails.cryptoAmount ||
+            0
+        ),
+        currency: (
+          transactionDetails.destinationCurrency ||
+          transactionDetails.cryptoCurrency ||
+          "ETH"
+        ).toUpperCase(),
+        tokenAddress: transactionDetails.tokenAddress,
+      },
+      exchangeRate: transactionDetails.exchangeRate || 0,
+      fees: {
+        serviceFee: {
+          value: transactionDetails.fees?.serviceFee || 0,
+          currency: transactionDetails.sourceCurrency || "USD",
+        },
+        networkFee: {
+          value: transactionDetails.fees?.networkFee || 0,
+          currency: transactionDetails.sourceCurrency || "USD",
+        },
+        totalFees: {
+          value: transactionDetails.fees?.totalFees || 0,
+          currency: transactionDetails.sourceCurrency || "USD",
+        },
+      },
+      sourceAccount: {
+        type: transactionType === "onramp" ? "bank_account" : "crypto_wallet",
+        identifier:
+          transactionDetails.sourceAccountId ||
+          transactionDetails.sourceAddress ||
+          "",
+        name: transactionDetails.sourceAccountName || "",
+        country: transactionDetails.sourceCountry,
+      },
+      destinationAccount: {
+        type: transactionType === "onramp" ? "crypto_wallet" : "bank_account",
+        identifier:
+          transactionDetails.destinationAddress ||
+          transactionDetails.destinationAccountId ||
+          "",
+        name: transactionDetails.destinationAccountName || "",
+        country: transactionDetails.destinationCountry,
+      },
+      blockchain: transactionDetails.blockchain || "ethereum",
+      transactionHash: transactionDetails.blockchainTransactionHash,
+      initiatedAt: transactionDetails.createdAt
+        ? new Date(transactionDetails.createdAt)
+        : new Date(),
+      failureReason: transactionDetails.failureReason,
+      ipAddress: transactionDetails.ipAddress || "unknown",
+      deviceInfo: {
+        userAgent: transactionDetails.userAgent || "",
+        platform: transactionDetails.platform || "",
+        fingerprint: transactionDetails.deviceFingerprint || "",
+      },
+      kycLevel: transactionDetails.kycLevel || "none",
+      metadata: transactionDetails,
     };
 
-    // Try to find existing transaction by Meld transaction ID
-    let transaction = await Transaction.findOne({
-      meldTransactionId: transactionId,
+    // 6. Update timestamps based on status
+    const now = new Date();
+    switch (fiatStatus) {
+      case "processing":
+        fiatInteractionData.processingStartedAt = now;
+        break;
+      case "completed":
+        fiatInteractionData.completedAt = now;
+        break;
+      case "failed":
+        fiatInteractionData.failedAt = now;
+        break;
+      case "cancelled":
+        fiatInteractionData.cancelledAt = now;
+        break;
+    }
+
+    // 7. Find existing FiatInteraction or create new one
+    let fiatInteraction = await FiatInteraction.findOne({
+      externalTransactionId: transactionId,
+      serviceProvider: "meld",
     });
 
-    if (transaction) {
-      // Update existing transaction
-      await Transaction.findByIdAndUpdate(transaction._id, updateData);
-      logger.info("Updated existing transaction", {
+    if (fiatInteraction) {
+      // Update existing FiatInteraction
+      await FiatInteraction.findByIdAndUpdate(fiatInteraction._id, {
+        $set: fiatInteractionData,
+        $push: {
+          webhookEvents: {
+            event: eventType,
+            timestamp: now,
+            data: transactionDetails,
+          },
+        },
+      });
+      logger.info("Updated existing FiatInteraction", {
         transactionId,
         meldTransactionId: transactionId,
       });
     } else {
-      // Create new transaction record if it doesn't exist
-      // This might happen if the webhook is received before the transaction is created in your system
-      const newTransaction = new Transaction({
-        type: "payment", // Default type, adjust based on your business logic
-        toUserId: user._id,
-        toAddress:
-          transactionDetails.destinationAddress || user.primaryWalletAddress,
-        amount: transactionDetails.destinationAmount?.toString() || "0",
-        sourceChain: "ethereum", // Default, adjust based on transaction details
-        destinationChain: "ethereum", // Default, adjust based on transaction details
-        status: mapMeldStatusToInternalStatus(
-          transactionDetails.status || eventType
-        ),
-        category: "crypto_deposit",
-        ...updateData,
+      // Create new FiatInteraction
+      const newFiatInteraction = new FiatInteraction({
+        ...fiatInteractionData,
+        webhookEvents: [
+          {
+            event: eventType,
+            timestamp: now,
+            data: transactionDetails,
+          },
+        ],
       });
 
-      await newTransaction.save();
-      transaction = newTransaction;
-      logger.info("Created new transaction record", {
+      await newFiatInteraction.save();
+      fiatInteraction = newFiatInteraction;
+      logger.info("Created new FiatInteraction record", {
         transactionId,
         meldTransactionId: transactionId,
       });
     }
 
-    // 4. Send notification to frontend
-    await sendCryptoTransactionNotification(
+    // 8. Send notification to frontend
+    await sendFiatInteractionNotification(
       user._id.toString(),
       eventType,
       transactionDetails,
-      transaction._id.toString()
+      fiatInteraction._id.toString()
     );
 
     logger.info("Successfully processed crypto transaction webhook", {
       eventType,
       transactionId,
       userId: user._id.toString(),
+      fiatInteractionId: fiatInteraction._id.toString(),
     });
   } catch (err) {
     logger.error("Error handling crypto transaction update", err as Error, {
@@ -909,91 +735,175 @@ async function handleCryptoTransactionUpdate(
 }
 
 /**
- * Map Meld transaction status to internal status
+ * Map Meld transaction status to FiatInteraction status
  */
-function mapMeldStatusToInternalStatus(
+function mapMeldStatusToFiatStatus(
   meldStatus: string
-): "pending" | "completed" | "failed" {
+): "pending" | "processing" | "completed" | "failed" | "cancelled" | "expired" {
   switch (meldStatus) {
     case "PENDING":
-    case "TRANSFERRING":
       return "pending";
+    case "TRANSFERRING":
+    case "PROCESSING":
+      return "processing";
     case "COMPLETED":
     case "SETTLED":
       return "completed";
     case "FAILED":
-    case "CANCELLED":
       return "failed";
+    case "CANCELLED":
+      return "cancelled";
+    case "EXPIRED":
+      return "expired";
     default:
       return "pending";
   }
 }
 
 /**
- * Send notification for crypto transaction updates
+ * Determine if this is an onramp or offramp transaction
  */
-async function sendCryptoTransactionNotification(
+function determineTransactionType(
+  eventType: string,
+  transactionDetails: any
+): "onramp" | "offramp" {
+  // Check event type first
+  if (eventType.includes("ONRAMP")) {
+    return "onramp";
+  }
+  if (eventType.includes("OFFRAMP")) {
+    return "offramp";
+  }
+
+  // Check transaction details
+  if (transactionDetails.type) {
+    if (
+      transactionDetails.type.toLowerCase().includes("buy") ||
+      transactionDetails.type.toLowerCase().includes("onramp")
+    ) {
+      return "onramp";
+    }
+    if (
+      transactionDetails.type.toLowerCase().includes("sell") ||
+      transactionDetails.type.toLowerCase().includes("offramp")
+    ) {
+      return "offramp";
+    }
+  }
+
+  // Default based on direction of funds
+  if (
+    transactionDetails.sourceCurrency &&
+    transactionDetails.destinationCurrency
+  ) {
+    const sourceIsFiat = ["USD", "EUR", "GBP", "CAD", "AUD"].includes(
+      transactionDetails.sourceCurrency.toUpperCase()
+    );
+    const destIsCrypto = ["ETH", "BTC", "USDC", "USDT"].includes(
+      transactionDetails.destinationCurrency.toUpperCase()
+    );
+    const sourceIsCrypto = ["ETH", "BTC", "USDC", "USDT"].includes(
+      transactionDetails.sourceCurrency.toUpperCase()
+    );
+    const destIsFiat = ["USD", "EUR", "GBP", "CAD", "AUD"].includes(
+      transactionDetails.destinationCurrency.toUpperCase()
+    );
+
+    if (sourceIsFiat && destIsCrypto) {
+      return "onramp";
+    }
+    if (sourceIsCrypto && destIsFiat) {
+      return "offramp";
+    }
+  }
+
+  // Default to onramp for crypto transactions
+  return "onramp";
+}
+
+/**
+ * Send notification for FiatInteraction updates
+ */
+async function sendFiatInteractionNotification(
   userId: string,
   eventType: string,
   transactionDetails: any,
-  transactionId: string
+  fiatInteractionId: string
 ): Promise<void> {
   try {
     const statusMessages = {
-      TRANSACTION_CRYPTO_PENDING: "Your crypto deposit is being processed",
+      TRANSACTION_CRYPTO_PENDING: "Your crypto transaction is being processed",
       TRANSACTION_CRYPTO_TRANSFERRING:
-        "Your crypto deposit is being transferred",
-      TRANSACTION_CRYPTO_COMPLETE: "Your crypto deposit has been completed",
-      TRANSACTION_CRYPTO_FAILED: "Your crypto deposit has failed",
+        "Your crypto transaction is being transferred",
+      TRANSACTION_CRYPTO_COMPLETE: "Your crypto transaction has been completed",
+      TRANSACTION_CRYPTO_FAILED: "Your crypto transaction has failed",
+      ONRAMP_COMPLETED: "Your crypto purchase has been completed",
+      ONRAMP_FAILED: "Your crypto purchase has failed",
+      OFFRAMP_COMPLETED: "Your crypto withdrawal has been completed",
+      OFFRAMP_FAILED: "Your crypto withdrawal has failed",
     };
 
-    const isSuccess = eventType === "TRANSACTION_CRYPTO_COMPLETE";
-    const isFailure = eventType === "TRANSACTION_CRYPTO_FAILED";
+    const isSuccess = eventType.includes("COMPLETED");
+    const isFailure = eventType.includes("FAILED");
+    const isOnramp =
+      eventType.includes("ONRAMP") ||
+      (eventType.includes("CRYPTO") && !eventType.includes("OFFRAMP"));
+    const isOfframp =
+      eventType.includes("OFFRAMP") ||
+      (eventType.includes("CRYPTO") && eventType.includes("OFFRAMP"));
+
+    const transactionType = isOnramp
+      ? "Purchase"
+      : isOfframp
+        ? "Withdrawal"
+        : "Transaction";
 
     const notificationOptions: NotificationOptions = {
       notification: {
         title: isSuccess
-          ? "Deposit Completed"
+          ? `${transactionType} Completed`
           : isFailure
-            ? "Deposit Failed"
-            : "Deposit Update",
+            ? `${transactionType} Failed`
+            : `${transactionType} Update`,
         body:
           statusMessages[eventType as keyof typeof statusMessages] ||
-          "Your deposit status has been updated",
+          "Your transaction status has been updated",
         icon: isSuccess
           ? "/icons/success-icon.png"
           : isFailure
             ? "/icons/error-icon.png"
             : "/icons/info-icon.png",
-        clickAction: "/transactions",
+        clickAction: "/fiat-interactions",
       },
       data: {
-        type: "crypto_transaction",
+        type: "fiat_interaction",
         eventType,
-        transactionId,
+        fiatInteractionId,
         status: transactionDetails.status,
-        amount: transactionDetails.destinationAmount?.toString() || "",
-        currency: transactionDetails.destinationCurrency || "",
+        amount:
+          transactionDetails.destinationAmount?.toString() ||
+          transactionDetails.sourceAmount?.toString() ||
+          "",
+        currency:
+          transactionDetails.destinationCurrency ||
+          transactionDetails.sourceCurrency ||
+          "",
         timestamp: new Date().toISOString(),
       },
     };
 
     await sendNotificationToUser(userId, notificationOptions, "payments");
 
-    logger.info("Sent crypto transaction notification", {
+    logger.info("Sent FiatInteraction notification", {
       userId,
       eventType,
-      transactionId,
+      fiatInteractionId,
     });
   } catch (err) {
-    logger.error(
-      "Error sending crypto transaction notification",
-      err as Error,
-      {
-        userId,
-        eventType,
-        transactionId,
-      }
-    );
+    logger.error("Error sending FiatInteraction notification", err as Error, {
+      userId,
+      eventType,
+      fiatInteractionId,
+    });
   }
 }

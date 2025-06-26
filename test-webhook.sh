@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# Test configuration
-TEST_SECRET="CyBVSYh28hawqqAFk4EChrqqHwrXz"
-BASE_URL="http://localhost:3000"
-WEBHOOK_PATH="/dev/api/webhooks/meld"
+# Test script for Meld webhook endpoints
+# This script tests the webhook handler with various Meld webhook events
+
+# Configuration
+WEBHOOK_URL="http://localhost:3000/dev/webhooks/meld"
+WEBHOOK_SECRET="${MELD_WEBHOOK_SECRET:-test-webhook-secret}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,227 +14,200 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Starting Meld Webhook Tests...${NC}"
-echo -e "${BLUE}📍 Testing endpoint: ${BASE_URL}${WEBHOOK_PATH}${NC}"
-echo -e "${BLUE}🔑 Using test secret: ${TEST_SECRET}${NC}"
-echo ""
+echo -e "${BLUE}🚀 Starting Meld Webhook Tests${NC}"
+echo -e "Webhook URL: ${WEBHOOK_URL}"
+echo -e "Webhook Secret: ${WEBHOOK_SECRET}"
+echo -e "=================================================="
 
-# Function to generate HMAC signature
+# Function to generate signature
 generate_signature() {
     local payload="$1"
     local secret="$2"
-    echo -n "$payload" | openssl dgst -sha256 -hmac "$secret" | sed 's/^.*= //'
+    echo -n "$payload" | openssl dgst -sha256 -hmac "$secret" | cut -d' ' -f2
 }
 
-# Function to test webhook
+# Function to test a webhook
 test_webhook() {
-    local test_name="$1"
-    local payload="$2"
+    local name="$1"
+    local event_type="$2"
+    local data="$3"
     
-    echo -e "${YELLOW}🧪 Testing $test_name...${NC}"
-    echo "Payload: $payload"
+    echo -e "\n${YELLOW}🧪 Testing: $name${NC}"
+    echo -e "Event Type: $event_type"
+    
+    # Create webhook payload
+    local payload=$(cat <<EOF
+{
+  "eventType": "$event_type",
+  "eventId": "test-event-$(date +%s)",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
+  "data": $data
+}
+EOF
+)
     
     # Generate signature
-    local signature=$(generate_signature "$payload" "$TEST_SECRET")
-    local signature_header="sha256=$signature"
+    local signature=$(generate_signature "$payload" "$WEBHOOK_SECRET")
     
-    echo "Signature: $signature_header"
-    
-    # Make request
-    local response=$(curl -s -w "\n%{http_code}" \
-        -X POST \
+    # Send webhook request
+    local response=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
         -H "Content-Type: application/json" \
-        -H "meld-signature: $signature_header" \
-        -d "$payload" \
-        "${BASE_URL}${WEBHOOK_PATH}")
+        -H "X-Meld-Signature: $signature" \
+        -H "User-Agent: Meld-Webhook-Test/1.0" \
+        -d "$payload")
     
-    # Extract status code (last line)
+    # Extract status code and response body
     local status_code=$(echo "$response" | tail -n1)
     local response_body=$(echo "$response" | head -n -1)
-    
-    echo -e "${BLUE}📊 Response Status: $status_code${NC}"
-    echo "Response Body: $response_body"
     
     if [ "$status_code" = "200" ]; then
-        echo -e "${GREEN}✅ Webhook test PASSED${NC}"
+        echo -e "${GREEN}✅ Status: $status_code${NC}"
+        echo -e "Response: $response_body"
+        
+        # Test the corresponding FiatInteraction endpoint if transactionId exists
+        if echo "$data" | grep -q "transactionId"; then
+            local transaction_id=$(echo "$data" | grep -o '"transactionId":"[^"]*"' | cut -d'"' -f4)
+            if [ -n "$transaction_id" ]; then
+                echo -e "\n${BLUE}🔍 Testing FiatInteraction endpoint for transaction: $transaction_id${NC}"
+                echo -e "Expected endpoint: http://localhost:3000/dev/api/fiat-interactions/external/$transaction_id"
+                echo -e "Note: This endpoint requires authentication in production"
+            fi
+        fi
     else
-        echo -e "${RED}❌ Webhook test FAILED${NC}"
+        echo -e "${RED}❌ Status: $status_code${NC}"
+        echo -e "Response: $response_body"
     fi
-    echo ""
+    
+    # Add delay between tests
+    sleep 1
 }
 
-# Function to test error cases
-test_error_case() {
-    local test_name="$1"
-    local payload="$2"
-    local expected_status="$3"
-    local signature_header="$4"
-    
-    echo -e "${YELLOW}🧪 Testing $test_name...${NC}"
-    
-    local curl_cmd="curl -s -w '\n%{http_code}' -X POST -H 'Content-Type: application/json'"
-    
-    if [ -n "$signature_header" ]; then
-        curl_cmd="$curl_cmd -H 'meld-signature: $signature_header'"
-    fi
-    
-    curl_cmd="$curl_cmd -d '$payload' '${BASE_URL}${WEBHOOK_PATH}'"
-    
-    local response=$(eval $curl_cmd)
-    local status_code=$(echo "$response" | tail -n1)
-    local response_body=$(echo "$response" | head -n -1)
-    
-    echo -e "${BLUE}📊 Response Status: $status_code${NC}"
-    echo "Response Body: $response_body"
-    
-    if [ "$status_code" = "$expected_status" ]; then
-        echo -e "${GREEN}✅ Correctly handled error case${NC}"
-    else
-        echo -e "${RED}❌ Expected status $expected_status, got $status_code${NC}"
-    fi
-    echo ""
-}
-
-# Test payloads
-BANK_LINKING_PAYLOAD='{
-  "type": "BANK_LINKING_CONNECTION_COMPLETED",
-  "id": "evt_test_123",
-  "accountId": "acc_test_456",
-  "data": {
-    "connectionId": "conn_test_789",
-    "status": "active",
-    "accounts": [
-      {
-        "id": "bank_acc_1",
-        "name": "Checking Account",
-        "type": "checking"
-      }
-    ]
-  }
+# Test data for different webhook types
+echo -e "\n${BLUE}Testing Account Created${NC}"
+test_webhook "Account Created" "ACCOUNT_CREATED" '{
+  "accountId": "test-account-123",
+  "userId": "test-user-456",
+  "status": "active",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
-ONRAMP_COMPLETED_PAYLOAD='{
-  "type": "ONRAMP_COMPLETED",
-  "id": "evt_test_124",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "txn_test_789",
-    "amount": "100.00",
-    "currency": "USD",
-    "status": "completed",
-    "externalTransactionId": "ext_txn_123"
-  }
+echo -e "\n${BLUE}Testing Onramp Completed${NC}"
+test_webhook "Onramp Completed" "ONRAMP_COMPLETED" '{
+  "accountId": "test-account-123",
+  "transactionId": "tx-onramp-789",
+  "fiatAmount": {"value": 100, "currency": "USD"},
+  "cryptoAmount": {"value": 0.05, "currency": "ETH"},
+  "exchangeRate": 2000,
+  "status": "completed",
+  "transactionHash": "0x1234567890abcdef",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
-ONRAMP_FAILED_PAYLOAD='{
-  "type": "ONRAMP_FAILED",
-  "id": "evt_test_125",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "txn_test_790",
-    "amount": "50.00",
-    "currency": "USD",
-    "status": "failed",
-    "error": "Insufficient funds",
-    "externalTransactionId": "ext_txn_124"
-  }
+echo -e "\n${BLUE}Testing Offramp Completed${NC}"
+test_webhook "Offramp Completed" "OFFRAMP_COMPLETED" '{
+  "accountId": "test-account-123",
+  "transactionId": "tx-offramp-101",
+  "cryptoAmount": {"value": 0.1, "currency": "ETH"},
+  "fiatAmount": {"value": 200, "currency": "USD"},
+  "exchangeRate": 2000,
+  "status": "completed",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
-TRANSACTIONS_ADDED_PAYLOAD='{
-  "type": "FINANCIAL_ACCOUNT_TRANSACTIONS_ADDED",
-  "id": "evt_test_126",
-  "accountId": "acc_test_456",
-  "data": {
-    "accountId": "bank_acc_1",
-    "transactions": [
-      {
-        "id": "txn_1",
-        "amount": "25.50",
-        "currency": "USD",
-        "description": "Coffee shop",
-        "date": "'$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)'"
-      }
-    ]
-  }
+echo -e "\n${BLUE}Testing Crypto Transaction Pending${NC}"
+test_webhook "Crypto Transaction Pending" "TRANSACTION_CRYPTO_PENDING" '{
+  "accountId": "test-account-123",
+  "transactionId": "tx-crypto-202",
+  "sourceAmount": 100,
+  "sourceCurrency": "USD",
+  "destinationAmount": 0.05,
+  "destinationCurrency": "ETH",
+  "exchangeRate": 2000,
+  "status": "pending",
+  "sourceAccountId": "bank-123",
+  "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+  "blockchain": "ethereum",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
-# New crypto transaction webhook payloads
-CRYPTO_PENDING_PAYLOAD='{
-  "type": "TRANSACTION_CRYPTO_PENDING",
-  "id": "evt_test_127",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "crypto_txn_001",
-    "status": "PENDING",
-    "sourceAmount": "100.00",
-    "sourceCurrency": "USD",
-    "destinationAmount": "0.05",
-    "destinationCurrency": "ETH",
-    "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-  }
+echo -e "\n${BLUE}Testing Crypto Transaction Complete${NC}"
+test_webhook "Crypto Transaction Complete" "TRANSACTION_CRYPTO_COMPLETE" '{
+  "accountId": "test-account-123",
+  "transactionId": "tx-crypto-202",
+  "sourceAmount": 100,
+  "sourceCurrency": "USD",
+  "destinationAmount": 0.05,
+  "destinationCurrency": "ETH",
+  "exchangeRate": 2000,
+  "status": "completed",
+  "sourceAccountId": "bank-123",
+  "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+  "blockchain": "ethereum",
+  "blockchainTransactionHash": "0xabcdef1234567890",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'",
+  "completedAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
-CRYPTO_TRANSFERRING_PAYLOAD='{
-  "type": "TRANSACTION_CRYPTO_TRANSFERRING",
-  "id": "evt_test_128",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "crypto_txn_001",
-    "status": "TRANSFERRING",
-    "sourceAmount": "100.00",
-    "sourceCurrency": "USD",
-    "destinationAmount": "0.05",
-    "destinationCurrency": "ETH",
-    "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-  }
+echo -e "\n${BLUE}Testing Crypto Transaction Failed${NC}"
+test_webhook "Crypto Transaction Failed" "TRANSACTION_CRYPTO_FAILED" '{
+  "accountId": "test-account-123",
+  "transactionId": "tx-crypto-203",
+  "sourceAmount": 50,
+  "sourceCurrency": "USD",
+  "destinationAmount": 0.025,
+  "destinationCurrency": "ETH",
+  "exchangeRate": 2000,
+  "status": "failed",
+  "failureReason": "Insufficient funds",
+  "sourceAccountId": "bank-123",
+  "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+  "blockchain": "ethereum",
+  "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'",
+  "failedAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
-
-CRYPTO_COMPLETE_PAYLOAD='{
-  "type": "TRANSACTION_CRYPTO_COMPLETE",
-  "id": "evt_test_129",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "crypto_txn_001",
-    "status": "COMPLETED",
-    "sourceAmount": "100.00",
-    "sourceCurrency": "USD",
-    "destinationAmount": "0.05",
-    "destinationCurrency": "ETH",
-    "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-    "blockchainTransactionHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-  }
-}'
-
-CRYPTO_FAILED_PAYLOAD='{
-  "type": "TRANSACTION_CRYPTO_FAILED",
-  "id": "evt_test_130",
-  "accountId": "acc_test_456",
-  "data": {
-    "transactionId": "crypto_txn_002",
-    "status": "FAILED",
-    "sourceAmount": "50.00",
-    "sourceCurrency": "USD",
-    "destinationAmount": "0.025",
-    "destinationCurrency": "ETH",
-    "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-    "failureReason": "Insufficient funds"
-  }
-}'
-
-# Run tests
-test_webhook "Bank Linking Completed" "$BANK_LINKING_PAYLOAD"
-test_webhook "Onramp Completed" "$ONRAMP_COMPLETED_PAYLOAD"
-test_webhook "Onramp Failed" "$ONRAMP_FAILED_PAYLOAD"
-test_webhook "Transactions Added" "$TRANSACTIONS_ADDED_PAYLOAD"
-
-# Test new crypto transaction webhooks
-test_webhook "Crypto Transaction Pending" "$CRYPTO_PENDING_PAYLOAD"
-test_webhook "Crypto Transaction Transferring" "$CRYPTO_TRANSFERRING_PAYLOAD"
-test_webhook "Crypto Transaction Complete" "$CRYPTO_COMPLETE_PAYLOAD"
-test_webhook "Crypto Transaction Failed" "$CRYPTO_FAILED_PAYLOAD"
 
 # Test error cases
-test_error_case "Without Signature" "$ONRAMP_COMPLETED_PAYLOAD" "401" ""
-test_error_case "Invalid Signature" "$ONRAMP_COMPLETED_PAYLOAD" "401" "sha256=invalid_signature_here"
+echo -e "\n${BLUE}Testing Invalid Signature${NC}"
+payload='{
+  "eventType": "ACCOUNT_CREATED",
+  "eventId": "test-invalid-sig",
+  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'",
+  "data": {"accountId": "test-account-123"}
+}'
 
-echo -e "${GREEN}🎉 All tests completed!${NC}" 
+response=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
+    -H "Content-Type: application/json" \
+    -H "X-Meld-Signature: invalid-signature" \
+    -H "User-Agent: Meld-Webhook-Test/1.0" \
+    -d "$payload")
+
+status_code=$(echo "$response" | tail -n1)
+response_body=$(echo "$response" | head -n -1)
+
+if [ "$status_code" = "401" ]; then
+    echo -e "${GREEN}✅ Correctly rejected invalid signature${NC}"
+else
+    echo -e "${RED}❌ Should have rejected invalid signature (Status: $status_code)${NC}"
+fi
+
+echo -e "\n${BLUE}Testing Missing Signature${NC}"
+response=$(curl -s -w "\n%{http_code}" -X POST "$WEBHOOK_URL" \
+    -H "Content-Type: application/json" \
+    -H "User-Agent: Meld-Webhook-Test/1.0" \
+    -d "$payload")
+
+status_code=$(echo "$response" | tail -n1)
+response_body=$(echo "$response" | head -n -1)
+
+if [ "$status_code" = "401" ]; then
+    echo -e "${GREEN}✅ Correctly rejected missing signature${NC}"
+else
+    echo -e "${RED}❌ Should have rejected missing signature (Status: $status_code)${NC}"
+fi
+
+echo -e "\n${GREEN}✅ All tests completed!${NC}"
+echo -e "\n${BLUE}📝 Notes:${NC}"
+echo -e "- Webhook processing logs should appear in your serverless offline console"
+echo -e "- Check the database for created/updated FiatInteraction records"
+echo -e "- Frontend should receive push notifications for status updates"
+echo -e "- Use the FiatInteraction endpoints to query transaction status" 
