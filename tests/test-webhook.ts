@@ -35,11 +35,11 @@ const testWebhooks = [
     eventType: "ONRAMP_COMPLETED",
     data: {
       accountId: "test-account-123",
-      transactionId: "tx-onramp-789",
+      paymentTransactionId: "tx-onramp-789",
       fiatAmount: { value: 100, currency: "USD" },
       cryptoAmount: { value: 0.05, currency: "ETH" },
       exchangeRate: 2000,
-      status: "completed",
+      paymentTransactionStatus: "SETTLED",
       transactionHash: "0x1234567890abcdef",
       createdAt: new Date().toISOString(),
     },
@@ -49,11 +49,11 @@ const testWebhooks = [
     eventType: "OFFRAMP_COMPLETED",
     data: {
       accountId: "test-account-123",
-      transactionId: "tx-offramp-101",
+      paymentTransactionId: "tx-offramp-101",
       cryptoAmount: { value: 0.1, currency: "ETH" },
       fiatAmount: { value: 200, currency: "USD" },
       exchangeRate: 2000,
-      status: "completed",
+      paymentTransactionStatus: "SETTLED",
       createdAt: new Date().toISOString(),
     },
   },
@@ -62,13 +62,37 @@ const testWebhooks = [
     eventType: "TRANSACTION_CRYPTO_PENDING",
     data: {
       accountId: "test-account-123",
-      transactionId: "tx-crypto-202",
+      customerId: "test-customer-456",
+      externalCustomerId: "customer_1234443",
+      externalSessionId: "session_1234323",
+      paymentTransactionId: "tx-crypto-202",
+      paymentTransactionStatus: "PENDING",
       sourceAmount: 100,
       sourceCurrency: "USD",
       destinationAmount: 0.05,
       destinationCurrency: "ETH",
       exchangeRate: 2000,
-      status: "pending",
+      sourceAccountId: "bank-123",
+      destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+      blockchain: "ethereum",
+      createdAt: new Date().toISOString(),
+    },
+  },
+  {
+    name: "Crypto Transaction Transferring",
+    eventType: "TRANSACTION_CRYPTO_TRANSFERRING",
+    data: {
+      accountId: "test-account-123",
+      customerId: "test-customer-456",
+      externalCustomerId: "customer_1234443",
+      externalSessionId: "session_1234323",
+      paymentTransactionId: "tx-crypto-202",
+      paymentTransactionStatus: "SETTLING",
+      sourceAmount: 100,
+      sourceCurrency: "USD",
+      destinationAmount: 0.05,
+      destinationCurrency: "ETH",
+      exchangeRate: 2000,
       sourceAccountId: "bank-123",
       destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
       blockchain: "ethereum",
@@ -80,13 +104,16 @@ const testWebhooks = [
     eventType: "TRANSACTION_CRYPTO_COMPLETE",
     data: {
       accountId: "test-account-123",
-      transactionId: "tx-crypto-202",
+      customerId: "test-customer-456",
+      externalCustomerId: "customer_1234443",
+      externalSessionId: "session_1234323",
+      paymentTransactionId: "tx-crypto-202",
+      paymentTransactionStatus: "SETTLED",
       sourceAmount: 100,
       sourceCurrency: "USD",
       destinationAmount: 0.05,
       destinationCurrency: "ETH",
       exchangeRate: 2000,
-      status: "completed",
       sourceAccountId: "bank-123",
       destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
       blockchain: "ethereum",
@@ -100,13 +127,16 @@ const testWebhooks = [
     eventType: "TRANSACTION_CRYPTO_FAILED",
     data: {
       accountId: "test-account-123",
-      transactionId: "tx-crypto-203",
+      customerId: "test-customer-456",
+      externalCustomerId: "customer_1234443",
+      externalSessionId: "session_1234323",
+      paymentTransactionId: "tx-crypto-203",
+      paymentTransactionStatus: "ERROR",
       sourceAmount: 50,
       sourceCurrency: "USD",
       destinationAmount: 0.025,
       destinationCurrency: "ETH",
       exchangeRate: 2000,
-      status: "failed",
       failureReason: "Insufficient funds",
       sourceAccountId: "bank-123",
       destinationAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
@@ -156,9 +186,9 @@ async function testWebhook(webhook: any): Promise<void> {
     console.log(`✅ Status: ${response.status}`);
     console.log(`Response: ${JSON.stringify(response.data, null, 2)}`);
 
-    // Test the corresponding FiatInteraction endpoint
-    if (webhook.data.transactionId) {
-      await testFiatInteractionEndpoint(webhook.data.transactionId);
+    // Test the corresponding FiatInteraction endpoint if transactionId exists
+    if (webhook.data.paymentTransactionId) {
+      await testFiatInteractionEndpoint(webhook.data.paymentTransactionId);
     }
   } catch (error: any) {
     console.log(`❌ Error: ${error.message}`);

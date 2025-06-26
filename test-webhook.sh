@@ -65,8 +65,8 @@ EOF
         echo -e "Response: $response_body"
         
         # Test the corresponding FiatInteraction endpoint if transactionId exists
-        if echo "$data" | grep -q "transactionId"; then
-            local transaction_id=$(echo "$data" | grep -o '"transactionId":"[^"]*"' | cut -d'"' -f4)
+        if echo "$data" | grep -q "paymentTransactionId"; then
+            local transaction_id=$(echo "$data" | grep -o '"paymentTransactionId":"[^"]*"' | cut -d'"' -f4)
             if [ -n "$transaction_id" ]; then
                 echo -e "\n${BLUE}🔍 Testing FiatInteraction endpoint for transaction: $transaction_id${NC}"
                 echo -e "Expected endpoint: http://localhost:3000/dev/api/fiat-interactions/external/$transaction_id"
@@ -94,11 +94,11 @@ test_webhook "Account Created" "ACCOUNT_CREATED" '{
 echo -e "\n${BLUE}Testing Onramp Completed${NC}"
 test_webhook "Onramp Completed" "ONRAMP_COMPLETED" '{
   "accountId": "test-account-123",
-  "transactionId": "tx-onramp-789",
+  "paymentTransactionId": "tx-onramp-789",
   "fiatAmount": {"value": 100, "currency": "USD"},
   "cryptoAmount": {"value": 0.05, "currency": "ETH"},
   "exchangeRate": 2000,
-  "status": "completed",
+  "paymentTransactionStatus": "SETTLED",
   "transactionHash": "0x1234567890abcdef",
   "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
@@ -106,24 +106,27 @@ test_webhook "Onramp Completed" "ONRAMP_COMPLETED" '{
 echo -e "\n${BLUE}Testing Offramp Completed${NC}"
 test_webhook "Offramp Completed" "OFFRAMP_COMPLETED" '{
   "accountId": "test-account-123",
-  "transactionId": "tx-offramp-101",
+  "paymentTransactionId": "tx-offramp-101",
   "cryptoAmount": {"value": 0.1, "currency": "ETH"},
   "fiatAmount": {"value": 200, "currency": "USD"},
   "exchangeRate": 2000,
-  "status": "completed",
+  "paymentTransactionStatus": "SETTLED",
   "createdAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
 }'
 
 echo -e "\n${BLUE}Testing Crypto Transaction Pending${NC}"
 test_webhook "Crypto Transaction Pending" "TRANSACTION_CRYPTO_PENDING" '{
   "accountId": "test-account-123",
-  "transactionId": "tx-crypto-202",
+  "customerId": "test-customer-456",
+  "externalCustomerId": "customer_1234443",
+  "externalSessionId": "session_1234323",
+  "paymentTransactionId": "tx-crypto-202",
+  "paymentTransactionStatus": "PENDING",
   "sourceAmount": 100,
   "sourceCurrency": "USD",
   "destinationAmount": 0.05,
   "destinationCurrency": "ETH",
   "exchangeRate": 2000,
-  "status": "pending",
   "sourceAccountId": "bank-123",
   "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
   "blockchain": "ethereum",
@@ -133,13 +136,16 @@ test_webhook "Crypto Transaction Pending" "TRANSACTION_CRYPTO_PENDING" '{
 echo -e "\n${BLUE}Testing Crypto Transaction Complete${NC}"
 test_webhook "Crypto Transaction Complete" "TRANSACTION_CRYPTO_COMPLETE" '{
   "accountId": "test-account-123",
-  "transactionId": "tx-crypto-202",
+  "customerId": "test-customer-456",
+  "externalCustomerId": "customer_1234443",
+  "externalSessionId": "session_1234323",
+  "paymentTransactionId": "tx-crypto-202",
+  "paymentTransactionStatus": "SETTLED",
   "sourceAmount": 100,
   "sourceCurrency": "USD",
   "destinationAmount": 0.05,
   "destinationCurrency": "ETH",
   "exchangeRate": 2000,
-  "status": "completed",
   "sourceAccountId": "bank-123",
   "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
   "blockchain": "ethereum",
@@ -151,13 +157,16 @@ test_webhook "Crypto Transaction Complete" "TRANSACTION_CRYPTO_COMPLETE" '{
 echo -e "\n${BLUE}Testing Crypto Transaction Failed${NC}"
 test_webhook "Crypto Transaction Failed" "TRANSACTION_CRYPTO_FAILED" '{
   "accountId": "test-account-123",
-  "transactionId": "tx-crypto-203",
+  "customerId": "test-customer-456",
+  "externalCustomerId": "customer_1234443",
+  "externalSessionId": "session_1234323",
+  "paymentTransactionId": "tx-crypto-203",
+  "paymentTransactionStatus": "ERROR",
   "sourceAmount": 50,
   "sourceCurrency": "USD",
   "destinationAmount": 0.025,
   "destinationCurrency": "ETH",
   "exchangeRate": 2000,
-  "status": "failed",
   "failureReason": "Insufficient funds",
   "sourceAccountId": "bank-123",
   "destinationAddress": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",

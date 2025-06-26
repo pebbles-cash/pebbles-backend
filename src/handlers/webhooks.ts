@@ -523,9 +523,23 @@ async function handleCryptoTransactionUpdate(
       data,
     });
 
-    const transactionId = data.transactionId;
+    // According to Meld docs, the transaction ID is in data.paymentTransactionId
+    const transactionId = data.paymentTransactionId;
     if (!transactionId) {
-      logger.warn("No transactionId in crypto webhook", { eventType, data });
+      logger.warn("No paymentTransactionId in crypto webhook", {
+        eventType,
+        data,
+      });
+      return;
+    }
+
+    // According to Meld docs, the status is in data.paymentTransactionStatus
+    const meldStatus = data.paymentTransactionStatus;
+    if (!meldStatus) {
+      logger.warn("No paymentTransactionStatus in crypto webhook", {
+        eventType,
+        data,
+      });
       return;
     }
 
@@ -561,9 +575,7 @@ async function handleCryptoTransactionUpdate(
     }
 
     // 3. Map Meld status to FiatInteraction status
-    const fiatStatus = mapMeldStatusToFiatStatus(
-      transactionDetails.status || eventType
-    );
+    const fiatStatus = mapMeldStatusToFiatStatus(meldStatus);
 
     // 4. Determine transaction type (onramp/offramp) based on event type
     const transactionType = determineTransactionType(
@@ -647,7 +659,13 @@ async function handleCryptoTransactionUpdate(
         fingerprint: transactionDetails.deviceFingerprint || "",
       },
       kycLevel: transactionDetails.kycLevel || "none",
-      metadata: transactionDetails,
+      metadata: {
+        ...transactionDetails,
+        meldCustomerId: data.customerId,
+        meldExternalCustomerId: data.externalCustomerId,
+        meldExternalSessionId: data.externalSessionId,
+        meldPaymentTransactionStatus: meldStatus,
+      },
     };
 
     // 6. Update timestamps based on status
@@ -743,12 +761,14 @@ function mapMeldStatusToFiatStatus(
   switch (meldStatus) {
     case "PENDING":
       return "pending";
+    case "SETTLING":
     case "TRANSFERRING":
     case "PROCESSING":
       return "processing";
-    case "COMPLETED":
     case "SETTLED":
+    case "COMPLETED":
       return "completed";
+    case "ERROR":
     case "FAILED":
       return "failed";
     case "CANCELLED":
@@ -756,6 +776,7 @@ function mapMeldStatusToFiatStatus(
     case "EXPIRED":
       return "expired";
     default:
+      logger.warn("Unknown Meld status, defaulting to pending", { meldStatus });
       return "pending";
   }
 }
@@ -879,7 +900,9 @@ async function sendFiatInteractionNotification(
         type: "fiat_interaction",
         eventType,
         fiatInteractionId,
-        status: transactionDetails.status,
+        status:
+          transactionDetails.paymentTransactionStatus ||
+          transactionDetails.status,
         amount:
           transactionDetails.destinationAmount?.toString() ||
           transactionDetails.sourceAmount?.toString() ||
