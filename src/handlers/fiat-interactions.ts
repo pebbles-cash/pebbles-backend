@@ -66,7 +66,7 @@ export const getUserFiatInteractions = requireAuth(
  * Get FiatInteraction details by ID
  * GET /api/fiat-interactions/{customerId}
  */
-export const getFiatInteractionDetails = requireAuth(
+export const getFiatInteractionById = requireAuth(
   async (
     event: AuthenticatedAPIGatewayProxyEvent
   ): Promise<APIGatewayProxyResult> => {
@@ -104,51 +104,6 @@ export const getFiatInteractionDetails = requireAuth(
       });
     } catch (err) {
       console.error("Get FiatInteraction details error:", err);
-      return error("Could not retrieve FiatInteraction details", 500);
-    }
-  }
-);
-
-/**
- * Get FiatInteraction by external transaction ID
- * GET /api/fiat-interactions/external/{externalTransactionId}
- */
-export const getFiatInteractionByExternalId = requireAuth(
-  async (
-    event: AuthenticatedAPIGatewayProxyEvent
-  ): Promise<APIGatewayProxyResult> => {
-    try {
-      // Database connection is handled in requireAuth middleware
-
-      // User is provided by the auth middleware
-      const userId = event.user?.id;
-
-      if (!userId) {
-        return error("User ID not found in token", 401);
-      }
-
-      // Get external transaction ID from path parameters
-      if (!event.pathParameters?.externalTransactionId) {
-        return error("External transaction ID parameter is required", 400);
-      }
-
-      const externalTransactionId = event.pathParameters.externalTransactionId;
-
-      // Get the FiatInteraction by external transaction ID
-      const fiatInteraction = await FiatInteraction.findOne({
-        externalTransactionId,
-        userId,
-      });
-
-      if (!fiatInteraction) {
-        return error("FiatInteraction not found", 404);
-      }
-
-      return success({
-        fiatInteraction,
-      });
-    } catch (err) {
-      console.error("Get FiatInteraction by external ID error:", err);
       return error("Could not retrieve FiatInteraction details", 500);
     }
   }

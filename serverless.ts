@@ -575,24 +575,12 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    getFiatInteractionDetails: {
-      handler: "src/handlers/fiat-interactions.getFiatInteractionDetails",
+    getFiatInteractionById: {
+      handler: "src/handlers/fiat-interactions.getFiatInteractionById",
       events: [
         {
           http: {
-            path: "/api/fiat-interactions/{customerId}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getFiatInteractionByExternalId: {
-      handler: "src/handlers/fiat-interactions.getFiatInteractionByExternalId",
-      events: [
-        {
-          http: {
-            path: "/api/fiat-interactions/external/{externalTransactionId}",
+            path: "/api/fiat-interactions/customer/{customerId}",
             method: "get",
             cors: true,
           },

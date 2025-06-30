@@ -162,15 +162,8 @@ async function processMeldWebhook(webhookData: any): Promise<void> {
     case "TRANSACTION_CRYPTO_TRANSFERRING":
     case "TRANSACTION_CRYPTO_COMPLETE":
     case "TRANSACTION_CRYPTO_FAILED":
-    case "ONRAMP_COMPLETED":
-    case "ONRAMP_FAILED":
-    case "OFFRAMP_COMPLETED":
-    case "OFFRAMP_FAILED":
       await handleCryptoTransactionUpdate(eventType, data, accountId, eventId);
       break;
-
-    // Note: ONRAMP/OFFRAMP events are now handled by handleCryptoTransactionUpdate
-    // which creates/updates FiatInteraction records instead of Transaction records
 
     default:
       logger.info("Unhandled Meld webhook event type", { eventType, eventId });
