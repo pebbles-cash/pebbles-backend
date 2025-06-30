@@ -315,6 +315,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getTransactionByHash: {
+      handler: "src/handlers/transactions.getTransactionByHash",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/hash/{txHash}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     getTransactionStats: {
       handler: "src/handlers/transactions.getTransactionStats",
       events: [

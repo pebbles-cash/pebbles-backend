@@ -1,5 +1,4 @@
 import { APIGatewayProxyResult } from "aws-lambda";
-import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";
 import { Transaction, User } from "../models";
 import { requireAuth } from "../middleware/auth";
@@ -483,6 +482,100 @@ export const getTransactionStats = requireAuth(
     } catch (err) {
       console.error("Get transaction stats error:", err);
       return error("Could not retrieve transaction statistics", 500);
+    }
+  }
+);
+
+/**
+ * Get transaction by transaction hash
+ * GET /api/transactions/hash/{txHash}
+ */
+export const getTransactionByHash = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get transaction hash from path parameters
+      if (!event.pathParameters?.txHash) {
+        return error("Transaction hash parameter is required", 400);
+      }
+
+      const txHash = event.pathParameters.txHash;
+
+      // Get the transaction
+      const transaction = await Transaction.findOne({
+        txHash,
+      });
+
+      if (!transaction) {
+        return error("Transaction not found", 404);
+      }
+
+      // Check if user is authorized to view this transaction
+      if (
+        transaction.fromUserId?.toString() !== userId &&
+        transaction.toUserId.toString() !== userId
+      ) {
+        return error("Unauthorized to access this transaction", 403);
+      }
+
+      // Get counterparty user details
+      const counterpartyId =
+        transaction.fromUserId?.toString() === userId
+          ? transaction.toUserId
+          : transaction.fromUserId;
+
+      let counterparty = null;
+      if (counterpartyId) {
+        const user = await User.findById(counterpartyId).select(
+          "_id username displayName avatar"
+        );
+        if (user) {
+          counterparty = {
+            id: user._id,
+            username: user.username,
+            displayName: user.displayName,
+            avatar: user.avatar,
+          };
+        }
+      }
+
+      // Format transaction data
+      const isSender = transaction.fromUserId?.toString() === userId;
+      const formattedTransaction = {
+        id: transaction._id,
+        type: transaction.type,
+        direction: isSender ? "outgoing" : "incoming",
+        amount: transaction.amount,
+        currency: "USD", // This would come from tx in a real system
+        status: transaction.status,
+        createdAt: transaction.createdAt,
+        updatedAt: transaction.updatedAt,
+        fromAddress: transaction.fromAddress,
+        toAddress: transaction.toAddress,
+        tokenAddress: transaction.tokenAddress,
+        sourceChain: transaction.sourceChain,
+        destinationChain: transaction.destinationChain,
+        txHash: transaction.txHash,
+        metadata: transaction.metadata,
+        counterparty,
+      };
+
+      return success({
+        transaction: formattedTransaction,
+      });
+    } catch (err) {
+      console.error("Get transaction by external ID error:", err);
+      return error("Could not retrieve transaction details", 500);
     }
   }
 );

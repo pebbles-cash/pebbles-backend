@@ -209,7 +209,7 @@ async function handleWalletTransferred(
       amount: amount,
       currency: currency,
       status: "completed",
-      externalTransactionId: transactionHash,
+      txHash: transactionHash, // Store the blockchain transaction hash
       metadata: {
         fromWallet,
         toWallet,

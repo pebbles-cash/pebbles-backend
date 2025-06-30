@@ -75,6 +75,7 @@ transactionSchema.index({ fromUserId: 1 });
 transactionSchema.index({ toUserId: 1 });
 transactionSchema.index({ status: 1 });
 transactionSchema.index({ createdAt: -1 });
+transactionSchema.index({ txHash: 1 }, { sparse: true });
 transactionSchema.index({ "metadata.orderId": 1 }, { sparse: true });
 transactionSchema.index({ "metadata.subscriptionId": 1 }, { sparse: true });
 
