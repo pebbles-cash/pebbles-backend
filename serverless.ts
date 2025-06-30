@@ -179,6 +179,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getWalletAddress: {
+      handler: "src/handlers/users.getWalletAddress",
+      events: [
+        {
+          http: {
+            path: "/api/users/wallet/lookup",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     updateSocialStats: {
       handler: "src/handlers/users.updateSocialStats",
       events: [

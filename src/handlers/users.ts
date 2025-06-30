@@ -397,3 +397,51 @@ export const updateCurrentUser = requireAuth(
     }
   }
 );
+
+/**
+ * Get user wallet address by username or email
+ * GET /api/users/wallet/lookup?username=xxx or GET /api/users/wallet/lookup?email=xxx
+ */
+export const getWalletAddress = async (
+  event: AuthenticatedAPIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectToDatabase();
+
+    const { username, email } = event.queryStringParameters || {};
+
+    console.log("query params", username, email);
+
+    // Validate that either username or email is provided
+    if (!username && !email) {
+      return error("Either username or email parameter is required", 400);
+    }
+
+    // Build query based on provided parameter
+    const query: any = {};
+    if (username) {
+      query.username = username;
+    } else if (email) {
+      query.email = email;
+    }
+
+    // Get user from database
+    const user = await User.findOne(query).select(
+      "primaryWalletAddress chain username email"
+    );
+
+    if (!user) {
+      return error("User not found", 404);
+    }
+
+    return success({
+      walletAddress: user.primaryWalletAddress,
+      chain: user.chain,
+      username: user.username,
+      email: user.email,
+    });
+  } catch (err) {
+    console.error("Get wallet address error:", err);
+    return error("Could not retrieve wallet address", 500);
+  }
+};
