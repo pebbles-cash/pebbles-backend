@@ -33,6 +33,7 @@ const serverlessConfiguration: AWS = {
       DYNAMIC_API_KEY: "${env:DYNAMIC_API_KEY, ''}",
       DYNAMIC_API_URL: "${env:DYNAMIC_API_URL, ''}",
       DYNAMIC_ENVIRONMENT_ID: "${env:DYNAMIC_ENVIRONMENT_ID, ''}", // Added missing env var
+      DYNAMIC_WEBHOOK_SECRET: "${env:DYNAMIC_WEBHOOK_SECRET, ''}",
       AUTH_REDIRECT_URL: "${env:AUTH_REDIRECT_URL, ''}",
       PAYMENT_BASE_URL: "${env:PAYMENT_BASE_URL, ''}",
       MONGODB_URI: "${env:MONGODB_URI, ''}", // Added missing env var
@@ -501,11 +502,23 @@ const serverlessConfiguration: AWS = {
     },
     // Webhook Handlers
     meldWebhook: {
-      handler: "src/handlers/webhooks.handleMeldWebhook",
+      handler: "src/handlers/webhooks/meld.handleMeldWebhook",
       events: [
         {
           http: {
             path: "/api/webhooks/meld",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    dynamicWebhook: {
+      handler: "src/handlers/webhooks/dynamic.handleDynamicWebhook",
+      events: [
+        {
+          http: {
+            path: "/api/webhooks/dynamic",
             method: "post",
             cors: true,
           },

@@ -439,6 +439,7 @@ export const getWalletAddress = async (
       chain: user.chain,
       username: user.username,
       email: user.email,
+      avatar: user.avatar,
     });
   } catch (err) {
     console.error("Get wallet address error:", err);

@@ -65,6 +65,9 @@ const userSchema = new Schema<IUser>(
     walletProvider: String,
     chain: { type: String, required: true, trim: true },
     dynamicUserId: String,
+    walletLinkedAt: Date, // When wallet was linked
+    lastLoginAt: Date, // Last login timestamp
+    lastDynamicEvent: String, // Last Dynamic event ID processed
     username: {
       type: String,
       required: false,

@@ -1,13 +1,13 @@
-// src/handlers/webhooks.ts
+// src/handlers/webhooks/meld.ts
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import crypto from "crypto";
-import { connectToDatabase } from "../services/mongoose";
-import { success, error } from "../utils/response";
-import { User, FiatInteraction } from "../models";
-import { logger } from "../utils/logger";
-import { sendNotificationToUser } from "../services/notification-service";
-import { NotificationOptions } from "../services/firebase";
-import { meldService } from "../services/meld-service";
+import { connectToDatabase } from "../../services/mongoose";
+import { success, error } from "../../utils/response";
+import { User, FiatInteraction } from "../../models";
+import { logger } from "../../utils/logger";
+import { sendNotificationToUser } from "../../services/notification-service";
+import { NotificationOptions } from "../../services/firebase";
+import { meldService } from "../../services/meld-service";
 
 /**
  * Handle Meld webhook events
@@ -211,9 +211,14 @@ async function handleBankLinkingDeleted(
   try {
     logger.info("Bank linking deleted", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
+    // Send notification to user
     await sendBankLinkingNotification(user._id.toString(), "disconnected");
   } catch (err) {
     logger.error("Error handling bank linking deleted", err as Error, {
@@ -234,13 +239,16 @@ async function handleCustomerActionRequired(
   try {
     logger.info("Customer action required", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
-    await sendActionRequiredNotification(
-      user._id.toString(),
-      data.message || "Action required for your account"
-    );
+    // Send notification to user about required action
+    const message = data.message || "Action required for your bank account";
+    await sendActionRequiredNotification(user._id.toString(), message);
   } catch (err) {
     logger.error("Error handling customer action required", err as Error, {
       accountId,
@@ -259,7 +267,18 @@ async function handleAccountsUpdating(
 ): Promise<void> {
   try {
     logger.info("Accounts updating", { accountId, eventId, data });
-    // This is typically just a status update, might not need user notification
+
+    // Find user by Meld account ID
+    const user = await findUserByMeldAccountId(accountId);
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
+
+    // You might want to update user's account status
+    logger.info("Accounts are being updated for user", {
+      userId: user._id.toString(),
+    });
   } catch (err) {
     logger.error("Error handling accounts updating", err as Error, {
       accountId,
@@ -279,10 +298,14 @@ async function handleAccountsUpdated(
   try {
     logger.info("Accounts updated", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
-    // Optionally notify user that their account information was updated
+    // Send notification to user
     await sendAccountUpdateNotification(user._id.toString());
   } catch (err) {
     logger.error("Error handling accounts updated", err as Error, {
@@ -303,9 +326,14 @@ async function handleAccountsRemoved(
   try {
     logger.info("Accounts removed", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
+    // Send notification to user
     await sendBankLinkingNotification(user._id.toString(), "removed");
   } catch (err) {
     logger.error("Error handling accounts removed", err as Error, {
@@ -326,11 +354,15 @@ async function handleFinancialAccountAdded(
   try {
     logger.info("Financial account added", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
-    // This indicates a new financial account (bank account, card, etc.) was added
-    await sendAccountUpdateNotification(user._id.toString());
+    // Process the new financial account
+    await processFinancialTransaction(user._id.toString(), data, eventId);
   } catch (err) {
     logger.error("Error handling financial account added", err as Error, {
       accountId,
@@ -340,7 +372,7 @@ async function handleFinancialAccountAdded(
 }
 
 /**
- * Handle new transactions added
+ * Handle transactions added
  */
 async function handleTransactionsAdded(
   data: any,
@@ -350,10 +382,14 @@ async function handleTransactionsAdded(
   try {
     logger.info("Transactions added", { accountId, eventId, data });
 
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
-    if (!user) return;
+    if (!user) {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
 
-    // Process each transaction in the data
+    // Process each transaction
     if (data.transactions && Array.isArray(data.transactions)) {
       for (const transaction of data.transactions) {
         await processFinancialTransaction(
@@ -371,40 +407,17 @@ async function handleTransactionsAdded(
   }
 }
 
-// Helper functions
-
 /**
  * Find user by Meld account ID
- * You'll need to store the Meld account ID in your User model
  */
 async function findUserByMeldAccountId(accountId: string) {
-  // You'll need to add meldAccountId field to your User model
-  // For now, this is a placeholder
+  // You'll need to implement this based on how you store the mapping
+  // between Meld account IDs and your user IDs
   return await User.findOne({ meldAccountId: accountId });
 }
 
 /**
- * Update FiatInteraction record
- */
-async function updateFiatInteraction(
-  externalTransactionId: string,
-  updateData: any
-): Promise<void> {
-  try {
-    await FiatInteraction.findOneAndUpdate(
-      { externalTransactionId },
-      { $set: updateData },
-      { upsert: false }
-    );
-  } catch (err) {
-    logger.error("Error updating FiatInteraction", err as Error, {
-      externalTransactionId,
-    });
-  }
-}
-
-/**
- * Process financial transaction from Meld
+ * Process financial transaction
  */
 async function processFinancialTransaction(
   userId: string,
@@ -418,89 +431,156 @@ async function processFinancialTransaction(
       eventId,
     });
 
-    // This could be bank transactions, credit card transactions, etc.
-    // Process according to your business logic
+    // Create or update FiatInteraction record
+    const fiatInteraction = new FiatInteraction({
+      userId,
+      type: "onramp", // or determine based on transaction type
+      status: "completed",
+      serviceProvider: "meld",
+      externalTransactionId: transaction.id,
+      fiatAmount: {
+        value: transaction.amount,
+        currency: transaction.currency,
+      },
+      cryptoAmount: {
+        value: transaction.cryptoAmount,
+        currency: transaction.cryptoCurrency,
+      },
+      exchangeRate: transaction.exchangeRate,
+      fees: transaction.fees,
+      sourceAccount: transaction.sourceAccount,
+      destinationAccount: transaction.destinationAccount,
+      blockchain: transaction.blockchain,
+      transactionHash: transaction.transactionHash,
+      initiatedAt: new Date(transaction.createdAt),
+      completedAt: new Date(transaction.completedAt),
+      ipAddress: transaction.ipAddress,
+      deviceInfo: transaction.deviceInfo,
+      kycLevel: transaction.kycLevel,
+      metadata: {
+        meldEventId: eventId,
+        ...transaction.metadata,
+      },
+    });
 
-    // Example: Create a record or update user balance
-    // Implementation depends on what type of financial data Meld sends
+    await fiatInteraction.save();
+
+    logger.info("Successfully processed financial transaction", {
+      userId,
+      transactionId: transaction.id,
+      fiatInteractionId: fiatInteraction._id.toString(),
+    });
   } catch (err) {
     logger.error("Error processing financial transaction", err as Error, {
       userId,
+      transactionId: transaction.id,
       eventId,
     });
   }
 }
 
-// Notification functions
-
+/**
+ * Send bank linking notification
+ */
 async function sendBankLinkingNotification(
   userId: string,
   status: "connected" | "disconnected" | "removed"
 ): Promise<void> {
-  const messages = {
-    connected: "Your bank account has been successfully connected",
-    disconnected: "Your bank account has been disconnected",
-    removed: "Your bank account has been removed",
-  };
+  try {
+    const statusMessages = {
+      connected: "Your bank account has been successfully connected",
+      disconnected: "Your bank account has been disconnected",
+      removed: "Your bank account has been removed",
+    };
 
-  const notificationOptions: NotificationOptions = {
-    notification: {
-      title: "Bank Account Update",
-      body: messages[status],
-      icon: "/icons/bank-icon.png",
-      clickAction: "/settings/payments",
-    },
-    data: {
-      type: "bank_linking",
+    const notificationOptions: NotificationOptions = {
+      notification: {
+        title: "Bank Account Update",
+        body: statusMessages[status],
+        icon: "/icons/bank-icon.png",
+        clickAction: "/fiat-interactions",
+      },
+      data: {
+        type: "bank_linking",
+        status,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    logger.info("Sent bank linking notification", { userId, status });
+  } catch (err) {
+    logger.error("Error sending bank linking notification", err as Error, {
+      userId,
       status,
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  await sendNotificationToUser(userId, notificationOptions, "security");
+    });
+  }
 }
 
+/**
+ * Send action required notification
+ */
 async function sendActionRequiredNotification(
   userId: string,
   message: string
 ): Promise<void> {
-  const notificationOptions: NotificationOptions = {
-    notification: {
-      title: "Action Required",
-      body: message,
-      icon: "/icons/warning-icon.png",
-      clickAction: "/settings/payments",
-    },
-    data: {
-      type: "action_required",
+  try {
+    const notificationOptions: NotificationOptions = {
+      notification: {
+        title: "Action Required",
+        body: message,
+        icon: "/icons/alert-icon.png",
+        clickAction: "/fiat-interactions",
+      },
+      data: {
+        type: "action_required",
+        message,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    logger.info("Sent action required notification", { userId, message });
+  } catch (err) {
+    logger.error("Error sending action required notification", err as Error, {
+      userId,
       message,
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  await sendNotificationToUser(userId, notificationOptions, "security");
-}
-
-async function sendAccountUpdateNotification(userId: string): Promise<void> {
-  const notificationOptions: NotificationOptions = {
-    notification: {
-      title: "Account Updated",
-      body: "Your payment account information has been updated",
-      icon: "/icons/account-icon.png",
-      clickAction: "/settings/payments",
-    },
-    data: {
-      type: "account_update",
-      timestamp: new Date().toISOString(),
-    },
-  };
-
-  await sendNotificationToUser(userId, notificationOptions, "security");
+    });
+  }
 }
 
 /**
- * Handle crypto transaction webhook updates
- * This function processes TRANSACTION_CRYPTO_* webhooks from Meld
+ * Send account update notification
+ */
+async function sendAccountUpdateNotification(userId: string): Promise<void> {
+  try {
+    const notificationOptions: NotificationOptions = {
+      notification: {
+        title: "Account Updated",
+        body: "Your bank account information has been updated",
+        icon: "/icons/success-icon.png",
+        clickAction: "/fiat-interactions",
+      },
+      data: {
+        type: "account_updated",
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    logger.info("Sent account update notification", { userId });
+  } catch (err) {
+    logger.error("Error sending account update notification", err as Error, {
+      userId,
+    });
+  }
+}
+
+/**
+ * Handle crypto transaction update
  */
 async function handleCryptoTransactionUpdate(
   eventType: string,
@@ -509,219 +589,79 @@ async function handleCryptoTransactionUpdate(
   eventId: string
 ): Promise<void> {
   try {
-    logger.info("Processing crypto transaction webhook", {
+    logger.info("Crypto transaction update", {
       eventType,
       accountId,
       eventId,
       data,
     });
 
-    // According to Meld docs, the transaction ID is in data.paymentTransactionId
-    const transactionId = data.paymentTransactionId;
-    if (!transactionId) {
-      logger.warn("No paymentTransactionId in crypto webhook", {
-        eventType,
-        data,
-      });
-      return;
-    }
-
-    // According to Meld docs, the status is in data.paymentTransactionStatus
-    const meldStatus = data.paymentTransactionStatus;
-    if (!meldStatus) {
-      logger.warn("No paymentTransactionStatus in crypto webhook", {
-        eventType,
-        data,
-      });
-      return;
-    }
-
-    // 1. Fetch latest transaction details from Meld API
-    let transactionDetails;
-    try {
-      transactionDetails = await meldService.getTransaction(transactionId);
-      logger.info("Fetched transaction details from Meld", {
-        transactionId,
-        status: transactionDetails.status,
-      });
-    } catch (apiError) {
-      logger.error(
-        "Failed to fetch transaction from Meld API",
-        apiError as Error,
-        {
-          transactionId,
-          eventType,
-        }
-      );
-      // Continue processing with webhook data if API call fails
-      transactionDetails = data;
-    }
-
-    // 2. Find user by Meld account ID
+    // Find user by Meld account ID
     const user = await findUserByMeldAccountId(accountId);
     if (!user) {
-      logger.warn("User not found for Meld account", {
+      logger.warn("User not found for Meld account", { accountId });
+      return;
+    }
+
+    const transactionDetails = data.transaction || data;
+    const transactionId =
+      transactionDetails.id || transactionDetails.transactionId;
+
+    if (!transactionId) {
+      logger.warn("No transaction ID found in crypto transaction update", {
+        eventType,
         accountId,
-        transactionId,
+        eventId,
       });
       return;
     }
 
-    // 3. Map Meld status to FiatInteraction status
-    const fiatStatus = mapMeldStatusToFiatStatus(meldStatus);
-
-    // 4. Determine transaction type (onramp/offramp) based on event type
-    const transactionType = determineTransactionType(
-      eventType,
-      transactionDetails
-    );
-
-    // 5. Prepare FiatInteraction data
-    const fiatInteractionData: any = {
-      userId: user._id,
-      type: transactionType,
-      status: fiatStatus,
-      serviceProvider: "meld" as const,
+    // Find existing FiatInteraction
+    const fiatInteraction = await FiatInteraction.findOne({
       externalTransactionId: transactionId,
-      fiatAmount: {
-        value: Number(
-          transactionDetails.sourceAmount || transactionDetails.fiatAmount || 0
-        ),
-        currency: (
-          transactionDetails.sourceCurrency ||
-          transactionDetails.fiatCurrency ||
-          "USD"
-        ).toUpperCase(),
-      },
-      cryptoAmount: {
-        value: Number(
-          transactionDetails.destinationAmount ||
-            transactionDetails.cryptoAmount ||
-            0
-        ),
-        currency: (
-          transactionDetails.destinationCurrency ||
-          transactionDetails.cryptoCurrency ||
-          "ETH"
-        ).toUpperCase(),
-        tokenAddress: transactionDetails.tokenAddress,
-      },
-      exchangeRate: transactionDetails.exchangeRate || 0,
-      fees: {
-        serviceFee: {
-          value: transactionDetails.fees?.serviceFee || 0,
-          currency: transactionDetails.sourceCurrency || "USD",
-        },
-        networkFee: {
-          value: transactionDetails.fees?.networkFee || 0,
-          currency: transactionDetails.sourceCurrency || "USD",
-        },
-        totalFees: {
-          value: transactionDetails.fees?.totalFees || 0,
-          currency: transactionDetails.sourceCurrency || "USD",
-        },
-      },
-      sourceAccount: {
-        type: transactionType === "onramp" ? "bank_account" : "crypto_wallet",
-        identifier:
-          transactionDetails.sourceAccountId ||
-          transactionDetails.sourceAddress ||
-          "",
-        name: transactionDetails.sourceAccountName || "",
-        country: transactionDetails.sourceCountry,
-      },
-      destinationAccount: {
-        type: transactionType === "onramp" ? "crypto_wallet" : "bank_account",
-        identifier:
-          transactionDetails.destinationAddress ||
-          transactionDetails.destinationAccountId ||
-          "",
-        name: transactionDetails.destinationAccountName || "",
-        country: transactionDetails.destinationCountry,
-      },
-      blockchain: transactionDetails.blockchain || "ethereum",
-      transactionHash: transactionDetails.blockchainTransactionHash,
-      initiatedAt: transactionDetails.createdAt
-        ? new Date(transactionDetails.createdAt)
-        : new Date(),
-      failureReason: transactionDetails.failureReason,
-      ipAddress: transactionDetails.ipAddress || "unknown",
-      deviceInfo: {
-        userAgent: transactionDetails.userAgent || "",
-        platform: transactionDetails.platform || "",
-        fingerprint: transactionDetails.deviceFingerprint || "",
-      },
-      kycLevel: transactionDetails.kycLevel || "none",
-      metadata: {
-        ...transactionDetails,
-        meldCustomerId: data.customerId,
-        meldExternalCustomerId: data.externalCustomerId,
-        meldExternalSessionId: data.externalSessionId,
-        meldPaymentTransactionStatus: meldStatus,
-      },
-    };
-
-    // 6. Update timestamps based on status
-    const now = new Date();
-    switch (fiatStatus) {
-      case "processing":
-        fiatInteractionData.processingStartedAt = now;
-        break;
-      case "completed":
-        fiatInteractionData.completedAt = now;
-        break;
-      case "failed":
-        fiatInteractionData.failedAt = now;
-        break;
-      case "cancelled":
-        fiatInteractionData.cancelledAt = now;
-        break;
-    }
-
-    // 7. Find existing FiatInteraction or create new one
-    let fiatInteraction = await FiatInteraction.findOne({
-      externalTransactionId: transactionId,
-      serviceProvider: "meld",
     });
 
-    if (fiatInteraction) {
-      // Update existing FiatInteraction
-      await FiatInteraction.findByIdAndUpdate(fiatInteraction._id, {
-        $set: fiatInteractionData,
-        $push: {
-          webhookEvents: {
-            event: eventType,
-            timestamp: now,
-            data: transactionDetails,
-          },
-        },
-      });
-      logger.info("Updated existing FiatInteraction", {
+    if (!fiatInteraction) {
+      logger.warn("FiatInteraction not found for transaction", {
         transactionId,
-        meldTransactionId: transactionId,
+        eventType,
       });
-    } else {
-      // Create new FiatInteraction
-      const newFiatInteraction = new FiatInteraction({
-        ...fiatInteractionData,
-        webhookEvents: [
-          {
-            event: eventType,
-            timestamp: now,
-            data: transactionDetails,
-          },
-        ],
-      });
-
-      await newFiatInteraction.save();
-      fiatInteraction = newFiatInteraction;
-      logger.info("Created new FiatInteraction record", {
-        transactionId,
-        meldTransactionId: transactionId,
-      });
+      return;
     }
 
-    // 8. Send notification to frontend
+    // Update status based on event type
+    const newStatus = mapMeldStatusToFiatStatus(eventType);
+    const updateData: any = {
+      status: newStatus,
+    };
+
+    // Add timestamps based on status
+    switch (newStatus) {
+      case "processing":
+        updateData.processingStartedAt = new Date();
+        break;
+      case "completed":
+        updateData.completedAt = new Date();
+        break;
+      case "failed":
+        updateData.failedAt = new Date();
+        updateData.failureReason =
+          transactionDetails.failureReason || "Unknown error";
+        break;
+    }
+
+    // Update the FiatInteraction
+    Object.assign(fiatInteraction, updateData);
+    await fiatInteraction.save();
+
+    // Add webhook event to the interaction
+    await fiatInteraction.addWebhookEvent(eventType, {
+      meldEventId: eventId,
+      timestamp: new Date(),
+      data: transactionDetails,
+    });
+
+    // Send notification to user
     await sendFiatInteractionNotification(
       user._id.toString(),
       eventType,
@@ -772,67 +712,6 @@ function mapMeldStatusToFiatStatus(
       logger.warn("Unknown Meld status, defaulting to pending", { meldStatus });
       return "pending";
   }
-}
-
-/**
- * Determine if this is an onramp or offramp transaction
- */
-function determineTransactionType(
-  eventType: string,
-  transactionDetails: any
-): "onramp" | "offramp" {
-  // Check event type first
-  if (eventType.includes("ONRAMP")) {
-    return "onramp";
-  }
-  if (eventType.includes("OFFRAMP")) {
-    return "offramp";
-  }
-
-  // Check transaction details
-  if (transactionDetails.type) {
-    if (
-      transactionDetails.type.toLowerCase().includes("buy") ||
-      transactionDetails.type.toLowerCase().includes("onramp")
-    ) {
-      return "onramp";
-    }
-    if (
-      transactionDetails.type.toLowerCase().includes("sell") ||
-      transactionDetails.type.toLowerCase().includes("offramp")
-    ) {
-      return "offramp";
-    }
-  }
-
-  // Default based on direction of funds
-  if (
-    transactionDetails.sourceCurrency &&
-    transactionDetails.destinationCurrency
-  ) {
-    const sourceIsFiat = ["USD", "EUR", "GBP", "CAD", "AUD"].includes(
-      transactionDetails.sourceCurrency.toUpperCase()
-    );
-    const destIsCrypto = ["ETH", "BTC", "USDC", "USDT"].includes(
-      transactionDetails.destinationCurrency.toUpperCase()
-    );
-    const sourceIsCrypto = ["ETH", "BTC", "USDC", "USDT"].includes(
-      transactionDetails.sourceCurrency.toUpperCase()
-    );
-    const destIsFiat = ["USD", "EUR", "GBP", "CAD", "AUD"].includes(
-      transactionDetails.destinationCurrency.toUpperCase()
-    );
-
-    if (sourceIsFiat && destIsCrypto) {
-      return "onramp";
-    }
-    if (sourceIsCrypto && destIsFiat) {
-      return "offramp";
-    }
-  }
-
-  // Default to onramp for crypto transactions
-  return "onramp";
 }
 
 /**

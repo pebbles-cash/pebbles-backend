@@ -60,6 +60,9 @@ export interface IUser extends Document {
   displayName?: string;
   avatar?: string;
   dynamicUserId?: string;
+  walletLinkedAt?: Date; // When wallet was linked
+  lastLoginAt?: Date; // Last login timestamp
+  lastDynamicEvent?: string; // Last Dynamic event ID processed
   socialProfiles: ISocialProfile[];
   preferences: IUserPreferences;
   fcmTokens: IFCMToken[];

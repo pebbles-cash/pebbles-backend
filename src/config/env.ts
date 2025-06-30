@@ -41,6 +41,7 @@ export const JWT_SECRET = getEnv("JWT_SECRET");
 export const DYNAMIC_API_URL = getEnv("DYNAMIC_API_URL");
 export const DYNAMIC_API_KEY = getEnv("DYNAMIC_API_KEY");
 export const DYNAMIC_ENVIRONMENT_ID = getEnv("DYNAMIC_ENVIRONMENT_ID");
+export const DYNAMIC_WEBHOOK_SECRET = getEnv("DYNAMIC_WEBHOOK_SECRET");
 
 // Firebase configuration
 export const FIREBASE_PROJECT_ID = getEnv("FIREBASE_PROJECT_ID");
