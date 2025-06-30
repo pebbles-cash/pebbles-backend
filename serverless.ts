@@ -580,7 +580,7 @@ const serverlessConfiguration: AWS = {
       events: [
         {
           http: {
-            path: "/api/fiat-interactions/{fiatInteractionId}",
+            path: "/api/fiat-interactions/{customerId}",
             method: "get",
             cors: true,
           },

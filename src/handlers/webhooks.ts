@@ -740,7 +740,7 @@ async function handleCryptoTransactionUpdate(
       eventType,
       transactionId,
       userId: user._id.toString(),
-      fiatInteractionId: fiatInteraction._id.toString(),
+      customerId: fiatInteraction._id.toString(),
     });
   } catch (err) {
     logger.error("Error handling crypto transaction update", err as Error, {
@@ -849,7 +849,7 @@ async function sendFiatInteractionNotification(
   userId: string,
   eventType: string,
   transactionDetails: any,
-  fiatInteractionId: string
+  customerId: string
 ): Promise<void> {
   try {
     const statusMessages = {
@@ -899,7 +899,7 @@ async function sendFiatInteractionNotification(
       data: {
         type: "fiat_interaction",
         eventType,
-        fiatInteractionId,
+        customerId,
         status:
           transactionDetails.paymentTransactionStatus ||
           transactionDetails.status,
@@ -920,13 +920,13 @@ async function sendFiatInteractionNotification(
     logger.info("Sent FiatInteraction notification", {
       userId,
       eventType,
-      fiatInteractionId,
+      customerId,
     });
   } catch (err) {
     logger.error("Error sending FiatInteraction notification", err as Error, {
       userId,
       eventType,
-      fiatInteractionId,
+      customerId,
     });
   }
 }

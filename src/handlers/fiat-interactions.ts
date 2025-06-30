@@ -64,7 +64,7 @@ export const getUserFiatInteractions = requireAuth(
 
 /**
  * Get FiatInteraction details by ID
- * GET /api/fiat-interactions/{fiatInteractionId}
+ * GET /api/fiat-interactions/{customerId}
  */
 export const getFiatInteractionDetails = requireAuth(
   async (
@@ -80,15 +80,15 @@ export const getFiatInteractionDetails = requireAuth(
         return error("User ID not found in token", 401);
       }
 
-      // Get FiatInteraction ID from path parameters
-      if (!event.pathParameters?.fiatInteractionId) {
-        return error("FiatInteraction ID parameter is required", 400);
+      // Get customer ID from path parameters
+      if (!event.pathParameters?.customerId) {
+        return error("Customer ID parameter is required", 400);
       }
 
-      const fiatInteractionId = event.pathParameters.fiatInteractionId;
+      const customerId = event.pathParameters.customerId;
 
       // Get the FiatInteraction
-      const fiatInteraction = await FiatInteraction.findById(fiatInteractionId);
+      const fiatInteraction = await FiatInteraction.findById(customerId);
 
       if (!fiatInteraction) {
         return error("FiatInteraction not found", 404);
