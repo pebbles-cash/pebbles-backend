@@ -21,7 +21,14 @@ export const getPaymentMethods = async (
 
     const queryParams = event.queryStringParameters || {};
 
-    const paymentMethods = await meldService.getPaymentMethods();
+    // Parse categories from query string
+    const categoriesParam = queryParams.categories;
+    console.log("categoriesParam", categoriesParam);
+    const categories = categoriesParam
+      ? categoriesParam.split(",").map((cat) => cat.trim())
+      : undefined;
+
+    const paymentMethods = await meldService.getPaymentMethods({ categories });
 
     return success(paymentMethods);
   } catch (err) {
@@ -166,3 +173,27 @@ export const createWidgetSession = optionalAuth(
     }
   }
 );
+
+/**
+ * Get crypto currencies
+ * GET /api/meld/crypto-list
+ */
+export const getCryptoCurrencies = async (
+  event: any
+): Promise<APIGatewayProxyResult> => {
+  try {
+    const queryParams = event.queryStringParameters || {};
+    let serviceProviders: string[] = ["COINBASEPAY"];
+    if (queryParams.serviceProviders) {
+      serviceProviders = queryParams.serviceProviders
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+    const data = await meldService.getCryptoCurrencies(serviceProviders);
+    return success(data);
+  } catch (err) {
+    logger.error("Get crypto currencies error", err as Error);
+    return error("Could not retrieve crypto currencies", 500);
+  }
+};

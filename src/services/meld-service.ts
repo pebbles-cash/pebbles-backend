@@ -68,13 +68,25 @@ class MeldService {
    * Get payment methods
    * GET /service-providers/properties/payment-methods
    */
-  async getPaymentMethods(): Promise<any> {
+  async getPaymentMethods(
+    options: {
+      categories?: string[];
+    } = {}
+  ): Promise<any[]> {
     try {
-      const response = await this.client.get(
-        `/service-providers/properties/payment-methods`
-      );
+      const response = await this.client.get(`/service-providers`);
+      let methods = response.data;
 
-      return response.data;
+      // Filter by categories if provided
+      if (options.categories && options.categories.length > 0) {
+        methods = methods.filter(
+          (method: { categories?: string[] }) =>
+            Array.isArray(method.categories) &&
+            method.categories.some((cat) => options.categories!.includes(cat))
+        );
+      }
+
+      return methods;
     } catch (error) {
       logger.error("Error getting payment methods", error as Error);
       throw error;
@@ -200,6 +212,28 @@ class MeldService {
     } catch (error) {
       logger.error("Error getting transaction from Meld", error as Error, {
         transactionId,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get crypto currencies
+   * GET /service-providers/properties/crypto-currencies
+   */
+  async getCryptoCurrencies(
+    serviceProviders: string[] = ["COINBASEPAY"]
+  ): Promise<any> {
+    try {
+      const params = new URLSearchParams();
+      params.append("serviceProviders", serviceProviders.join(","));
+      const response = await this.client.get(
+        `/service-providers/properties/crypto-currencies?${params.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      logger.error("Error getting crypto currencies", error as Error, {
+        serviceProviders,
       });
       throw error;
     }

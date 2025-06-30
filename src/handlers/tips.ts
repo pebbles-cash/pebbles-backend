@@ -8,8 +8,7 @@ import { error, success } from "../utils/response";
 // POST /tips/configure
 export const configureTipPage = requireAuth(
   async (
-    event: AuthenticatedAPIGatewayProxyEvent,
-    context: Context
+    event: AuthenticatedAPIGatewayProxyEvent
   ): Promise<APIGatewayProxyResult> => {
     await connectToDatabase();
     const userId = event.user?.id;
@@ -50,8 +49,7 @@ export const configureTipPage = requireAuth(
 
 // GET /tips/:username
 export const getTipPage = async (
-  event: any,
-  context: Context
+  event: any
 ): Promise<APIGatewayProxyResult> => {
   await connectToDatabase();
   const username = event.pathParameters?.username;

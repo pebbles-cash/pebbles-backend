@@ -624,6 +624,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getCryptoCurrencies: {
+      handler: "src/handlers/meld.getCryptoCurrencies",
+      events: [
+        {
+          http: {
+            path: "/api/meld/crypto-list",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
   },
 
   plugins: ["serverless-offline", "serverless-domain-manager"],
