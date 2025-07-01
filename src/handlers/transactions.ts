@@ -581,6 +581,155 @@ export const getTransactionByHash = requireAuth(
 );
 
 /**
+ * Get recent interaction users (contacts)
+ * GET /api/transactions/contacts
+ */
+export const getRecentInteractionUsers = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get query parameters
+      const queryParams = event.queryStringParameters || {};
+      const daysBack = parseInt(queryParams.daysBack || "90"); // Default to 90 days
+      const limit = parseInt(queryParams.limit || "50"); // Default to 50 users
+
+      // Calculate the date threshold
+      const dateThreshold = new Date();
+      dateThreshold.setDate(dateThreshold.getDate() - daysBack);
+
+      // Find all transactions where the user is involved (either sender or recipient)
+      const transactions = await Transaction.find({
+        $or: [{ fromUserId: userId }, { toUserId: userId }],
+        createdAt: { $gte: dateThreshold },
+        status: "completed", // Only include completed transactions
+      }).sort({ createdAt: -1 });
+
+      // Group transactions by counterparty and collect interaction data
+      const userInteractions = new Map();
+
+      for (const transaction of transactions) {
+        const isSender = transaction.fromUserId?.toString() === userId;
+        const counterpartyId = isSender
+          ? transaction.toUserId.toString()
+          : transaction.fromUserId?.toString();
+
+        if (!counterpartyId) continue;
+
+        if (!userInteractions.has(counterpartyId)) {
+          userInteractions.set(counterpartyId, {
+            userId: counterpartyId,
+            totalTransactions: 0,
+            sentCount: 0,
+            receivedCount: 0,
+            totalAmount: 0,
+            lastInteraction: null,
+            interactions: [],
+          });
+        }
+
+        const interaction = userInteractions.get(counterpartyId);
+        const amount = parseFloat(transaction.amount) || 0;
+
+        interaction.totalTransactions++;
+        interaction.totalAmount += amount;
+
+        if (isSender) {
+          interaction.sentCount++;
+        } else {
+          interaction.receivedCount++;
+        }
+
+        // Track the most recent interaction
+        if (
+          !interaction.lastInteraction ||
+          transaction.createdAt > interaction.lastInteraction
+        ) {
+          interaction.lastInteraction = transaction.createdAt;
+        }
+
+        // Add transaction details to interactions array
+        interaction.interactions.push({
+          transactionId: transaction._id,
+          type: transaction.type,
+          direction: isSender ? "sent" : "received",
+          amount: transaction.amount,
+          createdAt: transaction.createdAt,
+          category: transaction.category,
+        });
+      }
+
+      // Convert to array and sort by last interaction date
+      const interactionsArray = Array.from(userInteractions.values())
+        .sort(
+          (a, b) =>
+            new Date(b.lastInteraction).getTime() -
+            new Date(a.lastInteraction).getTime()
+        )
+        .slice(0, limit);
+
+      // Get user details for all counterparties
+      const userIds = interactionsArray.map(
+        (interaction) => interaction.userId
+      );
+      const users = await User.find({ _id: { $in: userIds } }).select(
+        "_id username displayName avatar primaryWalletAddress email"
+      );
+
+      // Create a map for quick user lookup
+      const userMap = new Map();
+      users.forEach((user) => {
+        userMap.set(user._id.toString(), {
+          id: user._id,
+          username: user.username,
+          displayName: user.displayName,
+          avatar: user.avatar,
+          primaryWalletAddress: user.primaryWalletAddress,
+          email: user.email,
+        });
+      });
+
+      // Combine user data with interaction data
+      const result = interactionsArray.map((interaction) => {
+        const userData = userMap.get(interaction.userId);
+        return {
+          user: userData || { id: interaction.userId },
+          interactionStats: {
+            totalTransactions: interaction.totalTransactions,
+            sentCount: interaction.sentCount,
+            receivedCount: interaction.receivedCount,
+            totalAmount: interaction.totalAmount,
+            lastInteraction: interaction.lastInteraction,
+            recentInteractions: interaction.interactions.slice(0, 5), // Last 5 interactions
+          },
+        };
+      });
+
+      return success({
+        interactions: result,
+        totalCount: result.length,
+        dateRange: {
+          from: dateThreshold,
+          to: new Date(),
+        },
+      });
+    } catch (err) {
+      console.error("Get recent interaction users error:", err);
+      return error("Could not retrieve recent interaction users", 500);
+    }
+  }
+);
+
+/**
  * Filter transactions
  * POST /api/transactions/filter
  */

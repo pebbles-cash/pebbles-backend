@@ -351,6 +351,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getRecentInteractionUsers: {
+      handler: "src/handlers/transactions.getRecentInteractionUsers",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/contacts",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     // Subscription Handlers
     createSubscriptionPlan: {
       handler: "src/handlers/subscriptions.createSubscriptionPlan",
