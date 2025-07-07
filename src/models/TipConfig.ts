@@ -1,12 +1,19 @@
 import { Schema, model } from "mongoose";
-import { ITipConfig, ITipGift } from "../types";
+import { ITipConfig, ITipGiftOption, IExclusiveContent } from "../types";
 
-const tipGiftSchema = new Schema<ITipGift>(
+const tipGiftOptionSchema = new Schema<ITipGiftOption>(
   {
-    emoji: { type: String, required: true },
-    label: { type: String, required: true },
+    image: { type: String, required: true },
     price: { type: Number, required: true },
-    isCustom: { type: Boolean, default: false },
+    currency: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const exclusiveContentSchema = new Schema<IExclusiveContent>(
+  {
+    enabled: { type: Boolean, default: false },
+    message: { type: String, default: "" },
   },
   { _id: false }
 );
@@ -20,9 +27,11 @@ const tipConfigSchema = new Schema<ITipConfig>(
       unique: true,
     },
     statement: { type: String, default: "" },
-    gifts: { type: [tipGiftSchema], default: [] },
-    exclusiveContentEnabled: { type: Boolean, default: false },
-    exclusiveContentMessage: { type: String, default: "" },
+    exclusiveContent: {
+      type: exclusiveContentSchema,
+      default: () => ({ enabled: false, message: "" }),
+    },
+    giftOptions: { type: [tipGiftOptionSchema], default: [] },
   },
   { timestamps: true }
 );

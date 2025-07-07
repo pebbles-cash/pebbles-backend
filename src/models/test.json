@@ -1,0 +1,39 @@
+{
+  "statement": "clara's statement",
+  "exclusiveContent": {
+    "enabled": true,
+    "message": "my exclusive content"
+  },
+  "giftOptions": [
+    {
+      "image": "/images/gift/gift-1.png",
+      "price": 5,
+      "currency": "CAD"
+    },
+    {
+      "image": "/images/gift/gift-2.png",
+      "price": 10,
+      "currency": "CAD"
+    },
+    {
+      "image": "/images/gift/gift-3.png",
+      "price": 25,
+      "currency": "CAD"
+    },
+    {
+      "image": "/images/gift/gift-4.png",
+      "price": 50,
+      "currency": "CAD"
+    },
+    {
+      "image": "/images/gift/gift-5.png",
+      "price": 100,
+      "currency": "CAD"
+    },
+    {
+      "image": "/images/gift/gift-6.png",
+      "price": 200,
+      "currency": "CAD"
+    }
+  ]
+}

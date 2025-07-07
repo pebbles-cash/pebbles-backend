@@ -136,6 +136,8 @@ export const getUserByUsername = async (
       avatar: user.avatar,
       bio: (user as any).bio, // Add bio if it exists
       createdAt: user.createdAt,
+      walletAddress: user.primaryWalletAddress,
+      chain: user.chain,
     };
 
     return success(userProfile);

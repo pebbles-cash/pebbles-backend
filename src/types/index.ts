@@ -667,19 +667,22 @@ export interface FiatInteractionModel extends Model<IFiatInteraction> {
   ): Promise<any[]>;
 }
 
-export interface ITipGift {
-  emoji: string;
-  label: string;
+export interface ITipGiftOption {
+  image: string;
   price: number;
-  isCustom?: boolean;
+  currency: string;
+}
+
+export interface IExclusiveContent {
+  enabled: boolean;
+  message: string;
 }
 
 export interface ITipConfig extends Document {
   userId: Types.ObjectId;
   statement: string;
-  gifts: ITipGift[];
-  exclusiveContentEnabled: boolean;
-  exclusiveContentMessage: string;
+  exclusiveContent: IExclusiveContent;
+  giftOptions: ITipGiftOption[];
   createdAt: Date;
   updatedAt: Date;
 }
