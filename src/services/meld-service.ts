@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { logger } from "../utils/logger";
+import { MELD_API_KEY, MELD_API_URL } from "../config/env";
 
 /**
  *  Meld API Service for core endpoints
@@ -10,12 +11,19 @@ class MeldService {
   private baseURL: string;
 
   constructor() {
-    this.apiKey = process.env.MELD_API_KEY || "";
-    this.baseURL = process.env.MELD_API_URL || "https://api.meld.io";
+    this.apiKey = MELD_API_KEY || "";
+    this.baseURL = MELD_API_URL;
 
     if (!this.apiKey) {
       throw new Error("MELD_API_KEY environment variable is required");
     }
+
+    // Debug logging (remove in production)
+    logger.info("MeldService initialized", {
+      baseURL: this.baseURL,
+      apiKeyLength: this.apiKey.length,
+      apiKeyPrefix: this.apiKey.substring(0, 8) + "...",
+    });
 
     this.client = axios.create({
       baseURL: this.baseURL,

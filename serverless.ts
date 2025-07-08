@@ -649,6 +649,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    updateTipPage: {
+      handler: "src/handlers/tips.updateTipPage",
+      events: [
+        {
+          http: {
+            path: "/api/tips/configure",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
     getTipPage: {
       handler: "src/handlers/tips.getTipPage",
       events: [

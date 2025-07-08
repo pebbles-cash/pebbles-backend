@@ -43,6 +43,12 @@ export const DYNAMIC_API_KEY = getEnv("DYNAMIC_API_KEY");
 export const DYNAMIC_ENVIRONMENT_ID = getEnv("DYNAMIC_ENVIRONMENT_ID");
 export const DYNAMIC_WEBHOOK_SECRET = getEnv("DYNAMIC_WEBHOOK_SECRET");
 
+// Meld integration
+export const MELD_API_KEY = getEnv("MELD_API_KEY");
+export const MELD_API_URL =
+  getEnv("MELD_API_URL", false) || "https://api.meld.io";
+export const MELD_WEBHOOK_SECRET = getEnv("MELD_WEBHOOK_SECRET");
+
 // Firebase configuration
 export const FIREBASE_PROJECT_ID = getEnv("FIREBASE_PROJECT_ID");
 export const FIREBASE_PRIVATE_KEY = getEnv("FIREBASE_PRIVATE_KEY", false);
@@ -63,3 +69,8 @@ export const ENABLE_FIREBASE_DEBUG =
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);
 console.log(`Payment Base URL: ${PAYMENT_BASE_URL}`);
+console.log(`Meld API URL: ${MELD_API_URL}`);
+console.log(`Meld API Key configured: ${MELD_API_KEY ? "Yes" : "No"}`);
+console.log(
+  `Meld Webhook Secret configured: ${MELD_WEBHOOK_SECRET ? "Yes" : "No"}`
+);

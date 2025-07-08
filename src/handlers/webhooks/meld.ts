@@ -8,6 +8,7 @@ import { logger } from "../../utils/logger";
 import { sendNotificationToUser } from "../../services/notification-service";
 import { NotificationOptions } from "../../services/firebase";
 import { meldService } from "../../services/meld-service";
+import { MELD_WEBHOOK_SECRET } from "../../config/env";
 
 /**
  * Handle Meld webhook events
@@ -28,7 +29,7 @@ export const handleMeldWebhook = async (
     // Verify webhook signature
     const signature =
       event.headers["meld-signature"] || event.headers["Meld-Signature"];
-    const webhookSecret = process.env.MELD_WEBHOOK_SECRET;
+    const webhookSecret = MELD_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
       logger.error("MELD_WEBHOOK_SECRET not configured");
