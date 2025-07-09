@@ -303,36 +303,24 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    getTransactionDetails: {
-      handler: "src/handlers/transactions.getTransactionDetails",
-      events: [
-        {
-          http: {
-            path: "/api/transactions/{transactionId}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
-    getTransactionByHash: {
-      handler: "src/handlers/transactions.getTransactionByHash",
-      events: [
-        {
-          http: {
-            path: "/api/transactions/hash/{txHash}",
-            method: "get",
-            cors: true,
-          },
-        },
-      ],
-    },
     getTransactionStats: {
       handler: "src/handlers/transactions.getTransactionStats",
       events: [
         {
           http: {
             path: "/api/transactions/stats",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getRecentInteractionUsers: {
+      handler: "src/handlers/transactions.getRecentInteractionUsers",
+      events: [
+        {
+          http: {
+            path: "/api/contacts",
             method: "get",
             cors: true,
           },
@@ -351,12 +339,24 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
-    getRecentInteractionUsers: {
-      handler: "src/handlers/transactions.getRecentInteractionUsers",
+    getTransactionByHash: {
+      handler: "src/handlers/transactions.getTransactionByHash",
       events: [
         {
           http: {
-            path: "/api/transactions/contacts",
+            path: "/api/transactions/hash/{txHash}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getTransactionDetails: {
+      handler: "src/handlers/transactions.getTransactionDetails",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/{transactionId}",
             method: "get",
             cors: true,
           },
@@ -679,6 +679,18 @@ const serverlessConfiguration: AWS = {
         {
           http: {
             path: "/api/meld/crypto-list",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getUserActivity: {
+      handler: "src/handlers/user-activity.getUserActivity",
+      events: [
+        {
+          http: {
+            path: "/api/user/activity",
             method: "get",
             cors: true,
           },

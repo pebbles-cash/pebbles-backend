@@ -3,7 +3,6 @@ import { success, error } from "../utils/response";
 import { Transaction, User } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
-import * as analyticsService from "../services/analytics-service";
 
 /**
  * Create a new transaction
@@ -364,6 +363,26 @@ export const getTransactionDetails = requireAuth(
 
       const transactionId = event.pathParameters.transactionId;
 
+      // Debug logging
+      console.log(
+        "getTransactionDetails called with transactionId:",
+        transactionId
+      );
+      console.log("Full event path:", event.path);
+      console.log("Path parameters:", event.pathParameters);
+
+      // Check if this is actually a request for contacts (due to route precedence issue)
+      if (transactionId === "contacts" || transactionId === "contacts ") {
+        console.log(
+          "Detected contacts request, redirecting to getRecentInteractionUsers"
+        );
+        // Instead of calling the handler directly, return an error that suggests the correct endpoint
+        return error(
+          "Invalid transaction ID. Did you mean to call /api/contacts?",
+          400
+        );
+      }
+
       // Get the transaction
       const transaction = await Transaction.findById(transactionId);
 
@@ -452,22 +471,66 @@ export const getTransactionStats = requireAuth(
       const period =
         (queryParams.period as "day" | "week" | "month" | "year") || "month";
 
-      // Get earnings summary from analytics service
-      const earningsSummary = await analyticsService.getEarningsSummary(
-        userId,
-        period
-      );
+      // Calculate date range based on period
+      const now = new Date();
+      let periodStart: Date;
 
-      // Get transaction counts
+      switch (period) {
+        case "day":
+          periodStart = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          break;
+        case "week":
+          const dayOfWeek = now.getDay();
+          const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          periodStart = new Date(
+            now.getTime() - daysToSubtract * 24 * 60 * 60 * 1000
+          );
+          periodStart.setHours(0, 0, 0, 0);
+          break;
+        case "month":
+          periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "year":
+          periodStart = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+
+      // Get transaction counts for the period
       const incomingCount = await Transaction.countDocuments({
         toUserId: userId,
         status: "completed",
+        createdAt: { $gte: periodStart },
       });
 
       const outgoingCount = await Transaction.countDocuments({
         fromUserId: userId,
         status: "completed",
+        createdAt: { $gte: periodStart },
       });
+
+      // Calculate earnings summary from transactions
+      const incomingTransactions = await Transaction.find({
+        toUserId: userId,
+        status: "completed",
+        createdAt: { $gte: periodStart },
+      });
+
+      const totalEarnings = incomingTransactions.reduce((sum, tx) => {
+        return sum + (parseFloat(tx.amount) || 0);
+      }, 0);
+
+      const earningsSummary = {
+        totalEarnings,
+        periodStart,
+        periodEnd: now,
+        period,
+      };
 
       return success({
         earningsSummary,
@@ -593,6 +656,11 @@ export const getRecentInteractionUsers = requireAuth(
 
       // User is provided by the auth middleware
       const userId = event.user?.id;
+
+      // Debug logging
+      console.log("getRecentInteractionUsers called");
+      console.log("Full event path:", event.path);
+      console.log("Path parameters:", event.pathParameters);
 
       if (!userId) {
         return error("User ID not found in token", 401);

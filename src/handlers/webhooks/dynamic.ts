@@ -202,21 +202,40 @@ async function handleWalletTransferred(
       return;
     }
 
-    // Create a transaction record
+    // Try to find if the recipient is a user in our system
+    let recipientUser = null;
+    if (toWallet !== fromWallet) {
+      recipientUser = await User.findOne({ primaryWalletAddress: toWallet });
+    }
+
+    // Create a transaction record that matches the Transaction schema
     const transaction = new Transaction({
-      userId: user._id,
-      type: "transfer",
-      amount: amount,
-      currency: currency,
+      type: "payment", // Map transfer to payment type
+      fromUserId: user._id, // The user who initiated the transfer
+      toUserId: recipientUser?._id || user._id, // Use recipient if found, otherwise self-transfer
+      fromAddress: fromWallet,
+      toAddress: toWallet,
+      amount: amount.toString(),
+      tokenAddress: "0x0", // Native token, adjust if needed
+      sourceChain: chain,
+      destinationChain: chain,
       status: "completed",
-      txHash: transactionHash, // Store the blockchain transaction hash
+      txHash: transactionHash,
+      category: recipientUser ? "payment" : "wallet_transfer",
+      tags: recipientUser ? ["dynamic", "payment"] : ["dynamic", "transfer"],
+      client: recipientUser ? "user_payment" : "dynamic",
+      projectId: recipientUser ? "user_payment" : "wallet_transfer",
       metadata: {
+        note: `Transfer from ${fromWallet.slice(0, 6)}...${fromWallet.slice(-4)} to ${toWallet.slice(0, 6)}...${toWallet.slice(-4)}`,
+        category: "wallet_transfer",
+        // Store additional data in metadata
         fromWallet,
         toWallet,
         chain,
         dynamicEventId: eventId,
         dynamicMessageId: messageId,
         timestamp,
+        currency: currency,
       },
     });
 
@@ -229,7 +248,8 @@ async function handleWalletTransferred(
       toWallet,
       amount,
       currency,
-      transactionHash
+      transactionHash,
+      recipientUser
     );
 
     logger.info("Successfully processed wallet transfer", {
@@ -441,13 +461,23 @@ async function sendWalletTransferNotification(
   toWallet: string,
   amount: number,
   currency: string,
-  transactionHash: string
+  transactionHash: string,
+  recipientUser?: any
 ): Promise<void> {
   try {
+    const isUserToUser =
+      recipientUser && recipientUser._id.toString() !== userId;
+    const notificationTitle = isUserToUser
+      ? "Payment Sent"
+      : "Wallet Transfer Completed";
+    const notificationBody = isUserToUser
+      ? `Successfully sent ${amount} ${currency} to ${recipientUser.displayName || recipientUser.username}`
+      : `Successfully transferred ${amount} ${currency} from ${fromWallet.slice(0, 6)}...${fromWallet.slice(-4)} to ${toWallet.slice(0, 6)}...${toWallet.slice(-4)}`;
+
     const notificationOptions: NotificationOptions = {
       notification: {
-        title: "Wallet Transfer Completed",
-        body: `Successfully transferred ${amount} ${currency} from ${fromWallet.slice(0, 6)}...${fromWallet.slice(-4)} to ${toWallet.slice(0, 6)}...${toWallet.slice(-4)}`,
+        title: notificationTitle,
+        body: notificationBody,
         icon: "/icons/success-icon.png",
         clickAction: "/transactions",
       },
