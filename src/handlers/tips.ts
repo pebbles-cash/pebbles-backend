@@ -152,6 +152,12 @@ export const getTipPage = async (
   }));
 
   return success({
+    user: {
+      username: user.username,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      walletAddress: user.primaryWalletAddress,
+    },
     config: {
       statement: config.statement,
       exclusiveContent: config.exclusiveContent,
