@@ -9,6 +9,8 @@ import {
   UpdateUserRequestBody,
   SocialStatsRequestBody,
 } from "../types";
+import axios from "axios";
+import { CountryConfig } from "../models";
 
 /**
  * Create new user profile
@@ -446,5 +448,74 @@ export const getWalletAddress = async (
   } catch (err) {
     console.error("Get wallet address error:", err);
     return error("Could not retrieve wallet address", 500);
+  }
+};
+
+/**
+ * Get user configuration based on IP address
+ * GET /api/users/ip-config
+ */
+export const getUserConfigByIp = async (
+  event: any
+): Promise<APIGatewayProxyResult> => {
+  try {
+    await connectToDatabase();
+
+    // Extract IP address
+    const headers = event.headers || {};
+    const ip =
+      headers["CF-Connecting-IP"] ||
+      headers["cf-connecting-ip"] ||
+      (headers["X-Forwarded-For"] || headers["x-forwarded-for"] || "")
+        .split(",")[0]
+        .trim() ||
+      event.requestContext?.identity?.sourceIp ||
+      null;
+    if (!ip) {
+      return error("Could not determine IP address", 400);
+    }
+
+    console.log("ip", ip);
+
+    // Geolocate IP (using ipinfo.io free tier)
+    const geoRes = await axios.get(
+      `https://ipinfo.io/${ip}?token=${process.env.IPINFO_TOKEN}`
+    );
+
+    console.log("geoRes", geoRes.data);
+
+    const geo = geoRes.data;
+    const countryCode = geo.country;
+    const region = geo.region || null;
+    const city = geo.city || null;
+    const timezone = geo.timezone || null;
+
+    // Query country config
+    const config = await CountryConfig.findOne({ countryCode });
+    if (!config) {
+      return error("No configuration found for country", 404);
+    }
+
+    // Compose response
+    const response = {
+      location: {
+        countryCode,
+        country: config.countryDisplayName,
+        region,
+        city,
+        timezone,
+      },
+      currency: {
+        code: config.currency.code,
+        symbol: config.currency.symbol,
+      },
+      language: "en-US", // You can enhance this with a language map if needed
+      onramp: config.onrampProviders.map((p) => p.id),
+      offramp: config.offrampProviders.map((p) => p.id),
+    };
+    return success(response);
+  } catch (err: any) {
+    console.error("Error in getUserConfigByIp:", err);
+    return error("Failed to get user config by IP", 500);
   }
 };

@@ -204,6 +204,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    getUserConfigByIp: {
+      handler: "src/handlers/users.getUserConfigByIp",
+      events: [
+        {
+          http: {
+            path: "/api/users/ip-config",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
 
     // Payment & QR Code Handlers
     generateQRCode: {

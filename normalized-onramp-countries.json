@@ -1,0 +1,8525 @@
+[
+  {
+    "countryDisplayName": "Andorra",
+    "countryCode": "AD",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "United Arab Emirates",
+    "countryCode": "AE",
+    "currency": {
+      "name": "UAE Dirham",
+      "symbol": "د.إ",
+      "code": "AED"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Afghanistan",
+    "countryCode": "AF",
+    "currency": {
+      "name": "Afghan Afghani",
+      "symbol": "؋",
+      "code": "AFN"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Antigua and Barbuda",
+    "countryCode": "AG",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Anguilla",
+    "countryCode": "AI",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Albania",
+    "countryCode": "AL",
+    "currency": {
+      "name": "Albanian Lek",
+      "symbol": "L",
+      "code": "ALL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Armenia",
+    "countryCode": "AM",
+    "currency": {
+      "name": "Armenian Dram",
+      "symbol": "֏",
+      "code": "AMD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Angola",
+    "countryCode": "AO",
+    "currency": {
+      "name": "Angolan Kwanza",
+      "symbol": "Kz",
+      "code": "AOA"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Antarctica",
+    "countryCode": "AQ",
+    "currency": {
+      "name": "No official currency¹",
+      "symbol": "–",
+      "code": "–"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Argentina",
+    "countryCode": "AR",
+    "currency": {
+      "name": "Argentine Peso",
+      "symbol": "$",
+      "code": "ARS"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "American Samoa",
+    "countryCode": "AS",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Austria",
+    "countryCode": "AT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Australia",
+    "countryCode": "AU",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Aruba",
+    "countryCode": "AW",
+    "currency": {
+      "name": "Aruban Florin",
+      "symbol": "ƒ",
+      "code": "AWG"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Åland Islands",
+    "countryCode": "AX",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Azerbaijan",
+    "countryCode": "AZ",
+    "currency": {
+      "name": "Azerbaijani Manat",
+      "symbol": "₼",
+      "code": "AZN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bosnia and Herzegovina",
+    "countryCode": "BA",
+    "currency": {
+      "name": "Convertible Mark",
+      "symbol": "KM",
+      "code": "BAM"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Barbados",
+    "countryCode": "BB",
+    "currency": {
+      "name": "Barbadian Dollar",
+      "symbol": "Bds$",
+      "code": "BBD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bangladesh",
+    "countryCode": "BD",
+    "currency": {
+      "name": "Bangladeshi Taka",
+      "symbol": "৳",
+      "code": "BDT"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Belgium",
+    "countryCode": "BE",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Burkina Faso",
+    "countryCode": "BF",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bulgaria",
+    "countryCode": "BG",
+    "currency": {
+      "name": "Bulgarian Lev",
+      "symbol": "лв",
+      "code": "BGN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bahrain",
+    "countryCode": "BH",
+    "currency": {
+      "name": "Bahraini Dinar",
+      "symbol": ".د.ب",
+      "code": "BHD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Burundi",
+    "countryCode": "BI",
+    "currency": {
+      "name": "Burundian Franc",
+      "symbol": "FBu",
+      "code": "BIF"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Benin",
+    "countryCode": "BJ",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Barthélemy",
+    "countryCode": "BL",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bermuda",
+    "countryCode": "BM",
+    "currency": {
+      "name": "Bermudian Dollar",
+      "symbol": "BD$",
+      "code": "BMD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Brunei",
+    "countryCode": "BN",
+    "currency": {
+      "name": "Brunei Dollar",
+      "symbol": "B$",
+      "code": "BND"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bolivia",
+    "countryCode": "BO",
+    "currency": {
+      "name": "Bolivian Boliviano",
+      "symbol": "Bs.",
+      "code": "BOB"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bonaire, Saint Eustatius and Saba",
+    "countryCode": "BQ",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Brazil",
+    "countryCode": "BR",
+    "currency": {
+      "name": "Brazilian Real",
+      "symbol": "R$",
+      "code": "BRL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bahamas",
+    "countryCode": "BS",
+    "currency": {
+      "name": "Bahamian Dollar",
+      "symbol": "B$",
+      "code": "BSD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bhutan",
+    "countryCode": "BT",
+    "currency": {
+      "name": "Bhutanese Ngultrum",
+      "symbol": "Nu.",
+      "code": "BTN"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Bouvet Island",
+    "countryCode": "BV",
+    "currency": {
+      "name": "Norwegian Krone",
+      "symbol": "kr",
+      "code": "NOK"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Botswana",
+    "countryCode": "BW",
+    "currency": {
+      "name": "Botswana Pula",
+      "symbol": "P",
+      "code": "BWP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Belarus",
+    "countryCode": "BY",
+    "currency": {
+      "name": "Belarusian Ruble",
+      "symbol": "Br",
+      "code": "BYN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Belize",
+    "countryCode": "BZ",
+    "currency": {
+      "name": "Belize Dollar",
+      "symbol": "BZ$",
+      "code": "BZD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Canada",
+    "countryCode": "CA",
+    "currency": {
+      "name": "Canadian Dollar",
+      "symbol": "C$",
+      "code": "CAD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cocos (Keeling) Islands",
+    "countryCode": "CC",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Democratic Republic of the Congo",
+    "countryCode": "CD",
+    "currency": {
+      "name": "Congolese Franc",
+      "symbol": "FC",
+      "code": "CDF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Central African Republic",
+    "countryCode": "CF",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Republic of the Congo",
+    "countryCode": "CG",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Switzerland",
+    "countryCode": "CH",
+    "currency": {
+      "name": "Swiss Franc",
+      "symbol": "CHF",
+      "code": "CHF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ivory Coast",
+    "countryCode": "CI",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cook Islands",
+    "countryCode": "CK",
+    "currency": {
+      "name": "New Zealand Dollar",
+      "symbol": "NZ$",
+      "code": "NZD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Chile",
+    "countryCode": "CL",
+    "currency": {
+      "name": "Chilean Peso",
+      "symbol": "$",
+      "code": "CLP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cameroon",
+    "countryCode": "CM",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "China",
+    "countryCode": "CN",
+    "currency": {
+      "name": "Chinese Yuan",
+      "symbol": "¥",
+      "code": "CNY"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Colombia",
+    "countryCode": "CO",
+    "currency": {
+      "name": "Colombian Peso",
+      "symbol": "$",
+      "code": "COP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Costa Rica",
+    "countryCode": "CR",
+    "currency": {
+      "name": "Costa Rican Colón",
+      "symbol": "₡",
+      "code": "CRC"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cuba",
+    "countryCode": "CU",
+    "currency": {
+      "name": "Cuban Peso",
+      "symbol": "$",
+      "code": "CUP"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Cape Verde",
+    "countryCode": "CV",
+    "currency": {
+      "name": "Cape Verdean Escudo",
+      "symbol": "$ or Esc",
+      "code": "CVE"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Curaçao",
+    "countryCode": "CW",
+    "currency": {
+      "name": "Netherlands Antillean Guilder",
+      "symbol": "ƒ",
+      "code": "ANG"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Christmas Island",
+    "countryCode": "CX",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cyprus",
+    "countryCode": "CY",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Czechia",
+    "countryCode": "CZ",
+    "currency": {
+      "name": "Czech Koruna",
+      "symbol": "Kč",
+      "code": "CZK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Germany",
+    "countryCode": "DE",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Djibouti",
+    "countryCode": "DJ",
+    "currency": {
+      "name": "Djiboutian Franc",
+      "symbol": "Fdj",
+      "code": "DJF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Denmark",
+    "countryCode": "DK",
+    "currency": {
+      "name": "Danish Krone",
+      "symbol": "kr",
+      "code": "DKK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Dominica",
+    "countryCode": "DM",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Dominican Republic",
+    "countryCode": "DO",
+    "currency": {
+      "name": "Dominican Peso",
+      "symbol": "RD$",
+      "code": "DOP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Algeria",
+    "countryCode": "DZ",
+    "currency": {
+      "name": "Algerian Dinar",
+      "symbol": "د.ج",
+      "code": "DZD"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ecuador",
+    "countryCode": "EC",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Estonia",
+    "countryCode": "EE",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Egypt",
+    "countryCode": "EG",
+    "currency": {
+      "name": "Egyptian Pound",
+      "symbol": "£ or ج.م",
+      "code": "EGP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Western Sahara",
+    "countryCode": "EH",
+    "currency": {
+      "name": "Moroccan Dirham²",
+      "symbol": "د.م.",
+      "code": "MAD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Eritrea",
+    "countryCode": "ER",
+    "currency": {
+      "name": "Eritrean Nakfa",
+      "symbol": "Nfk",
+      "code": "ERN"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Spain and the Canary Islands",
+    "countryCode": "ES",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ethiopia",
+    "countryCode": "ET",
+    "currency": {
+      "name": "Ethiopian Birr",
+      "symbol": "Br",
+      "code": "ETB"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Finland",
+    "countryCode": "FI",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Fiji",
+    "countryCode": "FJ",
+    "currency": {
+      "name": "Fijian Dollar",
+      "symbol": "FJ$",
+      "code": "FJD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Falkland Islands",
+    "countryCode": "FK",
+    "currency": {
+      "name": "Falkland Islands Pound",
+      "symbol": "£",
+      "code": "FKP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Federated States of Micronesia",
+    "countryCode": "FM",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Faroe Islands",
+    "countryCode": "FO",
+    "currency": {
+      "name": "Danish Krone",
+      "symbol": "kr",
+      "code": "DKK"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "France",
+    "countryCode": "FR",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Gabon",
+    "countryCode": "GA",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "United Kingdom",
+    "countryCode": "GB",
+    "currency": {
+      "name": "British Pound Sterling",
+      "symbol": "£",
+      "code": "GBP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Grenada",
+    "countryCode": "GD",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Georgia",
+    "countryCode": "GE",
+    "currency": {
+      "name": "Georgian Lari",
+      "symbol": "₾",
+      "code": "GEL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "French Guiana",
+    "countryCode": "GF",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guernsey",
+    "countryCode": "GG",
+    "currency": {
+      "name": "Guernsey Pound³",
+      "symbol": "£",
+      "code": "GGP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ghana",
+    "countryCode": "GH",
+    "currency": {
+      "name": "Ghanaian Cedi",
+      "symbol": "₵",
+      "code": "GHS"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Gibraltar",
+    "countryCode": "GI",
+    "currency": {
+      "name": "Gibraltar Pound",
+      "symbol": "£",
+      "code": "GIP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Greenland",
+    "countryCode": "GL",
+    "currency": {
+      "name": "Danish Krone",
+      "symbol": "kr",
+      "code": "DKK"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Gambia",
+    "countryCode": "GM",
+    "currency": {
+      "name": "Gambian Dalasi",
+      "symbol": "D",
+      "code": "GMD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guinea",
+    "countryCode": "GN",
+    "currency": {
+      "name": "Guinean Franc",
+      "symbol": "FG",
+      "code": "GNF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guadeloupe",
+    "countryCode": "GP",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Equatorial Guinea",
+    "countryCode": "GQ",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Greece",
+    "countryCode": "GR",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "South Georgia and South Sandwich Islands",
+    "countryCode": "GS",
+    "currency": {
+      "name": "Falkland Islands Pound",
+      "symbol": "£",
+      "code": "FKP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guatemala",
+    "countryCode": "GT",
+    "currency": {
+      "name": "Guatemalan Quetzal",
+      "symbol": "Q",
+      "code": "GTQ"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guam",
+    "countryCode": "GU",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guinea-Bissau",
+    "countryCode": "GW",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Guyana",
+    "countryCode": "GY",
+    "currency": {
+      "name": "Guyanese Dollar",
+      "symbol": "G$",
+      "code": "GYD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Hong Kong",
+    "countryCode": "HK",
+    "currency": {
+      "name": "Hong Kong Dollar",
+      "symbol": "HK$",
+      "code": "HKD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Heard Island and McDonald Islands",
+    "countryCode": "HM",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Honduras",
+    "countryCode": "HN",
+    "currency": {
+      "name": "Honduran Lempira",
+      "symbol": "L",
+      "code": "HNL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Croatia",
+    "countryCode": "HR",
+    "currency": {
+      "name": "Euro⁴",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Haiti",
+    "countryCode": "HT",
+    "currency": {
+      "name": "Haitian Gourde",
+      "symbol": "G",
+      "code": "HTG"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Hungary",
+    "countryCode": "HU",
+    "currency": {
+      "name": "Hungarian Forint",
+      "symbol": "Ft",
+      "code": "HUF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Indonesia",
+    "countryCode": "ID",
+    "currency": {
+      "name": "Indonesian Rupiah",
+      "symbol": "Rp",
+      "code": "IDR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ireland",
+    "countryCode": "IE",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Israel",
+    "countryCode": "IL",
+    "currency": {
+      "name": "Israeli New Shekel",
+      "symbol": "₪",
+      "code": "ILS"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Isle of Man",
+    "countryCode": "IM",
+    "currency": {
+      "name": "Manx Pound³",
+      "symbol": "£",
+      "code": "IMP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "India",
+    "countryCode": "IN",
+    "currency": {
+      "name": "Indian Rupee",
+      "symbol": "₹",
+      "code": "INR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "onmeta",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "British Indian Ocean Territory",
+    "countryCode": "IO",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Iraq",
+    "countryCode": "IQ",
+    "currency": {
+      "name": "Iraqi Dinar",
+      "symbol": "ع.د",
+      "code": "IQD"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Iran",
+    "countryCode": "IR",
+    "currency": {
+      "name": "Iranian Rial",
+      "symbol": "﷼",
+      "code": "IRR"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Iceland",
+    "countryCode": "IS",
+    "currency": {
+      "name": "Icelandic Króna",
+      "symbol": "kr",
+      "code": "ISK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Italy",
+    "countryCode": "IT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Jersey",
+    "countryCode": "JE",
+    "currency": {
+      "name": "Jersey Pound³",
+      "symbol": "£",
+      "code": "JEP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Jamaica",
+    "countryCode": "JM",
+    "currency": {
+      "name": "Jamaican Dollar",
+      "symbol": "J$",
+      "code": "JMD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Jordan",
+    "countryCode": "JO",
+    "currency": {
+      "name": "Jordanian Dinar",
+      "symbol": "د.ا",
+      "code": "JOD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Japan",
+    "countryCode": "JP",
+    "currency": {
+      "name": "Japanese Yen",
+      "symbol": "¥",
+      "code": "JPY"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kenya",
+    "countryCode": "KE",
+    "currency": {
+      "name": "Kenyan Shilling",
+      "symbol": "KSh",
+      "code": "KES"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kyrgyzstan",
+    "countryCode": "KG",
+    "currency": {
+      "name": "Kyrgyzstani Som",
+      "symbol": "с",
+      "code": "KGS"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cambodia",
+    "countryCode": "KH",
+    "currency": {
+      "name": "Cambodian Riel",
+      "symbol": "៛",
+      "code": "KHR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kiribati",
+    "countryCode": "KI",
+    "currency": {
+      "name": "Kiribati Dollar⁵",
+      "symbol": "$",
+      "code": "KID"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Comoros",
+    "countryCode": "KM",
+    "currency": {
+      "name": "Comorian Franc",
+      "symbol": "CF",
+      "code": "KMF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Kitts and Nevis",
+    "countryCode": "KN",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "North Korea",
+    "countryCode": "KP",
+    "currency": {
+      "name": "North Korean Won",
+      "symbol": "₩",
+      "code": "KPW"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "South Korea",
+    "countryCode": "KR",
+    "currency": {
+      "name": "South Korean Won",
+      "symbol": "₩",
+      "code": "KRW"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kuwait",
+    "countryCode": "KW",
+    "currency": {
+      "name": "Kuwaiti Dinar",
+      "symbol": "د.ك",
+      "code": "KWD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Cayman Islands",
+    "countryCode": "KY",
+    "currency": {
+      "name": "Cayman Islands Dollar",
+      "symbol": "CI$",
+      "code": "KYD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kazakhstan",
+    "countryCode": "KZ",
+    "currency": {
+      "name": "Kazakhstani Tenge",
+      "symbol": "₸",
+      "code": "KZT"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Laos",
+    "countryCode": "LA",
+    "currency": {
+      "name": "Lao Kip",
+      "symbol": "₭",
+      "code": "LAK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Lebanon",
+    "countryCode": "LB",
+    "currency": {
+      "name": "Lebanese Pound",
+      "symbol": "ل.ل",
+      "code": "LBP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Lucia",
+    "countryCode": "LC",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Liechtenstein",
+    "countryCode": "LI",
+    "currency": {
+      "name": "Swiss Franc",
+      "symbol": "CHF",
+      "code": "CHF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Sri Lanka",
+    "countryCode": "LK",
+    "currency": {
+      "name": "Sri Lankan Rupee",
+      "symbol": "Rs",
+      "code": "LKR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Liberia",
+    "countryCode": "LR",
+    "currency": {
+      "name": "Liberian Dollar",
+      "symbol": "L$",
+      "code": "LRD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Lesotho",
+    "countryCode": "LS",
+    "currency": {
+      "name": "Lesotho Loti",
+      "symbol": "L",
+      "code": "LSL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Lithuania",
+    "countryCode": "LT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Luxembourg",
+    "countryCode": "LU",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Latvia",
+    "countryCode": "LV",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Libya",
+    "countryCode": "LY",
+    "currency": {
+      "name": "Libyan Dinar",
+      "symbol": "ل.د",
+      "code": "LYD"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Morocco",
+    "countryCode": "MA",
+    "currency": {
+      "name": "Moroccan Dirham",
+      "symbol": "د.م.",
+      "code": "MAD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Principality of Monaco",
+    "countryCode": "MC",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Moldova",
+    "countryCode": "MD",
+    "currency": {
+      "name": "Moldovan Leu",
+      "symbol": "L",
+      "code": "MDL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Montenegro",
+    "countryCode": "ME",
+    "currency": {
+      "name": "Euro⁶",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Martin",
+    "countryCode": "MF",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Madagascar",
+    "countryCode": "MG",
+    "currency": {
+      "name": "Malagasy Ariary",
+      "symbol": "Ar",
+      "code": "MGA"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Marshall Islands",
+    "countryCode": "MH",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "North Macedonia",
+    "countryCode": "MK",
+    "currency": {
+      "name": "Macedonian Denar",
+      "symbol": "ден",
+      "code": "MKD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mali",
+    "countryCode": "ML",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Myanmar",
+    "countryCode": "MM",
+    "currency": {
+      "name": "Burmese Kyat",
+      "symbol": "K",
+      "code": "MMK"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Mongolia",
+    "countryCode": "MN",
+    "currency": {
+      "name": "Mongolian Tögrög",
+      "symbol": "₮",
+      "code": "MNT"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Macao",
+    "countryCode": "MO",
+    "currency": {
+      "name": "Macanese Pataca",
+      "symbol": "MOP$",
+      "code": "MOP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Northern Mariana Islands",
+    "countryCode": "MP",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Martinique",
+    "countryCode": "MQ",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mauritania",
+    "countryCode": "MR",
+    "currency": {
+      "name": "Mauritanian Ouguiya",
+      "symbol": "UM",
+      "code": "MRU"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Montserrat",
+    "countryCode": "MS",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Malta",
+    "countryCode": "MT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mauritius",
+    "countryCode": "MU",
+    "currency": {
+      "name": "Mauritian Rupee",
+      "symbol": "₨",
+      "code": "MUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Maldives",
+    "countryCode": "MV",
+    "currency": {
+      "name": "Maldivian Rufiyaa",
+      "symbol": ".ރ",
+      "code": "MVR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Malawi",
+    "countryCode": "MW",
+    "currency": {
+      "name": "Malawian Kwacha",
+      "symbol": "MK",
+      "code": "MWK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mexico",
+    "countryCode": "MX",
+    "currency": {
+      "name": "Mexican Peso",
+      "symbol": "$",
+      "code": "MXN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Malaysia",
+    "countryCode": "MY",
+    "currency": {
+      "name": "Malaysian Ringgit",
+      "symbol": "RM",
+      "code": "MYR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mozambique",
+    "countryCode": "MZ",
+    "currency": {
+      "name": "Mozambican Metical",
+      "symbol": "MT",
+      "code": "MZN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Namibia",
+    "countryCode": "NA",
+    "currency": {
+      "name": "Namibian Dollar",
+      "symbol": "N$",
+      "code": "NAD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "New Caledonia",
+    "countryCode": "NC",
+    "currency": {
+      "name": "CFP Franc",
+      "symbol": "₣",
+      "code": "XPF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Niger",
+    "countryCode": "NE",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Norfolk Island",
+    "countryCode": "NF",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Nigeria",
+    "countryCode": "NG",
+    "currency": {
+      "name": "Nigerian Naira",
+      "symbol": "₦",
+      "code": "NGN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Nicaragua",
+    "countryCode": "NI",
+    "currency": {
+      "name": "Nicaraguan Córdoba",
+      "symbol": "C$",
+      "code": "NIO"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Netherlands",
+    "countryCode": "NL",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Norway",
+    "countryCode": "NO",
+    "currency": {
+      "name": "Norwegian Krone",
+      "symbol": "kr",
+      "code": "NOK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Nepal",
+    "countryCode": "NP",
+    "currency": {
+      "name": "Nepalese Rupee",
+      "symbol": "₨",
+      "code": "NPR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Nauru",
+    "countryCode": "NR",
+    "currency": {
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "code": "AUD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Niue",
+    "countryCode": "NU",
+    "currency": {
+      "name": "New Zealand Dollar",
+      "symbol": "NZ$",
+      "code": "NZD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "New Zealand",
+    "countryCode": "NZ",
+    "currency": {
+      "name": "New Zealand Dollar",
+      "symbol": "NZ$",
+      "code": "NZD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Oman",
+    "countryCode": "OM",
+    "currency": {
+      "name": "Omani Rial",
+      "symbol": "ر.ع.",
+      "code": "OMR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Panama",
+    "countryCode": "PA",
+    "currency": {
+      "name": "Panamanian Balboa",
+      "symbol": "B/.",
+      "code": "PAB"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Peru",
+    "countryCode": "PE",
+    "currency": {
+      "name": "Peruvian Sol",
+      "symbol": "S/",
+      "code": "PEN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "French Polynesia",
+    "countryCode": "PF",
+    "currency": {
+      "name": "CFP Franc",
+      "symbol": "₣",
+      "code": "XPF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Papua New Guinea",
+    "countryCode": "PG",
+    "currency": {
+      "name": "Papua New Guinean Kina",
+      "symbol": "K",
+      "code": "PGK"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Philippines",
+    "countryCode": "PH",
+    "currency": {
+      "name": "Philippine Peso",
+      "symbol": "₱",
+      "code": "PHP"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "onmeta",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Pakistan",
+    "countryCode": "PK",
+    "currency": {
+      "name": "Pakistani Rupee",
+      "symbol": "₨",
+      "code": "PKR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Poland",
+    "countryCode": "PL",
+    "currency": {
+      "name": "Polish Złoty",
+      "symbol": "zł",
+      "code": "PLN"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Pierre and Miquelon",
+    "countryCode": "PM",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Pitcairn Islands",
+    "countryCode": "PN",
+    "currency": {
+      "name": "New Zealand Dollar",
+      "symbol": "NZ$",
+      "code": "NZD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Puerto Rico",
+    "countryCode": "PR",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Palestine",
+    "countryCode": "PS",
+    "currency": {
+      "name": "Israeli New Shekel⁷",
+      "symbol": "₪",
+      "code": "ILS"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Portugal",
+    "countryCode": "PT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Palau",
+    "countryCode": "PW",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Paraguay",
+    "countryCode": "PY",
+    "currency": {
+      "name": "Paraguayan Guaraní",
+      "symbol": "₲",
+      "code": "PYG"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Qatar",
+    "countryCode": "QA",
+    "currency": {
+      "name": "Qatari Riyal",
+      "symbol": "ر.ق",
+      "code": "QAR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Réunion",
+    "countryCode": "RE",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Romania",
+    "countryCode": "RO",
+    "currency": {
+      "name": "Romanian Leu",
+      "symbol": "lei",
+      "code": "RON"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Serbia",
+    "countryCode": "RS",
+    "currency": {
+      "name": "Serbian Dinar",
+      "symbol": "дин.",
+      "code": "RSD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Russia",
+    "countryCode": "RU",
+    "currency": {
+      "name": "Russian Ruble",
+      "symbol": "₽",
+      "code": "RUB"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Rwanda",
+    "countryCode": "RW",
+    "currency": {
+      "name": "Rwandan Franc",
+      "symbol": "FRw",
+      "code": "RWF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saudi Arabia",
+    "countryCode": "SA",
+    "currency": {
+      "name": "Saudi Riyal",
+      "symbol": "ر.س",
+      "code": "SAR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Solomon Islands",
+    "countryCode": "SB",
+    "currency": {
+      "name": "Solomon Islands Dollar",
+      "symbol": "SI$",
+      "code": "SBD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Seychelles",
+    "countryCode": "SC",
+    "currency": {
+      "name": "Seychellois Rupee",
+      "symbol": "₨",
+      "code": "SCR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Sudan",
+    "countryCode": "SD",
+    "currency": {
+      "name": "Sudanese Pound",
+      "symbol": "ج.س.",
+      "code": "SDG"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Sweden",
+    "countryCode": "SE",
+    "currency": {
+      "name": "Swedish Krona",
+      "symbol": "kr",
+      "code": "SEK"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Singapore",
+    "countryCode": "SG",
+    "currency": {
+      "name": "Singapore Dollar",
+      "symbol": "S$",
+      "code": "SGD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Helena, Ascension and Tristan da Cunha",
+    "countryCode": "SH",
+    "currency": {
+      "name": "Saint Helena Pound",
+      "symbol": "£",
+      "code": "SHP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Slovenia",
+    "countryCode": "SI",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Svalbard and Jan Mayen",
+    "countryCode": "SJ",
+    "currency": {
+      "name": "Norwegian Krone",
+      "symbol": "kr",
+      "code": "NOK"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Slovakia",
+    "countryCode": "SK",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Sierra Leone",
+    "countryCode": "SL",
+    "currency": {
+      "name": "Sierra Leonean Leone",
+      "symbol": "Le",
+      "code": "SLL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "San Marino",
+    "countryCode": "SM",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Senegal",
+    "countryCode": "SN",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Somalia",
+    "countryCode": "SO",
+    "currency": {
+      "name": "Somali Shilling",
+      "symbol": "Sh",
+      "code": "SOS"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Suriname",
+    "countryCode": "SR",
+    "currency": {
+      "name": "Surinamese Dollar",
+      "symbol": "$",
+      "code": "SRD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "South Sudan",
+    "countryCode": "SS",
+    "currency": {
+      "name": "South Sudanese Pound",
+      "symbol": "£",
+      "code": "SSP"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Sao Tome and Principe",
+    "countryCode": "ST",
+    "currency": {
+      "name": "São Tomé and Príncipe Dobra",
+      "symbol": "Db",
+      "code": "STN"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "El Salvador",
+    "countryCode": "SV",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Sint Maarten",
+    "countryCode": "SX",
+    "currency": {
+      "name": "Netherlands Antillean Guilder",
+      "symbol": "ƒ",
+      "code": "ANG"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Syria",
+    "countryCode": "SY",
+    "currency": {
+      "name": "Syrian Pound",
+      "symbol": "£ or ل.س",
+      "code": "SYP"
+    },
+    "providers": []
+  },
+  {
+    "countryDisplayName": "Eswatini",
+    "countryCode": "SZ",
+    "currency": {
+      "name": "Swazi Lilangeni",
+      "symbol": "L or E",
+      "code": "SZL"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Turks and Caicos Islands",
+    "countryCode": "TC",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Chad",
+    "countryCode": "TD",
+    "currency": {
+      "name": "Central African CFA Franc",
+      "symbol": "FCFA",
+      "code": "XAF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "French Southern and Antarctic Lands",
+    "countryCode": "TF",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Togo",
+    "countryCode": "TG",
+    "currency": {
+      "name": "West African CFA Franc",
+      "symbol": "CFA",
+      "code": "XOF"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Thailand",
+    "countryCode": "TH",
+    "currency": {
+      "name": "Thai Baht",
+      "symbol": "฿",
+      "code": "THB"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tajikistan",
+    "countryCode": "TJ",
+    "currency": {
+      "name": "Tajikistani Somoni",
+      "symbol": "SM",
+      "code": "TJS"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tokelau",
+    "countryCode": "TK",
+    "currency": {
+      "name": "New Zealand Dollar",
+      "symbol": "NZ$",
+      "code": "NZD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "East Timor",
+    "countryCode": "TL",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Turkmenistan",
+    "countryCode": "TM",
+    "currency": {
+      "name": "Turkmenistan Manat",
+      "symbol": "T",
+      "code": "TMT"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tunisia",
+    "countryCode": "TN",
+    "currency": {
+      "name": "Tunisian Dinar",
+      "symbol": "د.ت",
+      "code": "TND"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tonga",
+    "countryCode": "TO",
+    "currency": {
+      "name": "Tongan Paʻanga",
+      "symbol": "T$",
+      "code": "TOP"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Turkey",
+    "countryCode": "TR",
+    "currency": {
+      "name": "Turkish Lira",
+      "symbol": "₺",
+      "code": "TRY"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Trinidad and Tobago",
+    "countryCode": "TT",
+    "currency": {
+      "name": "Trinidad and Tobago Dollar",
+      "symbol": "TT$",
+      "code": "TTD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tuvalu",
+    "countryCode": "TV",
+    "currency": {
+      "name": "Tuvaluan Dollar⁵",
+      "symbol": "$",
+      "code": "TVD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Taiwan",
+    "countryCode": "TW",
+    "currency": {
+      "name": "New Taiwan Dollar",
+      "symbol": "NT$",
+      "code": "TWD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Tanzania",
+    "countryCode": "TZ",
+    "currency": {
+      "name": "Tanzanian Shilling",
+      "symbol": "TSh",
+      "code": "TZS"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Ukraine",
+    "countryCode": "UA",
+    "currency": {
+      "name": "Ukrainian Hryvnia",
+      "symbol": "₴",
+      "code": "UAH"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Uganda",
+    "countryCode": "UG",
+    "currency": {
+      "name": "Ugandan Shilling",
+      "symbol": "USh",
+      "code": "UGX"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "United States Minor Outlying Islands",
+    "countryCode": "UM",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "United States",
+    "countryCode": "US",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Uruguay",
+    "countryCode": "UY",
+    "currency": {
+      "name": "Uruguayan Peso",
+      "symbol": "$",
+      "code": "UYU"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Uzbekistan",
+    "countryCode": "UZ",
+    "currency": {
+      "name": "Uzbekistani Som",
+      "symbol": "so'm or лв",
+      "code": "UZS"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Vatican City",
+    "countryCode": "VA",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Saint Vincent and the Grenadines",
+    "countryCode": "VC",
+    "currency": {
+      "name": "Eastern Caribbean Dollar",
+      "symbol": "$",
+      "code": "XCD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Venezuela",
+    "countryCode": "VE",
+    "currency": {
+      "name": "Venezuelan Bolívar",
+      "symbol": "Bs.D",
+      "code": "VES"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "British Virgin Islands",
+    "countryCode": "VG",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "U.S. Virgin Islands",
+    "countryCode": "VI",
+    "currency": {
+      "name": "US Dollar",
+      "symbol": "$",
+      "code": "USD"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Vietnam",
+    "countryCode": "VN",
+    "currency": {
+      "name": "Vietnamese Đồng",
+      "symbol": "₫",
+      "code": "VND"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Vanuatu",
+    "countryCode": "VU",
+    "currency": {
+      "name": "Vanuatu Vatu",
+      "symbol": "VT",
+      "code": "VUV"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Wallis and Futuna",
+    "countryCode": "WF",
+    "currency": {
+      "name": "CFP Franc",
+      "symbol": "₣",
+      "code": "XPF"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Samoa",
+    "countryCode": "WS",
+    "currency": {
+      "name": "Samoan Tālā",
+      "symbol": "T",
+      "code": "WST"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Kosovo",
+    "countryCode": "XK",
+    "currency": {
+      "name": "Euro⁸",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Yemen",
+    "countryCode": "YE",
+    "currency": {
+      "name": "Yemeni Rial",
+      "symbol": "﷼",
+      "code": "YER"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Mayotte",
+    "countryCode": "YT",
+    "currency": {
+      "name": "Euro",
+      "symbol": "€",
+      "code": "EUR"
+    },
+    "providers": [
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "transak",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "South Africa",
+    "countryCode": "ZA",
+    "currency": {
+      "name": "South African Rand",
+      "symbol": "R",
+      "code": "ZAR"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Zambia",
+    "countryCode": "ZM",
+    "currency": {
+      "name": "Zambian Kwacha",
+      "symbol": "ZK",
+      "code": "ZMW"
+    },
+    "providers": [
+      {
+        "id": "alchemypay",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "banxa",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      },
+      {
+        "id": "unlimit",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  },
+  {
+    "countryDisplayName": "Zimbabwe",
+    "countryCode": "ZW",
+    "currency": {
+      "name": "Zimbabwean Dollar⁹",
+      "symbol": "Z$",
+      "code": "ZWL"
+    },
+    "providers": [
+      {
+        "id": "paybis",
+        "type": [
+          "onramp"
+        ]
+      }
+    ]
+  }
+]
