@@ -962,3 +962,232 @@ export const filterTransactions = requireAuth(
     }
   }
 );
+
+/**
+ * Process blockchain transaction hash
+ * POST /api/transactions/process
+ */
+export const processTransactionHash = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body = JSON.parse(event.body);
+      const {
+        txHash,
+        network = "ethereum",
+        type = "payment",
+        category = "blockchain_transaction",
+        tags = ["blockchain"],
+        client = "blockchain",
+        projectId,
+        metadata = {},
+      } = body;
+
+      // Validate required fields
+      if (!txHash) {
+        return error("Transaction hash (txHash) is required", 400);
+      }
+
+      // Validate transaction hash format
+      if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+        return error("Invalid transaction hash format", 400);
+      }
+
+      // Import the transaction status service
+      const { transactionStatusService } = await import(
+        "../services/transaction-status-service"
+      );
+
+      // Process the transaction hash
+      const result = await transactionStatusService.processTransactionHash(
+        userId,
+        txHash,
+        network,
+        {
+          type,
+          category,
+          tags,
+          client,
+          projectId,
+          ...metadata,
+        }
+      );
+
+      if (!result.success) {
+        return error(result.error || "Failed to process transaction", 400);
+      }
+
+      // Get the created transaction
+      const transaction = await Transaction.findById(result.transactionId);
+      if (!transaction) {
+        return error("Transaction not found after creation", 404);
+      }
+
+      // Format response
+      return success(
+        {
+          id: transaction._id,
+          txHash: transaction.txHash,
+          status: transaction.status,
+          type: transaction.type,
+          amount: transaction.amount,
+          fromAddress: transaction.fromAddress,
+          toAddress: transaction.toAddress,
+          sourceChain: transaction.sourceChain,
+          destinationChain: transaction.destinationChain,
+          category: transaction.category,
+          tags: transaction.tags,
+          client: transaction.client,
+          projectId: transaction.projectId,
+          metadata: transaction.metadata,
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
+          message:
+            "Transaction processed successfully. Status will be updated asynchronously.",
+        },
+        201
+      );
+    } catch (err) {
+      console.error("Process transaction hash error:", err);
+      return error("Could not process transaction hash", 500);
+    }
+  }
+);
+
+/**
+ * Get transaction status by hash
+ * GET /api/transactions/status/{txHash}
+ */
+export const getTransactionStatus = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get transaction hash from path parameters
+      if (!event.pathParameters?.txHash) {
+        return error("Transaction hash parameter is required", 400);
+      }
+
+      const txHash = event.pathParameters.txHash;
+      const network = event.queryStringParameters?.network || "ethereum";
+
+      // Validate transaction hash format
+      if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+        return error("Invalid transaction hash format", 400);
+      }
+
+      // Import the transaction status service
+      const { transactionStatusService } = await import(
+        "../services/transaction-status-service"
+      );
+
+      // Check if we have a local transaction record
+      const transaction = await Transaction.findOne({ txHash });
+
+      // Get blockchain status
+      const blockchainStatus =
+        await transactionStatusService.checkTransactionStatus(txHash, network);
+
+      // If we have a local record, return combined info
+      if (transaction) {
+        // Check if user is authorized to view this transaction
+        if (
+          transaction.fromUserId?.toString() !== userId &&
+          transaction.toUserId.toString() !== userId
+        ) {
+          return error("Unauthorized to access this transaction", 403);
+        }
+
+        return success({
+          transaction: {
+            id: transaction._id,
+            txHash: transaction.txHash,
+            status: transaction.status,
+            type: transaction.type,
+            amount: transaction.amount,
+            fromAddress: transaction.fromAddress,
+            toAddress: transaction.toAddress,
+            sourceChain: transaction.sourceChain,
+            destinationChain: transaction.destinationChain,
+            category: transaction.category,
+            tags: transaction.tags,
+            client: transaction.client,
+            projectId: transaction.projectId,
+            metadata: transaction.metadata,
+            createdAt: transaction.createdAt,
+            updatedAt: transaction.updatedAt,
+          },
+          blockchainStatus: {
+            isConfirmed: blockchainStatus.isConfirmed,
+            status: blockchainStatus.status,
+            confirmations: blockchainStatus.confirmations,
+            blockNumber: blockchainStatus.blockNumber,
+            error: blockchainStatus.error,
+          },
+        });
+      }
+
+      // If no local record, return only blockchain status
+      return success({
+        blockchainStatus: {
+          isConfirmed: blockchainStatus.isConfirmed,
+          status: blockchainStatus.status,
+          confirmations: blockchainStatus.confirmations,
+          blockNumber: blockchainStatus.blockNumber,
+          error: blockchainStatus.error,
+        },
+        message:
+          "No local transaction record found. Only blockchain status available.",
+      });
+    } catch (err) {
+      console.error("Get transaction status error:", err);
+      return error("Could not retrieve transaction status", 500);
+    }
+  }
+);
+
+/**
+ * Get supported blockchain networks
+ * GET /api/transactions/networks
+ */
+export const getSupportedNetworks = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Import the blockchain service
+      const { blockchainService } = await import(
+        "../services/blockchain-service"
+      );
+
+      const networks = blockchainService.getSupportedNetworks();
+
+      return success({
+        networks,
+        message: "Supported blockchain networks",
+      });
+    } catch (err) {
+      console.error("Get supported networks error:", err);
+      return error("Could not retrieve supported networks", 500);
+    }
+  }
+);

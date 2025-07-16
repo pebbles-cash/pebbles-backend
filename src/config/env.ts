@@ -65,6 +65,11 @@ export const FCM_VALIDATION_TIMEOUT = parseInt(
 export const ENABLE_FIREBASE_DEBUG =
   process.env.ENABLE_FIREBASE_DEBUG === "true";
 
+// Blockchain configuration
+export const SEPOLIA_RPC_URL = getEnv("SEPOLIA_RPC_URL", false);
+export const ETHEREUM_RPC_URL = getEnv("ETHEREUM_RPC_URL", false);
+export const ETHERSCAN_API_KEY = getEnv("ETHERSCAN_API_KEY", false);
+
 // Log configuration (without sensitive values)
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);

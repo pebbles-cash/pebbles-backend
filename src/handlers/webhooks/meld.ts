@@ -432,12 +432,36 @@ async function processFinancialTransaction(
       eventId,
     });
 
-    // Create or update FiatInteraction record
+    // Check if FiatInteraction already exists for this transaction
+    const existingInteraction = await FiatInteraction.findOne({
+      meldPaymentTransactionId: transaction.id,
+      userId: userId,
+    });
+
+    if (existingInteraction) {
+      logger.info("FiatInteraction already exists for transaction", {
+        transactionId: transaction.id,
+        fiatInteractionId: existingInteraction._id.toString(),
+      });
+      return;
+    }
+
+    // Create new FiatInteraction record
     const fiatInteraction = new FiatInteraction({
       userId,
       type: "onramp", // or determine based on transaction type
       status: "completed",
       serviceProvider: "meld",
+      // Meld-specific fields
+      meldPaymentTransactionId: transaction.id,
+      meldRequestId: transaction.requestId,
+      meldAccountId: transaction.accountId,
+      meldProfileId: transaction.profileId,
+      meldExternalCustomerId: transaction.externalCustomerId,
+      meldExternalSessionId: transaction.externalSessionId,
+      meldTransactionType: transaction.transactionType,
+      meldPaymentTransactionStatus: transaction.paymentTransactionStatus,
+      // Legacy field for backward compatibility
       externalTransactionId: transaction.id,
       fiatAmount: {
         value: transaction.amount,
@@ -605,11 +629,12 @@ async function handleCryptoTransactionUpdate(
     }
 
     const transactionDetails = data.transaction || data;
-    const transactionId =
-      transactionDetails.id || transactionDetails.transactionId;
+    const customerId = transactionDetails.customerId;
+    const sessionId = transactionDetails.sessionId;
+    const paymentTransactionId = transactionDetails.paymentTransactionId;
 
-    if (!transactionId) {
-      logger.warn("No transaction ID found in crypto transaction update", {
+    if (!customerId) {
+      logger.warn("No customer ID found in crypto transaction update", {
         eventType,
         accountId,
         eventId,
@@ -617,24 +642,34 @@ async function handleCryptoTransactionUpdate(
       return;
     }
 
-    // Find existing FiatInteraction
+    // Find existing FiatInteraction by meldCustomerId
     const fiatInteraction = await FiatInteraction.findOne({
-      externalTransactionId: transactionId,
+      meldCustomerId: customerId,
+      userId: user._id,
     });
 
     if (!fiatInteraction) {
-      logger.warn("FiatInteraction not found for transaction", {
-        transactionId,
+      logger.warn("FiatInteraction not found for customer", {
+        customerId,
         eventType,
       });
       return;
     }
 
+    // Update Meld-specific fields from webhook data
+    const updateData: any = {
+      meldPaymentTransactionId: paymentTransactionId,
+      meldPaymentTransactionStatus: transactionDetails.paymentTransactionStatus,
+      meldTransactionType: transactionDetails.transactionType,
+      meldRequestId: transactionDetails.requestId,
+      meldAccountId: accountId,
+      meldExternalCustomerId: transactionDetails.externalCustomerId,
+      meldExternalSessionId: transactionDetails.externalSessionId,
+    };
+
     // Update status based on event type
     const newStatus = mapMeldStatusToFiatStatus(eventType);
-    const updateData: any = {
-      status: newStatus,
-    };
+    updateData.status = newStatus;
 
     // Add timestamps based on status
     switch (newStatus) {
@@ -667,14 +702,13 @@ async function handleCryptoTransactionUpdate(
       user._id.toString(),
       eventType,
       transactionDetails,
-      fiatInteraction._id.toString()
+      customerId
     );
 
     logger.info("Successfully processed crypto transaction webhook", {
       eventType,
-      transactionId,
+      customerId,
       userId: user._id.toString(),
-      customerId: fiatInteraction._id.toString(),
     });
   } catch (err) {
     logger.error("Error handling crypto transaction update", err as Error, {

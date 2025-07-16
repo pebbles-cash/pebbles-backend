@@ -152,6 +152,16 @@ export interface ITransactionMetadata {
   note?: string;
   category?: string;
   anonymous?: boolean;
+  blockchainDetails?: {
+    gas?: string;
+    gasPrice?: string;
+    nonce?: number;
+    blockNumber?: number;
+    confirmations?: number;
+    timestamp?: number;
+  };
+  network?: string;
+  error?: string;
 }
 
 export interface ITransaction extends Document {
@@ -539,7 +549,22 @@ export interface IFiatInteraction extends Document {
     | "cancelled"
     | "expired";
   serviceProvider: "meld" | "moonpay" | "ramp" | "transak" | "other";
-  externalTransactionId: string;
+
+  // Meld-specific fields
+  meldCustomerId?: string;
+  meldSessionId?: string;
+  meldPaymentTransactionId?: string;
+  meldRequestId?: string;
+  meldAccountId?: string;
+  meldProfileId?: string;
+  meldExternalCustomerId?: string;
+  meldExternalSessionId?: string;
+  meldTransactionType?: string;
+  meldPaymentTransactionStatus?: string;
+
+  // Legacy field for backward compatibility
+  externalTransactionId?: string;
+
   fiatAmount: IAmount;
   cryptoAmount: ICryptoAmount;
   exchangeRate: number;

@@ -1,0 +1,377 @@
+import { Transaction } from "../models";
+import { blockchainService } from "./blockchain-service";
+import { logger } from "../utils/logger";
+
+export interface TransactionStatusUpdate {
+  transactionId: string;
+  status: "pending" | "completed" | "failed";
+  blockNumber?: number;
+  confirmations?: number;
+  error?: string;
+  updatedAt: Date;
+}
+
+export interface StatusCheckResult {
+  isConfirmed: boolean;
+  status: "pending" | "completed" | "failed";
+  confirmations: number;
+  blockNumber?: number;
+  error?: string;
+}
+
+class TransactionStatusService {
+  private readonly MAX_RETRIES = 10;
+  private readonly RETRY_DELAY = 2000; // 2 seconds
+  private readonly CONFIRMATION_THRESHOLD = 1; // Number of confirmations required
+
+  /**
+   * Process a new transaction hash and create/update transaction record
+   */
+  async processTransactionHash(
+    userId: string,
+    txHash: string,
+    network: string = "ethereum",
+    metadata: any = {}
+  ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+    try {
+      // Validate network
+      if (!blockchainService.isNetworkSupported(network)) {
+        return {
+          success: false,
+          error: `Unsupported network: ${network}. Supported networks: ${blockchainService.getSupportedNetworks().join(", ")}`,
+        };
+      }
+
+      // Check if transaction already exists
+      const existingTransaction = await Transaction.findOne({ txHash });
+      if (existingTransaction) {
+        logger.info("Transaction already exists", {
+          txHash,
+          transactionId: existingTransaction._id,
+        });
+        return {
+          success: true,
+          transactionId: existingTransaction._id.toString(),
+        };
+      }
+
+      // Get transaction details from blockchain
+      const txDetails = await blockchainService.getTransactionDetails(
+        network,
+        txHash
+      );
+
+      if (!txDetails) {
+        return {
+          success: false,
+          error: "Transaction not found on blockchain",
+        };
+      }
+
+      // Determine transaction type and direction
+      const isIncoming =
+        txDetails.to.toLowerCase() === metadata.toAddress?.toLowerCase();
+      const isOutgoing =
+        txDetails.from.toLowerCase() === metadata.fromAddress?.toLowerCase();
+
+      // Create transaction record
+      const transaction = new Transaction({
+        type: metadata.type || "payment",
+        fromUserId: isOutgoing ? userId : undefined,
+        toUserId: isIncoming ? userId : undefined,
+        fromAddress: txDetails.from,
+        toAddress: txDetails.to,
+        amount: txDetails.value,
+        tokenAddress: metadata.tokenAddress || "0x0",
+        sourceChain: network,
+        destinationChain: network,
+        txHash: txHash,
+        status: this.mapBlockchainStatus(txDetails.status),
+        category: metadata.category || "blockchain_transaction",
+        tags: metadata.tags || ["blockchain"],
+        client: metadata.client || "blockchain",
+        projectId: metadata.projectId,
+        metadata: {
+          ...metadata,
+          blockchainDetails: {
+            gas: txDetails.gas,
+            gasPrice: txDetails.gasPrice,
+            nonce: txDetails.nonce,
+            blockNumber: txDetails.blockNumber,
+            confirmations: txDetails.confirmations,
+            timestamp: txDetails.timestamp,
+          },
+          network,
+        },
+      });
+
+      await transaction.save();
+
+      // Start async status monitoring
+      this.monitorTransactionStatus(
+        transaction._id.toString(),
+        txHash,
+        network
+      );
+
+      logger.info("Transaction processed successfully", {
+        txHash,
+        transactionId: transaction._id.toString(),
+        network,
+        status: transaction.status,
+      });
+
+      return {
+        success: true,
+        transactionId: transaction._id.toString(),
+      };
+    } catch (error) {
+      logger.error("Error processing transaction hash", error as Error, {
+        txHash,
+        userId,
+        network,
+      });
+      return {
+        success: false,
+        error: "Failed to process transaction",
+      };
+    }
+  }
+
+  /**
+   * Monitor transaction status asynchronously
+   */
+  private async monitorTransactionStatus(
+    transactionId: string,
+    txHash: string,
+    network: string
+  ): Promise<void> {
+    let retries = 0;
+    let lastStatus: string | null = null;
+
+    const checkStatus = async (): Promise<void> => {
+      try {
+        const transaction = await Transaction.findById(transactionId);
+        if (!transaction) {
+          logger.warn("Transaction not found during status monitoring", {
+            transactionId,
+          });
+          return;
+        }
+
+        // Get updated transaction details from blockchain
+        const txDetails = await blockchainService.getTransactionDetails(
+          network,
+          txHash
+        );
+
+        if (!txDetails) {
+          if (retries < this.MAX_RETRIES) {
+            retries++;
+            setTimeout(checkStatus, this.RETRY_DELAY);
+          } else {
+            await this.updateTransactionStatus(transactionId, "failed", {
+              error: "Transaction not found after maximum retries",
+            });
+          }
+          return;
+        }
+
+        const newStatus = this.mapBlockchainStatus(txDetails.status);
+        const isConfirmed = await blockchainService.isTransactionConfirmed(
+          network,
+          txHash,
+          this.CONFIRMATION_THRESHOLD
+        );
+
+        // Update transaction if status changed
+        if (newStatus !== lastStatus || isConfirmed) {
+          const updateData: any = {
+            status: isConfirmed ? "completed" : newStatus,
+            updatedAt: new Date(),
+          };
+
+          // Update metadata with latest blockchain details
+          if (transaction.metadata) {
+            transaction.metadata.blockchainDetails = {
+              gas: txDetails.gas,
+              gasPrice: txDetails.gasPrice,
+              nonce: txDetails.nonce,
+              blockNumber: txDetails.blockNumber,
+              confirmations: txDetails.confirmations,
+              timestamp: txDetails.timestamp,
+            };
+          }
+
+          await Transaction.findByIdAndUpdate(transactionId, {
+            $set: updateData,
+          });
+
+          lastStatus = newStatus;
+
+          logger.info("Transaction status updated", {
+            transactionId,
+            txHash,
+            status: updateData.status,
+            confirmations: txDetails.confirmations,
+          });
+        }
+
+        // Continue monitoring if not confirmed
+        if (!isConfirmed && retries < this.MAX_RETRIES) {
+          retries++;
+          setTimeout(checkStatus, this.RETRY_DELAY);
+        }
+      } catch (error) {
+        logger.error("Error monitoring transaction status", error as Error, {
+          transactionId,
+          txHash,
+          retries,
+        });
+
+        if (retries < this.MAX_RETRIES) {
+          retries++;
+          setTimeout(checkStatus, this.RETRY_DELAY);
+        } else {
+          await this.updateTransactionStatus(transactionId, "failed", {
+            error: "Status monitoring failed after maximum retries",
+          });
+        }
+      }
+    };
+
+    // Start monitoring
+    setTimeout(checkStatus, this.RETRY_DELAY);
+  }
+
+  /**
+   * Update transaction status
+   */
+  private async updateTransactionStatus(
+    transactionId: string,
+    status: "pending" | "completed" | "failed",
+    additionalData: any = {}
+  ): Promise<void> {
+    try {
+      const updateData: any = {
+        status,
+        updatedAt: new Date(),
+      };
+
+      if (additionalData.error) {
+        if (!updateData.metadata) updateData.metadata = {};
+        updateData.metadata.error = additionalData.error;
+      }
+
+      await Transaction.findByIdAndUpdate(transactionId, { $set: updateData });
+
+      logger.info("Transaction status updated", {
+        transactionId,
+        status,
+        error: additionalData.error,
+      });
+    } catch (error) {
+      logger.error("Error updating transaction status", error as Error, {
+        transactionId,
+        status,
+      });
+    }
+  }
+
+  /**
+   * Check transaction status immediately
+   */
+  async checkTransactionStatus(
+    txHash: string,
+    network: string = "ethereum"
+  ): Promise<StatusCheckResult> {
+    try {
+      const txDetails = await blockchainService.getTransactionDetails(
+        network,
+        txHash
+      );
+
+      if (!txDetails) {
+        return {
+          isConfirmed: false,
+          status: "pending",
+          confirmations: 0,
+          error: "Transaction not found",
+        };
+      }
+
+      const isConfirmed = await blockchainService.isTransactionConfirmed(
+        network,
+        txHash,
+        this.CONFIRMATION_THRESHOLD
+      );
+
+      return {
+        isConfirmed,
+        status: this.mapBlockchainStatus(txDetails.status),
+        confirmations: txDetails.confirmations || 0,
+        blockNumber: txDetails.blockNumber,
+      };
+    } catch (error) {
+      logger.error("Error checking transaction status", error as Error, {
+        txHash,
+        network,
+      });
+      return {
+        isConfirmed: false,
+        status: "pending",
+        confirmations: 0,
+        error: "Failed to check status",
+      };
+    }
+  }
+
+  /**
+   * Get transaction status with retry logic
+   */
+  async getTransactionStatusWithRetry(
+    txHash: string,
+    network: string = "ethereum",
+    maxRetries: number = 5
+  ): Promise<StatusCheckResult> {
+    for (let i = 0; i < maxRetries; i++) {
+      const result = await this.checkTransactionStatus(txHash, network);
+
+      if (result.isConfirmed || result.status === "failed") {
+        return result;
+      }
+
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, this.RETRY_DELAY));
+      }
+    }
+
+    return await this.checkTransactionStatus(txHash, network);
+  }
+
+  /**
+   * Map blockchain status to our status format
+   */
+  private mapBlockchainStatus(
+    blockchainStatus?: string
+  ): "pending" | "completed" | "failed" {
+    switch (blockchainStatus) {
+      case "confirmed":
+        return "completed";
+      case "failed":
+        return "failed";
+      case "pending":
+      default:
+        return "pending";
+    }
+  }
+
+  /**
+   * Get supported networks
+   */
+  getSupportedNetworks(): string[] {
+    return blockchainService.getSupportedNetworks();
+  }
+}
+
+export const transactionStatusService = new TransactionStatusService();

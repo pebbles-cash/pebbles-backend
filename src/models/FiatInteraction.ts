@@ -71,10 +71,55 @@ const fiatInteractionSchema = new Schema<IFiatInteraction>(
       required: true,
       enum: ["meld", "moonpay", "ramp", "transak", "other"],
     },
+    // Meld-specific fields
+    meldCustomerId: {
+      type: String,
+      required: false,
+      index: true,
+    },
+    meldSessionId: {
+      type: String,
+      required: false,
+      index: true,
+    },
+    meldPaymentTransactionId: {
+      type: String,
+      required: false,
+      index: true,
+    },
+    meldRequestId: {
+      type: String,
+      required: false,
+    },
+    meldAccountId: {
+      type: String,
+      required: false,
+    },
+    meldProfileId: {
+      type: String,
+      required: false,
+    },
+    meldExternalCustomerId: {
+      type: String,
+      required: false,
+    },
+    meldExternalSessionId: {
+      type: String,
+      required: false,
+    },
+    meldTransactionType: {
+      type: String,
+      required: false,
+    },
+    meldPaymentTransactionStatus: {
+      type: String,
+      required: false,
+    },
+    // Legacy field for backward compatibility
     externalTransactionId: {
       type: String,
-      required: true,
-      unique: true,
+      required: false,
+      unique: false, // Remove unique constraint as we'll use Meld IDs
     },
     fiatAmount: {
       value: { type: Number, required: true },
@@ -160,7 +205,9 @@ fiatInteractionSchema.index({ userId: 1, createdAt: -1 });
 fiatInteractionSchema.index({ status: 1, createdAt: -1 });
 fiatInteractionSchema.index({ serviceProvider: 1, createdAt: -1 });
 fiatInteractionSchema.index({ type: 1, createdAt: -1 });
-fiatInteractionSchema.index({ externalTransactionId: 1 }, { unique: true });
+fiatInteractionSchema.index({ meldCustomerId: 1 });
+fiatInteractionSchema.index({ meldSessionId: 1 });
+fiatInteractionSchema.index({ meldPaymentTransactionId: 1 });
 fiatInteractionSchema.index({
   userId: 1,
   type: 1,

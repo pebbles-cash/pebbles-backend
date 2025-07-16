@@ -6,6 +6,121 @@ import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 
 /**
+ * Create a new FiatInteraction record for Meld transaction
+ * POST /api/fiat-interactions
+ */
+export const createFiatInteraction = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body = JSON.parse(event.body);
+      const {
+        id, // Meld session ID
+        customerId,
+        externalSessionId,
+        externalCustomerId,
+        widgetUrl,
+        token,
+        // Transaction details
+        fiatAmount,
+        cryptoAmount,
+        exchangeRate,
+        fees,
+        sourceAccount,
+        destinationAccount,
+        blockchain = "ethereum",
+        type = "onramp", // Default to onramp
+        serviceProvider = "meld",
+      } = body;
+
+      // Validate required fields
+      if (!id || !customerId) {
+        return error("Meld session ID and customer ID are required", 400);
+      }
+
+      if (!fiatAmount || !cryptoAmount) {
+        return error("Fiat and crypto amounts are required", 400);
+      }
+
+      // Check if FiatInteraction already exists for this customer
+      const existingInteraction = await FiatInteraction.findOne({
+        meldCustomerId: customerId,
+        userId: userId,
+      });
+
+      if (existingInteraction) {
+        return error("FiatInteraction already exists for this customer", 409);
+      }
+
+      // Create new FiatInteraction
+      const fiatInteraction = new FiatInteraction({
+        userId,
+        type,
+        status: "pending",
+        serviceProvider,
+        // Meld-specific fields
+        meldCustomerId: customerId,
+        meldSessionId: id,
+        meldExternalCustomerId: externalCustomerId,
+        meldExternalSessionId: externalSessionId,
+        // Transaction details
+        fiatAmount,
+        cryptoAmount,
+        exchangeRate,
+        fees,
+        sourceAccount,
+        destinationAccount,
+        blockchain,
+        // Metadata
+        metadata: {
+          widgetUrl,
+          token,
+          meldSessionId: id,
+        },
+        // Required fields with defaults
+        ipAddress: event.requestContext.identity.sourceIp || "unknown",
+        deviceInfo: {
+          userAgent: event.headers["User-Agent"] || "unknown",
+          platform: "web",
+        },
+        initiatedAt: new Date(),
+      });
+
+      await fiatInteraction.save();
+
+      return success(
+        {
+          id: fiatInteraction._id,
+          meldCustomerId: fiatInteraction.meldCustomerId,
+          meldSessionId: fiatInteraction.meldSessionId,
+          status: fiatInteraction.status,
+          type: fiatInteraction.type,
+          createdAt: fiatInteraction.createdAt,
+        },
+        201
+      );
+    } catch (err) {
+      console.error("Create FiatInteraction error:", err);
+      return error("Could not create FiatInteraction", 500);
+    }
+  }
+);
+
+/**
  * Get user's FiatInteraction records
  * GET /api/fiat-interactions
  */
@@ -87,16 +202,14 @@ export const getFiatInteractionById = requireAuth(
 
       const customerId = event.pathParameters.customerId;
 
-      // Get the FiatInteraction
-      const fiatInteraction = await FiatInteraction.findById(customerId);
+      // Get the FiatInteraction by meldCustomerId
+      const fiatInteraction = await FiatInteraction.findOne({
+        meldCustomerId: customerId,
+        userId: userId,
+      });
 
       if (!fiatInteraction) {
         return error("FiatInteraction not found", 404);
-      }
-
-      // Check if user is authorized to view this FiatInteraction
-      if (fiatInteraction.userId.toString() !== userId) {
-        return error("Unauthorized to access this FiatInteraction", 403);
       }
 
       return success({
@@ -104,6 +217,51 @@ export const getFiatInteractionById = requireAuth(
       });
     } catch (err) {
       console.error("Get FiatInteraction details error:", err);
+      return error("Could not retrieve FiatInteraction details", 500);
+    }
+  }
+);
+
+/**
+ * Get FiatInteraction by session ID
+ * GET /api/fiat-interactions/session/{sessionId}
+ */
+export const getFiatInteractionBySessionId = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Database connection is handled in requireAuth middleware
+
+      // User is provided by the auth middleware
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Get session ID from path parameters
+      if (!event.pathParameters?.sessionId) {
+        return error("Session ID parameter is required", 400);
+      }
+
+      const sessionId = event.pathParameters.sessionId;
+
+      // Get the FiatInteraction by meldSessionId
+      const fiatInteraction = await FiatInteraction.findOne({
+        meldSessionId: sessionId,
+        userId: userId,
+      });
+
+      if (!fiatInteraction) {
+        return error("FiatInteraction not found", 404);
+      }
+
+      return success({
+        fiatInteraction,
+      });
+    } catch (err) {
+      console.error("Get FiatInteraction by session ID error:", err);
       return error("Could not retrieve FiatInteraction details", 500);
     }
   }

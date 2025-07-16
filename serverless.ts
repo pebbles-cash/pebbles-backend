@@ -50,6 +50,9 @@ const serverlessConfiguration: AWS = {
       SKIP_FCM_VALIDATION: "${env:SKIP_FCM_VALIDATION, 'false'}",
       FCM_VALIDATION_TIMEOUT: "${env:FCM_VALIDATION_TIMEOUT, '5000'}",
       ENABLE_FIREBASE_DEBUG: "${env:ENABLE_FIREBASE_DEBUG, 'false'}",
+      SEPOLIA_RPC_URL: "${env:SEPOLIA_RPC_URL, ''}",
+      ETHEREUM_RPC_URL: "${env:ETHEREUM_RPC_URL, ''}",
+      ETHERSCAN_API_KEY: "${env:ETHERSCAN_API_KEY, ''}",
     },
     iam: {
       role: {
@@ -375,6 +378,42 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    processTransactionHash: {
+      handler: "src/handlers/transactions.processTransactionHash",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/process",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getTransactionStatus: {
+      handler: "src/handlers/transactions.getTransactionStatus",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/status/{txHash}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getSupportedNetworks: {
+      handler: "src/handlers/transactions.getSupportedNetworks",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/networks",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     // Subscription Handlers
     createSubscriptionPlan: {
       handler: "src/handlers/subscriptions.createSubscriptionPlan",
@@ -612,6 +651,18 @@ const serverlessConfiguration: AWS = {
       ],
     },
     // FiatInteraction endpoints
+    createFiatInteraction: {
+      handler: "src/handlers/fiat-interactions.createFiatInteraction",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
     getUserFiatInteractions: {
       handler: "src/handlers/fiat-interactions.getUserFiatInteractions",
       events: [
@@ -630,6 +681,18 @@ const serverlessConfiguration: AWS = {
         {
           http: {
             path: "/api/fiat-interactions/customer/{customerId}",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getFiatInteractionBySessionId: {
+      handler: "src/handlers/fiat-interactions.getFiatInteractionBySessionId",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions/session/{sessionId}",
             method: "get",
             cors: true,
           },
