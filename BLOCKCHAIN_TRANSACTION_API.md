@@ -73,6 +73,10 @@ Content-Type: application/json
 }
 ```
 
+**Note**: If `network` is not specified, the system will automatically use:
+- **Sepolia** for development and staging environments
+- **Ethereum** for production environment
+
 **Response (201):**
 ```json
 {
@@ -182,6 +186,8 @@ Authorization: Bearer <your-jwt-token>
   "success": true,
   "data": {
     "networks": ["sepolia", "ethereum"],
+    "defaultNetwork": "sepolia",
+    "currentEnvironment": "development",
     "message": "Supported blockchain networks"
   }
 }
@@ -202,10 +208,23 @@ ETHERSCAN_API_KEY=your-etherscan-api-key
 
 ### Network Configuration
 
-- **Development**: Uses Sepolia testnet
-- **Production**: Uses Ethereum mainnet
+- **Development**: Uses Sepolia testnet (automatic)
+- **Staging**: Uses Sepolia testnet (automatic)
+- **Production**: Uses Ethereum mainnet (automatic)
 - **RPC Providers**: Configured via environment variables
 - **API Keys**: Etherscan API key for enhanced transaction details
+
+### Environment-Based Network Selection
+
+The system automatically selects the appropriate blockchain network based on your deployment environment:
+
+| Environment | Network | Use Case |
+|-------------|---------|----------|
+| `development` | Sepolia | Local development and testing |
+| `staging` | Sepolia | Pre-production testing |
+| `production` | Ethereum | Live production environment |
+
+You can override the default network by explicitly specifying the `network` parameter in your API requests.
 
 ## Transaction Status Monitoring
 

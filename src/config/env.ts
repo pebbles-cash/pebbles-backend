@@ -70,6 +70,25 @@ export const SEPOLIA_RPC_URL = getEnv("SEPOLIA_RPC_URL", false);
 export const ETHEREUM_RPC_URL = getEnv("ETHEREUM_RPC_URL", false);
 export const ETHERSCAN_API_KEY = getEnv("ETHERSCAN_API_KEY", false);
 
+// Blockchain network selection based on environment
+export const DEFAULT_BLOCKCHAIN_NETWORK = IS_PRODUCTION
+  ? "ethereum"
+  : "sepolia";
+export const BLOCKCHAIN_NETWORK_CONFIG = {
+  development: "sepolia",
+  staging: "sepolia",
+  production: "ethereum",
+} as const;
+
+// Get the appropriate network for current environment
+export const getBlockchainNetwork = (): string => {
+  return (
+    BLOCKCHAIN_NETWORK_CONFIG[
+      NODE_ENV as keyof typeof BLOCKCHAIN_NETWORK_CONFIG
+    ] || "sepolia"
+  );
+};
+
 // Log configuration (without sensitive values)
 console.log(`Environment: ${NODE_ENV}`);
 console.log(`Database: ${MONGODB_DATABASE}`);
@@ -79,3 +98,7 @@ console.log(`Meld API Key configured: ${MELD_API_KEY ? "Yes" : "No"}`);
 console.log(
   `Meld Webhook Secret configured: ${MELD_WEBHOOK_SECRET ? "Yes" : "No"}`
 );
+console.log(`Default Blockchain Network: ${getBlockchainNetwork()}`);
+console.log(`Sepolia RPC configured: ${SEPOLIA_RPC_URL ? "Yes" : "No"}`);
+console.log(`Ethereum RPC configured: ${ETHEREUM_RPC_URL ? "Yes" : "No"}`);
+console.log(`Etherscan API configured: ${ETHERSCAN_API_KEY ? "Yes" : "No"}`);

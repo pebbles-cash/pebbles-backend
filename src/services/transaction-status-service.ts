@@ -1,4 +1,4 @@
-import { Transaction } from "../models";
+import { Transaction, User } from "../models";
 import { blockchainService } from "./blockchain-service";
 import { logger } from "../utils/logger";
 
@@ -68,17 +68,70 @@ class TransactionStatusService {
         };
       }
 
-      // Determine transaction type and direction
-      const isIncoming =
-        txDetails.to.toLowerCase() === metadata.toAddress?.toLowerCase();
-      const isOutgoing =
-        txDetails.from.toLowerCase() === metadata.fromAddress?.toLowerCase();
+      // Validate that we have the required transaction data
+      if (!txDetails.from || !txDetails.to) {
+        return {
+          success: false,
+          error: "Invalid transaction data from blockchain",
+        };
+      }
+
+      // Get the authenticated user's wallet address
+      const user = await User.findById(userId);
+      if (!user) {
+        return {
+          success: false,
+          error: "User not found",
+        };
+      }
+
+      const userWalletAddress = user.primaryWalletAddress?.toLowerCase();
+      if (!userWalletAddress) {
+        return {
+          success: false,
+          error: "User wallet address not found",
+        };
+      }
+
+      // Determine user's role based on blockchain transaction
+      const txFromAddress = txDetails.from.toLowerCase();
+      const txToAddress = txDetails.to.toLowerCase();
+
+      let fromUserId = undefined;
+      let toUserId = undefined;
+
+      // Check if the authenticated user is the sender
+      if (txFromAddress === userWalletAddress) {
+        fromUserId = userId;
+        // For blockchain transactions, we might not know the recipient user ID
+        // We'll need to either find them by address or create a placeholder
+        const recipientUser = await User.findOne({
+          primaryWalletAddress: { $regex: new RegExp(txToAddress, "i") },
+        });
+        toUserId = recipientUser?._id || userId; // Use self if recipient not found
+      }
+      // Check if the authenticated user is the recipient
+      else if (txToAddress === userWalletAddress) {
+        toUserId = userId;
+        // Find the sender user by their address
+        const senderUser = await User.findOne({
+          primaryWalletAddress: { $regex: new RegExp(txFromAddress, "i") },
+        });
+        fromUserId = senderUser?._id; // Can be undefined if sender not in our system
+      }
+      // If user is neither sender nor recipient, this might be a transaction they're tracking
+      else {
+        // For tracking purposes, we'll create a record where the user is the recipient
+        // and the sender is unknown (fromUserId = undefined)
+        toUserId = userId;
+        fromUserId = undefined;
+      }
 
       // Create transaction record
       const transaction = new Transaction({
-        type: metadata.type || "payment",
-        fromUserId: isOutgoing ? userId : undefined,
-        toUserId: isIncoming ? userId : undefined,
+        type: metadata.type || "payment", // Use "payment" for blockchain transactions
+        fromUserId: fromUserId,
+        toUserId: toUserId,
         fromAddress: txDetails.from,
         toAddress: txDetails.to,
         amount: txDetails.value,
@@ -103,6 +156,25 @@ class TransactionStatusService {
           },
           network,
         },
+      });
+
+      // Log transaction creation details for debugging
+      logger.info("Creating transaction record", {
+        txHash,
+        userId,
+        userWalletAddress,
+        fromUserId,
+        toUserId,
+        fromAddress: txDetails.from,
+        toAddress: txDetails.to,
+        network,
+        type: metadata.type || "payment",
+        userRole:
+          txFromAddress === userWalletAddress
+            ? "sender"
+            : txToAddress === userWalletAddress
+              ? "recipient"
+              : "tracking",
       });
 
       await transaction.save();
@@ -130,10 +202,14 @@ class TransactionStatusService {
         txHash,
         userId,
         network,
+        error: error instanceof Error ? error.message : String(error),
       });
       return {
         success: false,
-        error: "Failed to process transaction",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to process transaction",
       };
     }
   }

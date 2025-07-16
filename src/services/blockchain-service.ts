@@ -2,6 +2,7 @@ import { createPublicClient, http, getContract, parseAbi } from "viem";
 import { mainnet, sepolia } from "viem/chains";
 import axios from "axios";
 import { logger } from "../utils/logger";
+import { getBlockchainNetwork, NODE_ENV } from "../config/env";
 
 export interface BlockchainConfig {
   chainId: number;
@@ -129,7 +130,7 @@ class BlockchainService {
         blockHash: tx.blockHash,
         transactionIndex: tx.transactionIndex,
         status: receipt
-          ? receipt.status === "0x1"
+          ? receipt.status === "success"
             ? "confirmed"
             : "failed"
           : "pending",
@@ -312,7 +313,10 @@ class BlockchainService {
         return false;
       }
 
-      return txDetails.confirmations >= requiredConfirmations;
+      return (
+        txDetails.confirmations !== undefined &&
+        txDetails.confirmations >= requiredConfirmations
+      );
     } catch (error) {
       logger.error("Error checking transaction confirmation", error as Error, {
         network,
@@ -334,6 +338,20 @@ class BlockchainService {
    */
   isNetworkSupported(network: string): boolean {
     return this.configs.has(network);
+  }
+
+  /**
+   * Get default network for current environment
+   */
+  getDefaultNetwork(): string {
+    return getBlockchainNetwork();
+  }
+
+  /**
+   * Get current environment
+   */
+  getCurrentEnvironment(): string {
+    return NODE_ENV;
   }
 }
 

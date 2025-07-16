@@ -986,7 +986,7 @@ export const processTransactionHash = requireAuth(
       const body = JSON.parse(event.body);
       const {
         txHash,
-        network = "ethereum",
+        network,
         type = "payment",
         category = "blockchain_transaction",
         tags = ["blockchain"],
@@ -994,6 +994,13 @@ export const processTransactionHash = requireAuth(
         projectId,
         metadata = {},
       } = body;
+
+      // Import the blockchain service to get default network
+      const { blockchainService } = await import(
+        "../services/blockchain-service"
+      );
+      const defaultNetwork = blockchainService.getDefaultNetwork();
+      const selectedNetwork = network || defaultNetwork;
 
       // Validate required fields
       if (!txHash) {
@@ -1014,7 +1021,7 @@ export const processTransactionHash = requireAuth(
       const result = await transactionStatusService.processTransactionHash(
         userId,
         txHash,
-        network,
+        selectedNetwork,
         {
           type,
           category,
@@ -1088,7 +1095,14 @@ export const getTransactionStatus = requireAuth(
       }
 
       const txHash = event.pathParameters.txHash;
-      const network = event.queryStringParameters?.network || "ethereum";
+      const network = event.queryStringParameters?.network;
+
+      // Import the blockchain service to get default network
+      const { blockchainService } = await import(
+        "../services/blockchain-service"
+      );
+      const defaultNetwork = blockchainService.getDefaultNetwork();
+      const selectedNetwork = network || defaultNetwork;
 
       // Validate transaction hash format
       if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
@@ -1105,7 +1119,10 @@ export const getTransactionStatus = requireAuth(
 
       // Get blockchain status
       const blockchainStatus =
-        await transactionStatusService.checkTransactionStatus(txHash, network);
+        await transactionStatusService.checkTransactionStatus(
+          txHash,
+          selectedNetwork
+        );
 
       // If we have a local record, return combined info
       if (transaction) {
@@ -1180,9 +1197,13 @@ export const getSupportedNetworks = requireAuth(
       );
 
       const networks = blockchainService.getSupportedNetworks();
+      const defaultNetwork = blockchainService.getDefaultNetwork();
+      const currentEnvironment = blockchainService.getCurrentEnvironment();
 
       return success({
         networks,
+        defaultNetwork,
+        currentEnvironment,
         message: "Supported blockchain networks",
       });
     } catch (err) {
