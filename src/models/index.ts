@@ -6,6 +6,7 @@ export { Subscription } from "./Subscription";
 export { SubscriptionInstance } from "./SubscriptionInstance";
 export { FiatInteraction } from "./FiatInteraction";
 export { TipConfig } from "./TipConfig";
+export { NotificationHistory } from "./NotificationHistory";
 export * from "./CountryConfig";
 // export { AnalyticsCache } from "./AnalyticsCache";
 // export { ChatSession } from "./ChatSession";

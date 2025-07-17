@@ -4,7 +4,10 @@ import { connectToDatabase } from "../../services/mongoose";
 import { success, error } from "../../utils/response";
 import { User, Transaction } from "../../models";
 import { logger } from "../../utils/logger";
-import { sendNotificationToUser } from "../../services/notification-service";
+import {
+  sendNotificationToUser,
+  storeNotification,
+} from "../../services/notification-service";
 import { NotificationOptions } from "../../services/firebase";
 import { DYNAMIC_WEBHOOK_SECRET } from "../../config/env";
 
@@ -493,6 +496,20 @@ async function sendWalletTransferNotification(
     };
 
     await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    // Store notification in database
+    await storeNotification(
+      userId,
+      "wallet_transfer",
+      notificationOptions.notification?.title || "Wallet Transfer",
+      notificationOptions.notification?.body || notificationBody,
+      {
+        amount: amount.toString(),
+        currency,
+        clickAction: notificationOptions.notification?.clickAction,
+        metadata: notificationOptions.data,
+      }
+    );
 
     logger.info("Sent wallet transfer notification", {
       userId,

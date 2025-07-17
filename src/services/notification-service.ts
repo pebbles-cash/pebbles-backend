@@ -1,10 +1,50 @@
-import { User } from "../models";
+import { User, NotificationHistory } from "../models";
 import { INotificationPreferences } from "../types"; // Add this import
 import {
   sendNotificationToTokens,
   NotificationTemplates,
   NotificationOptions,
 } from "./firebase";
+
+/**
+ * Store notification in database
+ */
+export async function storeNotification(
+  userId: string,
+  type: string,
+  title: string,
+  body: string,
+  options: {
+    senderId?: string;
+    senderName?: string;
+    senderAvatar?: string;
+    amount?: string;
+    currency?: string;
+    transactionId?: string;
+    clickAction?: string;
+    metadata?: Record<string, any>;
+  } = {}
+): Promise<void> {
+  try {
+    await NotificationHistory.create({
+      userId,
+      type,
+      title,
+      body,
+      senderId: options.senderId,
+      senderName: options.senderName,
+      senderAvatar: options.senderAvatar,
+      amount: options.amount,
+      currency: options.currency,
+      transactionId: options.transactionId,
+      clickAction: options.clickAction,
+      metadata: options.metadata,
+      read: false,
+    });
+  } catch (error) {
+    console.error(`Error storing notification for user ${userId}:`, error);
+  }
+}
 
 /**
  * Send notification to a user by their ID
@@ -84,16 +124,38 @@ export async function sendNotificationToUser(
 export async function sendPaymentReceivedNotification(
   recipientUserId: string,
   amount: string,
-  senderName: string
+  senderName: string,
+  senderId?: string,
+  transactionId?: string
 ): Promise<void> {
   const notificationOptions = NotificationTemplates.paymentReceived(
     amount,
     senderName
   );
+
+  // Send push notification
   await sendNotificationToUser(
     recipientUserId,
     notificationOptions,
     "paymentReceived"
+  );
+
+  // Store notification in database
+  await storeNotification(
+    recipientUserId,
+    "payment_received",
+    notificationOptions.notification?.title || "Payment Received",
+    notificationOptions.notification?.body ||
+      `You received $${amount} from ${senderName}`,
+    {
+      senderId,
+      senderName,
+      amount,
+      currency: "USD", // Default currency, could be made configurable
+      transactionId,
+      clickAction: notificationOptions.notification?.clickAction,
+      metadata: notificationOptions.data,
+    }
   );
 }
 
@@ -103,16 +165,40 @@ export async function sendPaymentReceivedNotification(
 export async function sendTipReceivedNotification(
   recipientUserId: string,
   amount: string,
-  senderName?: string
+  senderName?: string,
+  senderId?: string,
+  transactionId?: string
 ): Promise<void> {
   const notificationOptions = NotificationTemplates.tipReceived(
     amount,
     senderName
   );
+
+  // Send push notification
   await sendNotificationToUser(
     recipientUserId,
     notificationOptions,
     "tipReceived"
+  );
+
+  // Store notification in database
+  await storeNotification(
+    recipientUserId,
+    "tip_received",
+    notificationOptions.notification?.title || "Tip Received",
+    notificationOptions.notification?.body ||
+      (senderName
+        ? `${senderName} sent you a $${amount} tip!`
+        : `You received a $${amount} tip!`),
+    {
+      senderId,
+      senderName,
+      amount,
+      currency: "USD", // Default currency, could be made configurable
+      transactionId,
+      clickAction: notificationOptions.notification?.clickAction,
+      metadata: notificationOptions.data,
+    }
   );
 }
 

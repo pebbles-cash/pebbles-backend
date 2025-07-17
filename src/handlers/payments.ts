@@ -353,7 +353,9 @@ export const processPayment = optionalAuth(
           await sendPaymentReceivedNotification(
             recipient._id.toString(),
             order.amount.value.toString(),
-            sender?.displayName || sender?.username || "Anonymous"
+            sender?.displayName || sender?.username || "Anonymous",
+            sender?._id.toString(),
+            transaction._id.toString()
           );
         } catch (notificationError) {
           console.error(
@@ -423,13 +425,17 @@ export const processPayment = optionalAuth(
             await sendTipReceivedNotification(
               recipient._id.toString(),
               amount.toString(),
-              sender?.displayName || sender?.username
+              sender?.displayName || sender?.username,
+              sender?._id.toString(),
+              transaction._id.toString()
             );
           } else {
             await sendPaymentReceivedNotification(
               recipient._id.toString(),
               amount.toString(),
-              sender?.displayName || sender?.username || "Anonymous"
+              sender?.displayName || sender?.username || "Anonymous",
+              sender?._id.toString(),
+              transaction._id.toString()
             );
           }
         } catch (notificationError) {

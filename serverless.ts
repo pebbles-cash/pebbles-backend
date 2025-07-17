@@ -575,6 +575,54 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    markNotificationsAsRead: {
+      handler: "src/handlers/notifications.markAsRead",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/history/read",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
+    markAllNotificationsAsRead: {
+      handler: "src/handlers/notifications.markAllAsRead",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/history/read-all",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
+    clearAllNotifications: {
+      handler: "src/handlers/notifications.clearAll",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/history/clear",
+            method: "delete",
+            cors: true,
+          },
+        },
+      ],
+    },
+    getUnreadNotificationCount: {
+      handler: "src/handlers/notifications.getUnreadCount",
+      events: [
+        {
+          http: {
+            path: "/api/notifications/history/unread-count",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
     // Webhook Handlers
     meldWebhook: {
       handler: "src/handlers/webhooks/meld.handleMeldWebhook",

@@ -1,7 +1,7 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import { connectToDatabase } from "../services/mongoose";
 import { success, error } from "../utils/response";
-import { User } from "../models";
+import { User, NotificationHistory } from "../models";
 import { requireAuth } from "../middleware/auth";
 import {
   AuthenticatedAPIGatewayProxyEvent,
@@ -405,7 +405,7 @@ export const getPreferences = requireAuth(
 );
 
 /**
- * Get notification history (placeholder for future implementation)
+ * Get notification history
  * GET /api/notifications/history
  */
 export const getHistory = requireAuth(
@@ -420,15 +420,213 @@ export const getHistory = requireAuth(
         return error("User ID not found in token", 401);
       }
 
-      // This would be implemented with a NotificationHistory model
-      // For now, return empty array
+      // Parse query parameters
+      const queryParams = event.queryStringParameters || {};
+      const page = parseInt(queryParams.page || "1");
+      const limit = Math.min(parseInt(queryParams.limit || "20"), 50); // Max 50 per page
+      const unreadOnly = queryParams.unreadOnly === "true";
+      const type = queryParams.type; // Optional filter by notification type
+
+      // Build query
+      const query: any = { userId };
+
+      if (unreadOnly) {
+        query.read = false;
+      }
+
+      if (type) {
+        query.type = type;
+      }
+
+      // Get total count for pagination
+      const total = await NotificationHistory.countDocuments(query);
+
+      // Get notifications with pagination and populate sender info
+      const notifications = await NotificationHistory.find(query)
+        .populate("senderId", "username displayName avatar")
+        .sort({ createdAt: -1 }) // Most recent first
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      // Transform notifications to match frontend expectations
+      const transformedNotifications = notifications.map((notification) => ({
+        id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        body: notification.body,
+        sender:
+          notification.senderId && typeof notification.senderId === "object"
+            ? {
+                id: notification.senderId._id,
+                username: (notification.senderId as any).username,
+                displayName: (notification.senderId as any).displayName,
+                avatar: (notification.senderId as any).avatar,
+              }
+            : {
+                username: notification.senderName || "Anonymous",
+                avatar: notification.senderAvatar,
+              },
+        amount: notification.amount,
+        currency: notification.currency,
+        read: notification.read,
+        clickAction: notification.clickAction,
+        createdAt: notification.createdAt,
+        metadata: notification.metadata,
+      }));
+
       return success({
-        notifications: [],
-        total: 0,
+        notifications: transformedNotifications,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNext: page * limit < total,
+          hasPrev: page > 1,
+        },
       });
     } catch (err) {
       console.error("Get notification history error:", err);
       return error("Could not retrieve notification history", 500);
+    }
+  }
+);
+
+/**
+ * Mark notifications as read
+ * PUT /api/notifications/history/read
+ */
+export const markAsRead = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      if (!event.body) {
+        return error("Missing request body", 400);
+      }
+
+      const body = JSON.parse(event.body);
+      const { notificationIds } = body; // Array of notification IDs to mark as read
+
+      if (!notificationIds || !Array.isArray(notificationIds)) {
+        return error("notificationIds array is required", 400);
+      }
+
+      // Mark specific notifications as read
+      const result = await NotificationHistory.updateMany(
+        {
+          _id: { $in: notificationIds },
+          userId,
+        },
+        { read: true }
+      );
+
+      return success({
+        message: "Notifications marked as read",
+        updatedCount: result.modifiedCount,
+      });
+    } catch (err) {
+      console.error("Mark notifications as read error:", err);
+      return error("Could not mark notifications as read", 500);
+    }
+  }
+);
+
+/**
+ * Mark all notifications as read
+ * PUT /api/notifications/history/read-all
+ */
+export const markAllAsRead = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Mark all unread notifications as read
+      const result = await NotificationHistory.updateMany(
+        { userId, read: false },
+        { read: true }
+      );
+
+      return success({
+        message: "All notifications marked as read",
+        updatedCount: result.modifiedCount,
+      });
+    } catch (err) {
+      console.error("Mark all notifications as read error:", err);
+      return error("Could not mark all notifications as read", 500);
+    }
+  }
+);
+
+/**
+ * Clear all notifications
+ * DELETE /api/notifications/history/clear
+ */
+export const clearAll = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Delete all notifications for the user
+      const result = await NotificationHistory.deleteMany({ userId });
+
+      return success({
+        message: "All notifications cleared",
+        deletedCount: result.deletedCount,
+      });
+    } catch (err) {
+      console.error("Clear all notifications error:", err);
+      return error("Could not clear all notifications", 500);
+    }
+  }
+);
+
+/**
+ * Get unread notification count
+ * GET /api/notifications/history/unread-count
+ */
+export const getUnreadCount = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      const userId = event.user?.id;
+
+      if (!userId) {
+        return error("User ID not found in token", 401);
+      }
+
+      // Count unread notifications
+      const count = await NotificationHistory.countDocuments({
+        userId,
+        read: false,
+      });
+
+      return success({
+        unreadCount: count,
+      });
+    } catch (err) {
+      console.error("Get unread count error:", err);
+      return error("Could not get unread count", 500);
     }
   }
 );

@@ -5,7 +5,10 @@ import { connectToDatabase } from "../../services/mongoose";
 import { success, error } from "../../utils/response";
 import { User, FiatInteraction } from "../../models";
 import { logger } from "../../utils/logger";
-import { sendNotificationToUser } from "../../services/notification-service";
+import {
+  sendNotificationToUser,
+  storeNotification,
+} from "../../services/notification-service";
 import { NotificationOptions } from "../../services/firebase";
 import { meldService } from "../../services/meld-service";
 import { MELD_WEBHOOK_SECRET } from "../../config/env";
@@ -566,6 +569,18 @@ async function sendActionRequiredNotification(
     };
 
     await sendNotificationToUser(userId, notificationOptions, "payments");
+
+    // Store notification in database
+    await storeNotification(
+      userId,
+      "action_required",
+      notificationOptions.notification?.title || "Action Required",
+      notificationOptions.notification?.body || message,
+      {
+        clickAction: notificationOptions.notification?.clickAction,
+        metadata: notificationOptions.data,
+      }
+    );
 
     logger.info("Sent action required notification", { userId, message });
   } catch (err) {
