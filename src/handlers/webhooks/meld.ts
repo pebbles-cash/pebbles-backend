@@ -48,7 +48,8 @@ export const handleMeldWebhook = async (
     const isValidSignature = verifyMeldSignature(
       event.body,
       signature,
-      webhookSecret
+      webhookSecret,
+      event
     );
     if (!isValidSignature) {
       logger.warn("Invalid Meld webhook signature", { signature });
@@ -87,15 +88,29 @@ export const handleMeldWebhook = async (
 function verifyMeldSignature(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
+  event: APIGatewayProxyEvent
 ): boolean {
   try {
-    // Meld typically uses HMAC-SHA256 for webhook signatures
-    // Format might be "sha256=<hash>" or just the hash
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload, "utf8")
-      .digest("hex");
+    // Get timestamp and URL from headers or request context
+    const timestamp =
+      event.headers["x-meld-timestamp"] || event.headers["X-Meld-Timestamp"];
+    const url = event.requestContext?.path || "/api/webhooks/meld";
+
+    if (!timestamp) {
+      logger.warn("Missing timestamp in Meld webhook headers");
+      return false;
+    }
+
+    // Create signature using the same format as Java: timestamp.url.body
+    const data = [timestamp, url, payload].join(".");
+    const hmac = crypto.createHmac("sha256", secret);
+    hmac.update(data, "utf8");
+    const expectedSignature = hmac
+      .digest("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
 
     // Handle different signature formats
     const receivedSignature = signature.startsWith("sha256=")
@@ -103,8 +118,8 @@ function verifyMeldSignature(
       : signature;
 
     // Use timingSafeEqual to prevent timing attacks
-    const expectedBuffer = Buffer.from(expectedSignature, "hex");
-    const receivedBuffer = Buffer.from(receivedSignature, "hex");
+    const expectedBuffer = Buffer.from(expectedSignature, "ascii");
+    const receivedBuffer = Buffer.from(receivedSignature, "ascii");
 
     return (
       expectedBuffer.length === receivedBuffer.length &&

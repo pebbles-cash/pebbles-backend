@@ -137,7 +137,18 @@ export const getTipPage = async (
   if (!user) return error("User not found", 404);
 
   const config = await TipConfig.findOne({ userId: user._id });
-  if (!config) return error("Tip config not found", 404);
+  if (!config) {
+    return success({
+      user: {
+        username: user.username,
+        displayName: user.displayName,
+        avatar: user.avatar,
+        walletAddress: user.primaryWalletAddress,
+      },
+      config: {},
+      tippers: [],
+    });
+  }
 
   // Find all tip transactions to this user
   const tips = await Transaction.find({

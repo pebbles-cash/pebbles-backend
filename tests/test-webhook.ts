@@ -148,10 +148,26 @@ const testWebhooks = [
 ];
 
 /**
- * Generate webhook signature
+ * Generate webhook signature using the same algorithm as the Java implementation
  */
 function generateSignature(payload: string, secret: string): string {
-  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const url = "/api/webhooks/meld";
+
+  // Create data string using dot concatenation: timestamp.url.body
+  const data = [timestamp, url, payload].join(".");
+
+  // Create HMAC-SHA256 hash
+  const hmac = crypto.createHmac("sha256", secret);
+  hmac.update(data, "utf8");
+  const bytes = hmac.digest();
+
+  // Convert to Base64 URL-safe encoding (same as Java's Base64.getUrlEncoder())
+  return bytes
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 }
 
 /**
@@ -171,6 +187,7 @@ async function testWebhook(webhook: any): Promise<void> {
     };
 
     const payloadString = JSON.stringify(payload);
+    const timestamp = Math.floor(Date.now() / 1000).toString();
     const signature = generateSignature(payloadString, WEBHOOK_SECRET);
 
     // Send webhook request
@@ -178,6 +195,7 @@ async function testWebhook(webhook: any): Promise<void> {
       headers: {
         "Content-Type": "application/json",
         "X-Meld-Signature": signature,
+        "X-Meld-Timestamp": timestamp,
         "User-Agent": "Meld-Webhook-Test/1.0",
       },
       timeout: 10000,
