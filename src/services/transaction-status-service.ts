@@ -95,7 +95,12 @@ class TransactionStatusService {
 
       // Determine user's role based on blockchain transaction
       const txFromAddress = txDetails.from.toLowerCase();
-      const txToAddress = txDetails.to.toLowerCase();
+
+      // Use actual recipient for ERC-20 transfers, otherwise use the 'to' address
+      const txToAddress =
+        txDetails.isERC20Transfer && txDetails.actualRecipient
+          ? txDetails.actualRecipient.toLowerCase()
+          : txDetails.to.toLowerCase();
 
       let fromUserId = undefined;
       let toUserId = undefined;
@@ -127,15 +132,30 @@ class TransactionStatusService {
         fromUserId = undefined;
       }
 
+      // Determine the correct addresses and amounts for the transaction record
+      const fromAddress = txDetails.from;
+      const toAddress =
+        txDetails.isERC20Transfer && txDetails.actualRecipient
+          ? txDetails.actualRecipient
+          : txDetails.to;
+      const amount =
+        txDetails.isERC20Transfer && txDetails.tokenAmount
+          ? txDetails.tokenAmount
+          : txDetails.value;
+      const tokenAddress =
+        txDetails.isERC20Transfer && txDetails.tokenAddress
+          ? txDetails.tokenAddress
+          : metadata.tokenAddress || "0x0";
+
       // Create transaction record
       const transaction = new Transaction({
         type: metadata.type || "payment", // Use "payment" for blockchain transactions
         fromUserId: fromUserId,
         toUserId: toUserId,
-        fromAddress: txDetails.from,
-        toAddress: txDetails.to,
-        amount: txDetails.value,
-        tokenAddress: metadata.tokenAddress || "0x0",
+        fromAddress: fromAddress,
+        toAddress: toAddress,
+        amount: amount,
+        tokenAddress: tokenAddress,
         sourceChain: network,
         destinationChain: network,
         txHash: txHash,
@@ -153,6 +173,10 @@ class TransactionStatusService {
             blockNumber: txDetails.blockNumber,
             confirmations: txDetails.confirmations,
             timestamp: txDetails.timestamp,
+            isERC20Transfer: txDetails.isERC20Transfer,
+            contractAddress: txDetails.isERC20Transfer
+              ? txDetails.to
+              : undefined,
           },
           network,
         },
@@ -167,6 +191,10 @@ class TransactionStatusService {
         toUserId,
         fromAddress: txDetails.from,
         toAddress: txDetails.to,
+        actualRecipient: txDetails.actualRecipient,
+        isERC20Transfer: txDetails.isERC20Transfer,
+        tokenAddress: txDetails.tokenAddress,
+        tokenAmount: txDetails.tokenAmount,
         network,
         type: metadata.type || "payment",
         userRole:
@@ -276,7 +304,28 @@ class TransactionStatusService {
               blockNumber: txDetails.blockNumber,
               confirmations: txDetails.confirmations,
               timestamp: txDetails.timestamp,
+              isERC20Transfer: txDetails.isERC20Transfer,
+              contractAddress: txDetails.isERC20Transfer
+                ? txDetails.to
+                : undefined,
             };
+          }
+
+          // If this is an ERC-20 transfer and we have updated details, update the transaction record
+          if (txDetails.isERC20Transfer && txDetails.actualRecipient) {
+            updateData.toAddress = txDetails.actualRecipient;
+            updateData.amount = txDetails.tokenAmount || txDetails.value;
+            updateData.tokenAddress =
+              txDetails.tokenAddress || transaction.tokenAddress;
+
+            logger.info("Updating ERC-20 transaction with correct recipient", {
+              transactionId,
+              txHash,
+              contractAddress: txDetails.to,
+              actualRecipient: txDetails.actualRecipient,
+              tokenAddress: txDetails.tokenAddress,
+              tokenAmount: txDetails.tokenAmount,
+            });
           }
 
           await Transaction.findByIdAndUpdate(transactionId, {
@@ -290,6 +339,7 @@ class TransactionStatusService {
             txHash,
             status: updateData.status,
             confirmations: txDetails.confirmations,
+            isERC20Transfer: txDetails.isERC20Transfer,
           });
         }
 

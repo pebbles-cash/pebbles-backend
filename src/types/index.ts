@@ -159,6 +159,8 @@ export interface ITransactionMetadata {
     blockNumber?: number;
     confirmations?: number;
     timestamp?: number;
+    isERC20Transfer?: boolean;
+    contractAddress?: string;
   };
   network?: string;
   error?: string;

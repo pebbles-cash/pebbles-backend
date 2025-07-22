@@ -1,8 +1,19 @@
-import { createPublicClient, http, getContract, parseAbi } from "viem";
+import {
+  createPublicClient,
+  http,
+  getContract,
+  parseAbi,
+  decodeEventLog,
+} from "viem";
 import { mainnet, sepolia } from "viem/chains";
 import axios from "axios";
 import { logger } from "../utils/logger";
 import { getBlockchainNetwork, NODE_ENV } from "../config/env";
+
+// ERC-20 Transfer event signature
+const ERC20_TRANSFER_EVENT_SIGNATURE = "Transfer(address,address,uint256)";
+const ERC20_TRANSFER_EVENT_TOPIC =
+  "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 export interface BlockchainConfig {
   chainId: number;
@@ -25,6 +36,18 @@ export interface TransactionDetails {
   status?: "pending" | "confirmed" | "failed";
   confirmations?: number;
   timestamp?: number;
+  // Add fields for ERC-20 transfers
+  isERC20Transfer?: boolean;
+  actualRecipient?: string;
+  tokenAddress?: string;
+  tokenAmount?: string;
+}
+
+export interface ERC20TransferDetails {
+  from: string;
+  to: string;
+  value: string;
+  tokenAddress: string;
 }
 
 export interface TransactionReceipt {
@@ -86,6 +109,55 @@ class BlockchainService {
   }
 
   /**
+   * Parse ERC-20 transfer events from transaction logs
+   */
+  private parseERC20TransferEvents(logs: any[]): ERC20TransferDetails[] {
+    const transferEvents: ERC20TransferDetails[] = [];
+
+    for (const log of logs) {
+      // Check if this is a Transfer event (first topic should match Transfer event signature)
+      if (log.topics && log.topics[0] === ERC20_TRANSFER_EVENT_TOPIC) {
+        try {
+          // Parse the Transfer event
+          const decoded = decodeEventLog({
+            abi: parseAbi([
+              "event Transfer(address indexed from, address indexed to, uint256 value)",
+            ]),
+            data: log.data,
+            topics: log.topics,
+          });
+
+          if (decoded.eventName === "Transfer") {
+            transferEvents.push({
+              from: decoded.args.from,
+              to: decoded.args.to,
+              value: decoded.args.value.toString(),
+              tokenAddress: log.address,
+            });
+          }
+        } catch (error) {
+          logger.warn("Failed to decode ERC-20 transfer event", {
+            logAddress: log.address,
+            topics: log.topics,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    }
+
+    return transferEvents;
+  }
+
+  /**
+   * Check if a transaction is an ERC-20 transfer
+   */
+  private isERC20Transfer(logs: any[]): boolean {
+    return logs.some(
+      (log) => log.topics && log.topics[0] === ERC20_TRANSFER_EVENT_TOPIC
+    );
+  }
+
+  /**
    * Get transaction details from blockchain
    */
   async getTransactionDetails(
@@ -107,7 +179,7 @@ class BlockchainService {
         return null;
       }
 
-      // Get transaction receipt for status
+      // Get transaction receipt for status and logs
       const receipt = await client.getTransactionReceipt({
         hash: txHash as `0x${string}`,
       });
@@ -116,6 +188,36 @@ class BlockchainService {
       let blockDetails = null;
       if (tx.blockNumber) {
         blockDetails = await client.getBlock({ blockNumber: tx.blockNumber });
+      }
+
+      // Check if this is an ERC-20 transfer
+      const isERC20Transfer = receipt
+        ? this.isERC20Transfer(receipt.logs)
+        : false;
+      let actualRecipient = tx.to || "";
+      let tokenAddress = "";
+      let tokenAmount = "0";
+
+      // If it's an ERC-20 transfer, parse the actual recipient from logs
+      if (isERC20Transfer && receipt) {
+        const transferEvents = this.parseERC20TransferEvents(receipt.logs);
+
+        if (transferEvents.length > 0) {
+          // For simplicity, we'll use the first transfer event
+          // In a more sophisticated implementation, you might want to handle multiple transfers
+          const transferEvent = transferEvents[0];
+          actualRecipient = transferEvent.to;
+          tokenAddress = transferEvent.tokenAddress;
+          tokenAmount = transferEvent.value;
+
+          logger.info("ERC-20 transfer detected", {
+            txHash,
+            contractAddress: tx.to,
+            actualRecipient,
+            tokenAddress,
+            tokenAmount,
+          });
+        }
       }
 
       return {
@@ -140,6 +242,11 @@ class BlockchainService {
         timestamp: blockDetails?.timestamp
           ? Number(blockDetails.timestamp)
           : undefined,
+        // ERC-20 specific fields
+        isERC20Transfer,
+        actualRecipient,
+        tokenAddress,
+        tokenAmount,
       };
     } catch (error) {
       logger.error("Error getting transaction details", error as Error, {

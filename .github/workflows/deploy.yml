@@ -50,6 +50,10 @@ jobs:
           DYNAMIC_API_KEY=${{ secrets.DEV_DYNAMIC_API_KEY }}
           DYNAMIC_API_URL=${{ secrets.DEV_DYNAMIC_API_URL }}
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.DEV_DYNAMIC_ENVIRONMENT_ID }}
+          DYNAMIC_WEBHOOK_SECRET=${{ secrets.DEV_DYNAMIC_WEBHOOK_SECRET }}
+          MELD_API_KEY=${{ secrets.DEV_MELD_API_KEY }}
+          MELD_API_URL=${{ secrets.DEV_MELD_API_URL }}
+          MELD_WEBHOOK_SECRET=${{ secrets.DEV_MELD_WEBHOOK_SECRET }}
           AUTH_REDIRECT_URL=${{ secrets.DEV_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.DEV_PAYMENT_BASE_URL }}
           EOF
@@ -84,6 +88,10 @@ jobs:
           DYNAMIC_API_KEY=${{ secrets.STAGING_DYNAMIC_API_KEY }}
           DYNAMIC_API_URL=${{ secrets.STAGING_DYNAMIC_API_URL }}
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.STAGING_DYNAMIC_ENVIRONMENT_ID }}
+          DYNAMIC_WEBHOOK_SECRET=${{ secrets.STAGING_DYNAMIC_WEBHOOK_SECRET }}
+          MELD_API_KEY=${{ secrets.STAGING_MELD_API_KEY }}
+          MELD_API_URL=${{ secrets.STAGING_MELD_API_URL }}
+          MELD_WEBHOOK_SECRET=${{ secrets.STAGING_MELD_WEBHOOK_SECRET }}
           AUTH_REDIRECT_URL=${{ secrets.STAGING_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.STAGING_PAYMENT_BASE_URL }}
           EOF
@@ -119,6 +127,10 @@ jobs:
           DYNAMIC_API_KEY=${{ secrets.PROD_DYNAMIC_API_KEY }}
           DYNAMIC_API_URL=${{ secrets.PROD_DYNAMIC_API_URL }}
           DYNAMIC_ENVIRONMENT_ID=${{ secrets.PROD_DYNAMIC_ENVIRONMENT_ID }}
+          DYNAMIC_WEBHOOK_SECRET=${{ secrets.PROD_DYNAMIC_WEBHOOK_SECRET }}
+          MELD_API_KEY=${{ secrets.PROD_MELD_API_KEY }}
+          MELD_API_URL=${{ secrets.PROD_MELD_API_URL }}
+          MELD_WEBHOOK_SECRET=${{ secrets.PROD_MELD_WEBHOOK_SECRET }}
           AUTH_REDIRECT_URL=${{ secrets.PROD_AUTH_REDIRECT_URL }}
           PAYMENT_BASE_URL=${{ secrets.PROD_PAYMENT_BASE_URL }}
           EOF

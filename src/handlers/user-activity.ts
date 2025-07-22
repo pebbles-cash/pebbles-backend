@@ -3,6 +3,7 @@ import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 import { Transaction, FiatInteraction, User } from "../models";
 import { success, error } from "../utils/response";
+import { getTokenSymbol } from "../utils/token-symbols";
 
 /**
  * Unified user activity feed
@@ -96,10 +97,15 @@ export const getUserActivity = requireAuth(
       // Transactions
       for (const tx of transactions) {
         const isSender = tx.fromUserId?.toString() === userId;
+
+        // Get token symbol from address and network
+        const network = tx.sourceChain || "ethereum";
+        const currency = getTokenSymbol(tx.tokenAddress, network);
+
         activities.push({
           id: tx._id,
           amount: tx.amount,
-          currency: tx.tokenAddress || "USD", // fallback if not set
+          currency: currency,
           direction: isSender ? "output" : "input",
           date: tx.createdAt,
           category: isSender ? "paid" : "received",
@@ -112,14 +118,23 @@ export const getUserActivity = requireAuth(
       }
       // Fiat Interactions
       for (const fiat of fiatInteractions) {
+        // Get token symbol for crypto currency if it has a token address
+        let currency =
+          fiat.fiatAmount?.currency || fiat.cryptoAmount?.currency || "USD";
+
+        // If it's a crypto amount with a token address, get the symbol
+        if (fiat.cryptoAmount?.tokenAddress) {
+          const network = fiat.blockchain || "ethereum";
+          currency = getTokenSymbol(fiat.cryptoAmount.tokenAddress, network);
+        }
+
         activities.push({
           id: fiat._id,
           amount:
             fiat.fiatAmount?.value?.toString() ||
             fiat.cryptoAmount?.value?.toString() ||
             "",
-          currency:
-            fiat.fiatAmount?.currency || fiat.cryptoAmount?.currency || "USD",
+          currency: currency,
           direction: fiat.type === "onramp" ? "input" : "output",
           date: fiat.createdAt,
           category: fiat.type === "onramp" ? "deposit" : "withdraw",
