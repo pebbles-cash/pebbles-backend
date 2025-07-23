@@ -23,6 +23,16 @@ export const handleMeldWebhook = async (
   try {
     await connectToDatabase();
 
+    // Log the incoming webhook request
+    logger.info("Meld webhook received", {
+      hasBody: !!event.body,
+      bodyLength: event.body?.length,
+      headers: event.headers,
+      method: event.httpMethod,
+      path: event.path,
+      requestContext: event.requestContext,
+    });
+
     // Get webhook payload
     if (!event.body) {
       logger.warn("Meld webhook received without body");
@@ -32,6 +42,13 @@ export const handleMeldWebhook = async (
     // Verify webhook signature
     const signature = event.headers["meld-signature"];
     const webhookSecret = MELD_WEBHOOK_SECRET;
+
+    logger.info("Webhook signature verification setup", {
+      hasSignature: !!signature,
+      signatureLength: signature?.length,
+      hasSecret: !!webhookSecret,
+      secretLength: webhookSecret?.length,
+    });
 
     if (!webhookSecret) {
       logger.error("MELD_WEBHOOK_SECRET not configured");
@@ -94,17 +111,39 @@ function verifyMeldSignature(
     // Get timestamp and URL from headers
     const timestamp = event.headers["meld-signature-timestamp"];
 
+    // Log all headers for debugging
+    logger.info("Webhook headers received", {
+      headers: event.headers,
+      signature: signature,
+      hasTimestamp: !!timestamp,
+      timestamp: timestamp,
+    });
+
     // Construct the full webhook URL
     let url: string;
     if (event.requestContext?.domainName && event.requestContext?.path) {
       // For API Gateway, construct the full URL
-      const protocol = event.requestContext.protocol || "https";
+      // Use https since webhooks come over HTTPS, not HTTP/1.1 (which is the HTTP version)
+      const protocol = "https";
       const domain = event.requestContext.domainName;
       const path = event.requestContext.path;
       url = `${protocol}://${domain}${path}`;
+
+      logger.info("Constructed webhook URL from API Gateway context", {
+        protocol,
+        domain,
+        path,
+        url,
+        requestContext: event.requestContext,
+      });
     } else {
       // Fallback URL - you should replace this with your actual webhook URL
       url = "https://your-api-domain.com/api/webhooks/meld";
+
+      logger.warn("Using fallback webhook URL - this may be incorrect", {
+        url,
+        requestContext: event.requestContext,
+      });
     }
 
     if (!timestamp) {
@@ -112,8 +151,17 @@ function verifyMeldSignature(
       return false;
     }
 
-    // Create signature using the same format as documented: timestamp.url.body
+    // Log the data being signed
     const data = [timestamp, url, payload].join(".");
+    logger.info("Signature verification data", {
+      timestamp,
+      url,
+      payloadLength: payload.length,
+      dataLength: data.length,
+      dataPreview: data.substring(0, 100) + (data.length > 100 ? "..." : ""),
+    });
+
+    // Create signature using the same format as documented: timestamp.url.body
     const hmac = crypto.createHmac("sha256", secret);
     hmac.update(data, "utf8");
     const expectedSignature = hmac.digest("base64");
@@ -121,16 +169,38 @@ function verifyMeldSignature(
     // The signature should be in base64 format as shown in the docs
     const receivedSignature = signature;
 
+    logger.info("Signature comparison", {
+      expectedSignature,
+      receivedSignature,
+      expectedLength: expectedSignature.length,
+      receivedLength: receivedSignature.length,
+      secretConfigured: !!secret,
+      secretLength: secret.length,
+    });
+
     // Use timingSafeEqual to prevent timing attacks
     const expectedBuffer = Buffer.from(expectedSignature, "base64");
     const receivedBuffer = Buffer.from(receivedSignature, "base64");
 
-    return (
+    const isValid =
       expectedBuffer.length === receivedBuffer.length &&
-      crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
-    );
+      crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+    logger.info("Signature verification result", {
+      isValid,
+      expectedBufferLength: expectedBuffer.length,
+      receivedBufferLength: receivedBuffer.length,
+      bufferLengthsMatch: expectedBuffer.length === receivedBuffer.length,
+    });
+
+    return isValid;
   } catch (err) {
-    logger.error("Error verifying Meld signature", err as Error);
+    logger.error("Error verifying Meld signature", err as Error, {
+      signature,
+      hasSecret: !!secret,
+      secretLength: secret?.length,
+      payloadLength: payload?.length,
+    });
     return false;
   }
 }
@@ -211,8 +281,8 @@ async function handleBankLinkingCompleted(
   try {
     logger.info("Bank linking completed", { accountId, eventId, data });
 
-    // Find user by Meld account ID (you'll need to store this mapping)
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -239,8 +309,8 @@ async function handleBankLinkingDeleted(
   try {
     logger.info("Bank linking deleted", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -267,8 +337,8 @@ async function handleCustomerActionRequired(
   try {
     logger.info("Customer action required", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -296,8 +366,8 @@ async function handleAccountsUpdating(
   try {
     logger.info("Accounts updating", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -326,8 +396,8 @@ async function handleAccountsUpdated(
   try {
     logger.info("Accounts updated", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -354,8 +424,8 @@ async function handleAccountsRemoved(
   try {
     logger.info("Accounts removed", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -382,8 +452,8 @@ async function handleFinancialAccountAdded(
   try {
     logger.info("Financial account added", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -410,8 +480,8 @@ async function handleTransactionsAdded(
   try {
     logger.info("Transactions added", { accountId, eventId, data });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
+    // Find user by Meld identifiers
+    const user = await findUserByMeldIdentifiers(accountId);
     if (!user) {
       logger.warn("User not found for Meld account", { accountId });
       return;
@@ -436,12 +506,71 @@ async function handleTransactionsAdded(
 }
 
 /**
- * Find user by Meld account ID
+ * Find user by Meld identifiers (for future use when user assignment is needed)
  */
-async function findUserByMeldAccountId(accountId: string) {
-  // You'll need to implement this based on how you store the mapping
-  // between Meld account IDs and your user IDs
-  return await User.findOne({ meldAccountId: accountId });
+async function findUserByMeldIdentifiers(
+  accountId: string,
+  customerId?: string,
+  sessionId?: string,
+  paymentTransactionId?: string
+) {
+  logger.info("Looking for user by Meld identifiers", {
+    accountId,
+    customerId,
+    sessionId,
+    paymentTransactionId,
+  });
+
+  // Strategy 1: Look for existing FiatInteraction with any of these identifiers
+  const fiatInteraction = await FiatInteraction.findOne({
+    $or: [
+      { meldAccountId: accountId },
+      { meldCustomerId: customerId },
+      { meldSessionId: sessionId },
+      { meldPaymentTransactionId: paymentTransactionId },
+      { externalTransactionId: paymentTransactionId }, // Legacy field
+    ].filter(Boolean), // Remove undefined values
+  });
+
+  if (fiatInteraction && fiatInteraction.userId) {
+    logger.info("Found user via FiatInteraction", {
+      userId: fiatInteraction.userId,
+      fiatInteractionId: fiatInteraction._id,
+      meldAccountId: fiatInteraction.meldAccountId,
+      meldCustomerId: fiatInteraction.meldCustomerId,
+    });
+
+    // Return the user associated with this FiatInteraction
+    return await User.findById(fiatInteraction.userId);
+  }
+
+  // Strategy 2: Look for user by customerId in metadata
+  // This is the primary identification method - customerId is stored in user metadata
+  const userByCustomerId = await User.findOne({
+    $or: [
+      { "metadata.meldCustomerId": customerId },
+      { "metadata.customerId": customerId },
+      { "metadata.meldAccountId": accountId },
+    ].filter(Boolean),
+  });
+
+  if (userByCustomerId) {
+    logger.info("Found user via customer ID", {
+      userId: userByCustomerId._id,
+      customerId,
+      accountId,
+    });
+    return userByCustomerId;
+  }
+
+  logger.warn("No user found for any Meld identifiers", {
+    accountId,
+    customerId,
+    sessionId,
+    paymentTransactionId,
+  });
+
+  return null;
 }
 
 /**
@@ -662,40 +791,90 @@ async function handleCryptoTransactionUpdate(
       payload,
     });
 
-    // Find user by Meld account ID
-    const user = await findUserByMeldAccountId(accountId);
-    if (!user) {
-      logger.warn("User not found for Meld account", { accountId });
-      return;
-    }
-
     // The payload contains the transaction details directly
     const transactionDetails = payload;
     const customerId = transactionDetails.customerId;
     const sessionId = transactionDetails.sessionId;
     const paymentTransactionId = transactionDetails.paymentTransactionId;
 
-    if (!customerId) {
-      logger.warn("No customer ID found in crypto transaction update", {
-        eventType,
-        accountId,
-        eventId,
-      });
-      return;
-    }
-
-    // Find existing FiatInteraction by meldCustomerId
-    const fiatInteraction = await FiatInteraction.findOne({
+    // Find existing FiatInteraction by meldCustomerId (with or without userId)
+    let fiatInteraction = await FiatInteraction.findOne({
       meldCustomerId: customerId,
-      userId: user._id,
     });
 
     if (!fiatInteraction) {
-      logger.warn("FiatInteraction not found for customer", {
+      logger.info("Creating new FiatInteraction for Meld transaction", {
+        customerId,
+        accountId,
+        eventType,
+        eventId,
+      });
+
+      // Create new FiatInteraction without userId (will be assigned later)
+      fiatInteraction = new FiatInteraction({
+        // userId: null, // Will be assigned when user claims the transaction
+        type: "onramp", // or determine based on transaction type
+        status: "pending",
+        serviceProvider: "meld",
+        // Meld-specific fields
+        meldCustomerId: customerId,
+        meldSessionId: sessionId,
+        meldPaymentTransactionId: paymentTransactionId,
+        meldRequestId: transactionDetails.requestId,
+        meldAccountId: accountId,
+        meldProfileId: transactionDetails.profileId,
+        meldExternalCustomerId: transactionDetails.externalCustomerId,
+        meldExternalSessionId: transactionDetails.externalSessionId,
+        meldTransactionType: transactionDetails.transactionType,
+        meldPaymentTransactionStatus:
+          transactionDetails.paymentTransactionStatus,
+        // Legacy field for backward compatibility
+        externalTransactionId: paymentTransactionId,
+        // Basic transaction data (will be updated with more details later)
+        fiatAmount: {
+          value: transactionDetails.amount || 0,
+          currency: transactionDetails.currency || "USD",
+        },
+        cryptoAmount: {
+          value: transactionDetails.cryptoAmount || 0,
+          currency: transactionDetails.cryptoCurrency || "BTC",
+        },
+        exchangeRate: transactionDetails.exchangeRate || 1,
+        fees: {
+          serviceFee: { value: 0, currency: "USD" },
+          networkFee: { value: 0, currency: "USD" },
+          totalFees: { value: 0, currency: "USD" },
+        },
+        sourceAccount: {
+          type: "bank_account",
+          identifier: "Meld",
+        },
+        destinationAccount: {
+          type: "crypto_wallet",
+          identifier: transactionDetails.walletAddress || "Unknown",
+        },
+        blockchain: transactionDetails.blockchain || "ethereum",
+        initiatedAt: new Date(transactionDetails.createdAt || Date.now()),
+        ipAddress: transactionDetails.ipAddress || "Unknown",
+        deviceInfo: {
+          userAgent: transactionDetails.userAgent || "Unknown",
+          platform: "web",
+          fingerprint: "Unknown",
+        },
+        kycLevel: "none",
+        metadata: {
+          meldEventId: eventId,
+          meldAccountId: accountId,
+          ...transactionDetails.metadata,
+        },
+      });
+
+      await fiatInteraction.save();
+      logger.info("Created new FiatInteraction", {
+        fiatInteractionId: fiatInteraction._id.toString(),
         customerId,
         eventType,
       });
-      return;
     }
 
     // Update Meld-specific fields from webhook data
@@ -739,18 +918,30 @@ async function handleCryptoTransactionUpdate(
       data: transactionDetails,
     });
 
-    // Send notification to user
-    await sendFiatInteractionNotification(
-      user._id.toString(),
-      eventType,
-      transactionDetails,
-      customerId
-    );
+    // Only send notification if user is assigned
+    if (fiatInteraction.userId) {
+      await sendFiatInteractionNotification(
+        fiatInteraction.userId.toString(),
+        eventType,
+        transactionDetails,
+        customerId
+      );
+    } else {
+      logger.info(
+        "No user assigned to FiatInteraction, skipping notification",
+        {
+          fiatInteractionId: fiatInteraction._id.toString(),
+          customerId,
+          eventType,
+        }
+      );
+    }
 
     logger.info("Successfully processed crypto transaction webhook", {
       eventType,
       customerId,
-      userId: user._id.toString(),
+      fiatInteractionId: fiatInteraction._id.toString(),
+      hasUser: !!fiatInteraction.userId,
     });
   } catch (err) {
     logger.error("Error handling crypto transaction update", err as Error, {

@@ -6,7 +6,6 @@ import {
   IS_PRODUCTION,
 } from "../config/env";
 
-// Keep track of connection status
 let isConnected = false;
 
 /**

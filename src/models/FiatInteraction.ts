@@ -43,7 +43,7 @@ const fiatInteractionSchema = new Schema<IFiatInteraction>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false, // Allow null for unassigned transactions
       index: true,
     },
     type: {

@@ -23,6 +23,7 @@ const serverlessConfiguration: AWS = {
     region: "us-east-1",
     memorySize: 2048,
     timeout: 15,
+    versionFunctions: false,
     deploymentBucket: {
       // Dynamic bucket name based on stage
       name: "pebbles-org-${self:provider.stage}-deploy",
@@ -42,7 +43,7 @@ const serverlessConfiguration: AWS = {
       FIREBASE_PRIVATE_KEY: "${env:FIREBASE_PRIVATE_KEY, ''}",
       FIREBASE_CLIENT_EMAIL: "${env:FIREBASE_CLIENT_EMAIL, ''}",
       FIREBASE_SERVICE_ACCOUNT_JSON: "${env:FIREBASE_SERVICE_ACCOUNT_JSON, ''}",
-      CORS_ORIGIN: "${self:custom.corsOrigin.${self:provider.stage}, '*'}",
+      CORS_ORIGIN: "${self:custom.corsOrigins.${self:provider.stage}, '*'}",
       API_DOMAIN: "${self:custom.domain.${self:provider.stage}}",
       MELD_WEBHOOK_SECRET: "${env:MELD_WEBHOOK_SECRET, ''}",
       MELD_API_KEY: "${env:MELD_API_KEY, ''}",
@@ -82,6 +83,19 @@ const serverlessConfiguration: AWS = {
   },
   functions: {
     // Authentication Handlers
+    // Global CORS handler for OPTIONS requests
+    corsHandler: {
+      handler: "src/handlers/cors.handleCors",
+      events: [
+        {
+          http: {
+            path: "/api/{proxy+}",
+            method: "options",
+            cors: true,
+          },
+        },
+      ],
+    },
     authLogin: {
       handler: "src/handlers/auth.login",
       events: [
@@ -728,7 +742,7 @@ const serverlessConfiguration: AWS = {
       events: [
         {
           http: {
-            path: "/api/fiat-interactions/customer/{customerId}",
+            path: "/api/fiat-interactions/customer/{partnerCustomerId}",
             method: "get",
             cors: true,
           },
@@ -822,7 +836,11 @@ const serverlessConfiguration: AWS = {
     },
   },
 
-  plugins: ["serverless-offline", "serverless-domain-manager"],
+  plugins: [
+    "serverless-offline",
+    "serverless-domain-manager",
+    "serverless-prune-plugin",
+  ],
   custom: {
     serverlessPluginTypescript: {
       tsConfigFilePath: "./tsconfig.json",
@@ -855,13 +873,12 @@ const serverlessConfiguration: AWS = {
       staging: "staging-api.pebbles.cash",
       prod: "api.pebbles.cash",
     },
+    corsOrigins: {
+      dev: "https://qa.pebbles.cash",
+      staging: "https://dev.pebbles.cash",
+      prod: "https://app.pebbles.cash",
+    },
   },
-};
-
-const corsOrigins = {
-  dev: "http://localhost:3000",
-  staging: "https://dev.pebbles.cash",
-  prod: "https://app.pebbles.cash",
 };
 
 module.exports = serverlessConfiguration;

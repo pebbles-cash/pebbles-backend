@@ -4,6 +4,7 @@ import { success, error } from "../utils/response";
 import { FiatInteraction, User } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
+import { Types } from "mongoose";
 
 /**
  * Create a new FiatInteraction record for Meld transaction
@@ -196,17 +197,37 @@ export const getFiatInteractionById = requireAuth(
       }
 
       // Get customer ID from path parameters
-      if (!event.pathParameters?.customerId) {
+      if (!event.pathParameters?.partnerCustomerId) {
         return error("Customer ID parameter is required", 400);
       }
 
-      const customerId = event.pathParameters.customerId;
+      const partnerCustomerId = event.pathParameters.partnerCustomerId;
 
-      // Get the FiatInteraction by meldCustomerId
-      const fiatInteraction = await FiatInteraction.findOne({
-        meldCustomerId: customerId,
+      // First, try to find FiatInteraction assigned to this user
+      let fiatInteraction = await FiatInteraction.findOne({
+        meldCustomerId: partnerCustomerId,
         userId: userId,
       });
+
+      // If not found, look for unassigned FiatInteraction and assign it to the user
+      if (!fiatInteraction) {
+        fiatInteraction = await FiatInteraction.findOne({
+          meldCustomerId: partnerCustomerId,
+          userId: { $exists: false }, // Unassigned transaction
+        });
+
+        if (fiatInteraction) {
+          // Assign the transaction to this user
+          fiatInteraction.userId = new Types.ObjectId(userId);
+          await fiatInteraction.save();
+
+          console.log("Assigned FiatInteraction to user", {
+            fiatInteractionId: fiatInteraction._id.toString(),
+            userId,
+            partnerCustomerId,
+          });
+        }
+      }
 
       if (!fiatInteraction) {
         return error("FiatInteraction not found", 404);
@@ -214,6 +235,7 @@ export const getFiatInteractionById = requireAuth(
 
       return success({
         fiatInteraction,
+        assigned: fiatInteraction.userId?.toString() === userId,
       });
     } catch (err) {
       console.error("Get FiatInteraction details error:", err);
