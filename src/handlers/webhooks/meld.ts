@@ -30,7 +30,7 @@ export const handleMeldWebhook = async (
     }
 
     // Verify webhook signature
-    const signature = event.headers["Meld-Signature"];
+    const signature = event.headers["meld-signature"];
     const webhookSecret = MELD_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
@@ -92,7 +92,7 @@ function verifyMeldSignature(
 ): boolean {
   try {
     // Get timestamp and URL from headers
-    const timestamp = event.headers["Meld-Signature-Timestamp"];
+    const timestamp = event.headers["meld-signature-timestamp"];
 
     // Construct the full webhook URL
     let url: string;
@@ -108,7 +108,7 @@ function verifyMeldSignature(
     }
 
     if (!timestamp) {
-      logger.warn("Missing Meld-Signature-Timestamp in webhook headers");
+      logger.warn("Missing meld-signature-timestamp in webhook headers");
       return false;
     }
 
@@ -139,7 +139,7 @@ function verifyMeldSignature(
  * Process Meld webhook based on event type
  */
 async function processMeldWebhook(webhookData: any): Promise<void> {
-  const { eventType, data, accountId, eventId } = webhookData;
+  const { eventType, payload, accountId, eventId } = webhookData;
 
   logger.info("Processing Meld webhook event", {
     eventType,
@@ -149,35 +149,35 @@ async function processMeldWebhook(webhookData: any): Promise<void> {
 
   switch (eventType) {
     case "BANK_LINKING_CONNECTION_COMPLETED":
-      await handleBankLinkingCompleted(data, accountId, eventId);
+      await handleBankLinkingCompleted(payload, accountId, eventId);
       break;
 
     case "BANK_LINKING_CONNECTION_DELETED":
-      await handleBankLinkingDeleted(data, accountId, eventId);
+      await handleBankLinkingDeleted(payload, accountId, eventId);
       break;
 
     case "BANK_LINKING_CUSTOMER_ACTION_REQUIRED":
-      await handleCustomerActionRequired(data, accountId, eventId);
+      await handleCustomerActionRequired(payload, accountId, eventId);
       break;
 
     case "BANK_LINKING_ACCOUNTS_UPDATING":
-      await handleAccountsUpdating(data, accountId, eventId);
+      await handleAccountsUpdating(payload, accountId, eventId);
       break;
 
     case "BANK_LINKING_ACCOUNTS_UPDATED":
-      await handleAccountsUpdated(data, accountId, eventId);
+      await handleAccountsUpdated(payload, accountId, eventId);
       break;
 
     case "BANK_LINKING_ACCOUNTS_REMOVED":
-      await handleAccountsRemoved(data, accountId, eventId);
+      await handleAccountsRemoved(payload, accountId, eventId);
       break;
 
     case "FINANCIAL_ACCOUNT_ADDED":
-      await handleFinancialAccountAdded(data, accountId, eventId);
+      await handleFinancialAccountAdded(payload, accountId, eventId);
       break;
 
     case "FINANCIAL_ACCOUNT_TRANSACTIONS_ADDED":
-      await handleTransactionsAdded(data, accountId, eventId);
+      await handleTransactionsAdded(payload, accountId, eventId);
       break;
 
     // Crypto transaction webhooks - handled by FiatInteraction
@@ -185,7 +185,12 @@ async function processMeldWebhook(webhookData: any): Promise<void> {
     case "TRANSACTION_CRYPTO_TRANSFERRING":
     case "TRANSACTION_CRYPTO_COMPLETE":
     case "TRANSACTION_CRYPTO_FAILED":
-      await handleCryptoTransactionUpdate(eventType, data, accountId, eventId);
+      await handleCryptoTransactionUpdate(
+        eventType,
+        payload,
+        accountId,
+        eventId
+      );
       break;
 
     default:
@@ -450,19 +455,19 @@ async function processFinancialTransaction(
   try {
     logger.info("Processing financial transaction", {
       userId,
-      transactionId: transaction.id,
+      transactionId: transaction.paymentTransactionId,
       eventId,
     });
 
     // Check if FiatInteraction already exists for this transaction
     const existingInteraction = await FiatInteraction.findOne({
-      meldPaymentTransactionId: transaction.id,
+      meldPaymentTransactionId: transaction.paymentTransactionId,
       userId: userId,
     });
 
     if (existingInteraction) {
       logger.info("FiatInteraction already exists for transaction", {
-        transactionId: transaction.id,
+        transactionId: transaction.paymentTransactionId,
         fiatInteractionId: existingInteraction._id.toString(),
       });
       return;
@@ -475,7 +480,7 @@ async function processFinancialTransaction(
       status: "completed",
       serviceProvider: "meld",
       // Meld-specific fields
-      meldPaymentTransactionId: transaction.id,
+      meldPaymentTransactionId: transaction.paymentTransactionId,
       meldRequestId: transaction.requestId,
       meldAccountId: transaction.accountId,
       meldProfileId: transaction.profileId,
@@ -484,14 +489,16 @@ async function processFinancialTransaction(
       meldTransactionType: transaction.transactionType,
       meldPaymentTransactionStatus: transaction.paymentTransactionStatus,
       // Legacy field for backward compatibility
-      externalTransactionId: transaction.id,
+      externalTransactionId: transaction.paymentTransactionId,
+      // Note: Some fields may not be available in the webhook payload
+      // and would need to be populated from other sources
       fiatAmount: {
-        value: transaction.amount,
-        currency: transaction.currency,
+        value: transaction.amount || 0,
+        currency: transaction.currency || "USD",
       },
       cryptoAmount: {
-        value: transaction.cryptoAmount,
-        currency: transaction.cryptoCurrency,
+        value: transaction.cryptoAmount || 0,
+        currency: transaction.cryptoCurrency || "BTC",
       },
       exchangeRate: transaction.exchangeRate,
       fees: transaction.fees,
@@ -499,8 +506,8 @@ async function processFinancialTransaction(
       destinationAccount: transaction.destinationAccount,
       blockchain: transaction.blockchain,
       transactionHash: transaction.transactionHash,
-      initiatedAt: new Date(transaction.createdAt),
-      completedAt: new Date(transaction.completedAt),
+      initiatedAt: new Date(transaction.createdAt || Date.now()),
+      completedAt: new Date(transaction.completedAt || Date.now()),
       ipAddress: transaction.ipAddress,
       deviceInfo: transaction.deviceInfo,
       kycLevel: transaction.kycLevel,
@@ -514,13 +521,13 @@ async function processFinancialTransaction(
 
     logger.info("Successfully processed financial transaction", {
       userId,
-      transactionId: transaction.id,
+      transactionId: transaction.paymentTransactionId,
       fiatInteractionId: fiatInteraction._id.toString(),
     });
   } catch (err) {
     logger.error("Error processing financial transaction", err as Error, {
       userId,
-      transactionId: transaction.id,
+      transactionId: transaction.paymentTransactionId,
       eventId,
     });
   }
@@ -643,7 +650,7 @@ async function sendAccountUpdateNotification(userId: string): Promise<void> {
  */
 async function handleCryptoTransactionUpdate(
   eventType: string,
-  data: any,
+  payload: any,
   accountId: string,
   eventId: string
 ): Promise<void> {
@@ -652,7 +659,7 @@ async function handleCryptoTransactionUpdate(
       eventType,
       accountId,
       eventId,
-      data,
+      payload,
     });
 
     // Find user by Meld account ID
@@ -662,7 +669,8 @@ async function handleCryptoTransactionUpdate(
       return;
     }
 
-    const transactionDetails = data.transaction || data;
+    // The payload contains the transaction details directly
+    const transactionDetails = payload;
     const customerId = transactionDetails.customerId;
     const sessionId = transactionDetails.sessionId;
     const paymentTransactionId = transactionDetails.paymentTransactionId;
@@ -749,7 +757,7 @@ async function handleCryptoTransactionUpdate(
       eventType,
       accountId,
       eventId,
-      data,
+      payload,
     });
   }
 }
