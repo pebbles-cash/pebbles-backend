@@ -30,8 +30,7 @@ export const handleMeldWebhook = async (
     }
 
     // Verify webhook signature
-    const signature =
-      event.headers["meld-signature"] || event.headers["Meld-Signature"];
+    const signature = event.headers["Meld-Signature"];
     const webhookSecret = MELD_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
@@ -66,8 +65,8 @@ export const handleMeldWebhook = async (
     }
 
     logger.info("Received Meld webhook", {
-      eventType: webhookData.type,
-      eventId: webhookData.id,
+      eventType: webhookData.eventType,
+      eventId: webhookData.eventId,
       accountId: webhookData.accountId,
     });
 
@@ -92,34 +91,39 @@ function verifyMeldSignature(
   event: APIGatewayProxyEvent
 ): boolean {
   try {
-    // Get timestamp and URL from headers or request context
-    const timestamp =
-      event.headers["x-meld-timestamp"] || event.headers["X-Meld-Timestamp"];
-    const url = event.requestContext?.path || "/api/webhooks/meld";
+    // Get timestamp and URL from headers
+    const timestamp = event.headers["Meld-Signature-Timestamp"];
+
+    // Construct the full webhook URL
+    let url: string;
+    if (event.requestContext?.domainName && event.requestContext?.path) {
+      // For API Gateway, construct the full URL
+      const protocol = event.requestContext.protocol || "https";
+      const domain = event.requestContext.domainName;
+      const path = event.requestContext.path;
+      url = `${protocol}://${domain}${path}`;
+    } else {
+      // Fallback URL - you should replace this with your actual webhook URL
+      url = "https://your-api-domain.com/api/webhooks/meld";
+    }
 
     if (!timestamp) {
-      logger.warn("Missing timestamp in Meld webhook headers");
+      logger.warn("Missing Meld-Signature-Timestamp in webhook headers");
       return false;
     }
 
-    // Create signature using the same format as Java: timestamp.url.body
+    // Create signature using the same format as documented: timestamp.url.body
     const data = [timestamp, url, payload].join(".");
     const hmac = crypto.createHmac("sha256", secret);
     hmac.update(data, "utf8");
-    const expectedSignature = hmac
-      .digest("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=/g, "");
+    const expectedSignature = hmac.digest("base64");
 
-    // Handle different signature formats
-    const receivedSignature = signature.startsWith("sha256=")
-      ? signature.slice(7)
-      : signature;
+    // The signature should be in base64 format as shown in the docs
+    const receivedSignature = signature;
 
     // Use timingSafeEqual to prevent timing attacks
-    const expectedBuffer = Buffer.from(expectedSignature, "ascii");
-    const receivedBuffer = Buffer.from(receivedSignature, "ascii");
+    const expectedBuffer = Buffer.from(expectedSignature, "base64");
+    const receivedBuffer = Buffer.from(receivedSignature, "base64");
 
     return (
       expectedBuffer.length === receivedBuffer.length &&
@@ -135,7 +139,7 @@ function verifyMeldSignature(
  * Process Meld webhook based on event type
  */
 async function processMeldWebhook(webhookData: any): Promise<void> {
-  const { type: eventType, data, accountId, id: eventId } = webhookData;
+  const { eventType, data, accountId, eventId } = webhookData;
 
   logger.info("Processing Meld webhook event", {
     eventType,
