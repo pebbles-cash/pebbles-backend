@@ -3,6 +3,7 @@ import { success, error } from "../utils/response";
 import { Transaction, User } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
+import { getTokenSymbol } from "../utils/token-symbols";
 
 /**
  * Create a new transaction
@@ -310,7 +311,7 @@ export const getUserTransactions = requireAuth(
           type: tx.type,
           direction,
           amount: tx.amount,
-          currency: "USD", // This would come from tx in a real system
+          currency: getTokenSymbol(tx.tokenAddress, tx.sourceChain),
           status: tx.status,
           createdAt: tx.createdAt,
           metadata: tx.metadata,
@@ -426,7 +427,10 @@ export const getTransactionDetails = requireAuth(
         type: transaction.type,
         direction: isSender ? "outgoing" : "incoming",
         amount: transaction.amount,
-        currency: "USD", // This would come from tx in a real system
+        currency: getTokenSymbol(
+          transaction.tokenAddress,
+          transaction.sourceChain
+        ),
         status: transaction.status,
         createdAt: transaction.createdAt,
         updatedAt: transaction.updatedAt,
@@ -619,7 +623,10 @@ export const getTransactionByHash = requireAuth(
         type: transaction.type,
         direction: isSender ? "outgoing" : "incoming",
         amount: transaction.amount,
-        currency: "USD", // This would come from tx in a real system
+        currency: getTokenSymbol(
+          transaction.tokenAddress,
+          transaction.sourceChain
+        ),
         status: transaction.status,
         createdAt: transaction.createdAt,
         updatedAt: transaction.updatedAt,
@@ -923,7 +930,7 @@ export const filterTransactions = requireAuth(
           type: tx.type,
           direction: txDirection,
           amount: tx.amount,
-          currency: "USD", // This would come from tx in a real system
+          currency: getTokenSymbol(tx.tokenAddress, tx.sourceChain),
           status: tx.status,
           createdAt: tx.createdAt,
           metadata: tx.metadata,
@@ -1058,6 +1065,7 @@ export const processTransactionHash = requireAuth(
           createdAt: transaction.createdAt,
           updatedAt: transaction.updatedAt,
           message:
+            result.message ||
             "Transaction processed successfully. Status will be updated asynchronously.",
         },
         201
