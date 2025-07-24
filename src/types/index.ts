@@ -419,37 +419,6 @@ export interface SendTipRequestBody {
   anonymous?: boolean;
 }
 
-export interface IMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-  timestamp: Date;
-}
-
-export interface IChatSession extends Document {
-  userId: Types.ObjectId;
-  title: string;
-  messages: IMessage[];
-  lastInteraction: Date;
-  active: boolean;
-  metadata: {
-    context?: {
-      dateRange?: {
-        start?: Date;
-        end?: Date;
-      };
-      transactionTypes?: string[];
-      clients?: string[];
-      projects?: string[];
-    };
-    aiProvider?: string;
-    modelVersion?: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  addMessage(sender: string, content: string): void;
-  generateTitle(): string;
-}
-
 export interface IAnalyticsCache extends Document {
   userId: Types.ObjectId;
   queryType: string;

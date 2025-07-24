@@ -98,7 +98,7 @@ export const getUserActivity = requireAuth(
       for (const tx of transactions) {
         const isSender = tx.fromUserId?.toString() === userId;
 
-        // Get token symbol from address and network
+        // Get token symbol from address and network, fallback to token address if no mapping
         const network = tx.sourceChain || "ethereum";
         const currency = getTokenSymbol(tx.tokenAddress, network);
 

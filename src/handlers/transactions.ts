@@ -986,7 +986,7 @@ export const processTransactionHash = requireAuth(
       const body = JSON.parse(event.body);
       const {
         txHash,
-        network,
+        networkId,
         type = "payment",
         category = "blockchain_transaction",
         tags = ["blockchain"],
@@ -995,12 +995,8 @@ export const processTransactionHash = requireAuth(
         metadata = {},
       } = body;
 
-      // Import the blockchain service to get default network
-      const { blockchainService } = await import(
-        "../services/blockchain-service"
-      );
-      const defaultNetwork = blockchainService.getDefaultNetwork();
-      const selectedNetwork = network || defaultNetwork;
+      // Default to Ethereum mainnet (1) if no networkId provided
+      const selectedNetworkId = networkId || 1;
 
       // Validate required fields
       if (!txHash) {
@@ -1021,7 +1017,7 @@ export const processTransactionHash = requireAuth(
       const result = await transactionStatusService.processTransactionHash(
         userId,
         txHash,
-        selectedNetwork,
+        selectedNetworkId,
         {
           type,
           category,
@@ -1095,14 +1091,12 @@ export const getTransactionStatus = requireAuth(
       }
 
       const txHash = event.pathParameters.txHash;
-      const network = event.queryStringParameters?.network;
+      const networkIdParam = event.queryStringParameters?.networkId;
 
-      // Import the blockchain service to get default network
-      const { blockchainService } = await import(
-        "../services/blockchain-service"
-      );
-      const defaultNetwork = blockchainService.getDefaultNetwork();
-      const selectedNetwork = network || defaultNetwork;
+      // Convert networkId parameter to number, default to Ethereum mainnet (1)
+      const selectedNetworkId = networkIdParam
+        ? parseInt(networkIdParam, 10)
+        : 1;
 
       // Validate transaction hash format
       if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
@@ -1121,7 +1115,7 @@ export const getTransactionStatus = requireAuth(
       const blockchainStatus =
         await transactionStatusService.checkTransactionStatus(
           txHash,
-          selectedNetwork
+          selectedNetworkId
         );
 
       // If we have a local record, return combined info

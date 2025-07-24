@@ -68,7 +68,9 @@ export const ENABLE_FIREBASE_DEBUG =
 // Blockchain configuration
 export const SEPOLIA_RPC_URL = getEnv("SEPOLIA_RPC_URL", false);
 export const ETHEREUM_RPC_URL = getEnv("ETHEREUM_RPC_URL", false);
+export const BSC_RPC_URL = getEnv("BSC_RPC_URL", false);
 export const ETHERSCAN_API_KEY = getEnv("ETHERSCAN_API_KEY", false);
+export const BSCSCAN_API_KEY = getEnv("BSCSCAN_API_KEY", false);
 
 // Blockchain network selection based on environment
 export const DEFAULT_BLOCKCHAIN_NETWORK = IS_PRODUCTION

@@ -24,23 +24,53 @@ class TransactionStatusService {
   private readonly RETRY_DELAY = 2000; // 2 seconds
   private readonly CONFIRMATION_THRESHOLD = 1; // Number of confirmations required
 
+  // Network ID to network name mapping
+  private readonly NETWORK_MAP: Record<number, string> = {
+    1: "ethereum", // Ethereum mainnet
+    11155111: "sepolia", // Sepolia testnet
+    56: "bsc", // BNB Smart Chain (BSC)
+  };
+
+  /**
+   * Convert network ID to network name
+   */
+  private getNetworkName(networkId: number): string {
+    const networkName = this.NETWORK_MAP[networkId];
+    if (!networkName) {
+      throw new Error(
+        `Unsupported network ID: ${networkId}. Supported networks: ${Object.keys(this.NETWORK_MAP).join(", ")}`
+      );
+    }
+    return networkName;
+  }
+
+  /**
+   * Check if network ID is supported
+   */
+  private isNetworkIdSupported(networkId: number): boolean {
+    return networkId in this.NETWORK_MAP;
+  }
+
   /**
    * Process a new transaction hash and create/update transaction record
    */
   async processTransactionHash(
     userId: string,
     txHash: string,
-    network: string = "ethereum",
+    networkId: number = 1, // Default to Ethereum mainnet (1)
     metadata: any = {}
   ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
     try {
-      // Validate network
-      if (!blockchainService.isNetworkSupported(network)) {
+      // Validate network ID
+      if (!this.isNetworkIdSupported(networkId)) {
         return {
           success: false,
-          error: `Unsupported network: ${network}. Supported networks: ${blockchainService.getSupportedNetworks().join(", ")}`,
+          error: `Unsupported network ID: ${networkId}. Supported networks: ${Object.keys(this.NETWORK_MAP).join(", ")}`,
         };
       }
+
+      // Convert network ID to network name for blockchain service
+      const networkName = this.getNetworkName(networkId);
 
       // Check if transaction already exists
       const existingTransaction = await Transaction.findOne({ txHash });
@@ -57,7 +87,7 @@ class TransactionStatusService {
 
       // Get transaction details from blockchain
       const txDetails = await blockchainService.getTransactionDetails(
-        network,
+        networkName,
         txHash
       );
 
@@ -156,8 +186,8 @@ class TransactionStatusService {
         toAddress: toAddress,
         amount: amount,
         tokenAddress: tokenAddress,
-        sourceChain: network,
-        destinationChain: network,
+        sourceChain: networkName,
+        destinationChain: networkName,
         txHash: txHash,
         status: this.mapBlockchainStatus(txDetails.status),
         category: metadata.category || "blockchain_transaction",
@@ -178,7 +208,8 @@ class TransactionStatusService {
               ? txDetails.to
               : undefined,
           },
-          network,
+          networkId,
+          networkName,
         },
       });
 
@@ -195,7 +226,8 @@ class TransactionStatusService {
         isERC20Transfer: txDetails.isERC20Transfer,
         tokenAddress: txDetails.tokenAddress,
         tokenAmount: txDetails.tokenAmount,
-        network,
+        networkId,
+        networkName,
         type: metadata.type || "payment",
         userRole:
           txFromAddress === userWalletAddress
@@ -211,13 +243,14 @@ class TransactionStatusService {
       this.monitorTransactionStatus(
         transaction._id.toString(),
         txHash,
-        network
+        networkId
       );
 
       logger.info("Transaction processed successfully", {
         txHash,
         transactionId: transaction._id.toString(),
-        network,
+        networkId,
+        networkName,
         status: transaction.status,
       });
 
@@ -229,7 +262,7 @@ class TransactionStatusService {
       logger.error("Error processing transaction hash", error as Error, {
         txHash,
         userId,
-        network,
+        networkId,
         error: error instanceof Error ? error.message : String(error),
       });
       return {
@@ -248,7 +281,7 @@ class TransactionStatusService {
   private async monitorTransactionStatus(
     transactionId: string,
     txHash: string,
-    network: string
+    networkId: number
   ): Promise<void> {
     let retries = 0;
     let lastStatus: string | null = null;
@@ -263,9 +296,12 @@ class TransactionStatusService {
           return;
         }
 
+        // Convert network ID to network name for blockchain service
+        const networkName = this.getNetworkName(networkId);
+
         // Get updated transaction details from blockchain
         const txDetails = await blockchainService.getTransactionDetails(
-          network,
+          networkName,
           txHash
         );
 
@@ -283,7 +319,7 @@ class TransactionStatusService {
 
         const newStatus = this.mapBlockchainStatus(txDetails.status);
         const isConfirmed = await blockchainService.isTransactionConfirmed(
-          network,
+          networkName,
           txHash,
           this.CONFIRMATION_THRESHOLD
         );
@@ -409,11 +445,12 @@ class TransactionStatusService {
    */
   async checkTransactionStatus(
     txHash: string,
-    network: string = "ethereum"
+    networkId: number = 1 // Default to Ethereum mainnet (1)
   ): Promise<StatusCheckResult> {
     try {
+      const networkName = this.getNetworkName(networkId);
       const txDetails = await blockchainService.getTransactionDetails(
-        network,
+        networkName,
         txHash
       );
 
@@ -427,7 +464,7 @@ class TransactionStatusService {
       }
 
       const isConfirmed = await blockchainService.isTransactionConfirmed(
-        network,
+        networkName,
         txHash,
         this.CONFIRMATION_THRESHOLD
       );
@@ -441,7 +478,7 @@ class TransactionStatusService {
     } catch (error) {
       logger.error("Error checking transaction status", error as Error, {
         txHash,
-        network,
+        networkId,
       });
       return {
         isConfirmed: false,
@@ -457,11 +494,11 @@ class TransactionStatusService {
    */
   async getTransactionStatusWithRetry(
     txHash: string,
-    network: string = "ethereum",
+    networkId: number = 1, // Default to Ethereum mainnet (1)
     maxRetries: number = 5
   ): Promise<StatusCheckResult> {
     for (let i = 0; i < maxRetries; i++) {
-      const result = await this.checkTransactionStatus(txHash, network);
+      const result = await this.checkTransactionStatus(txHash, networkId);
 
       if (result.isConfirmed || result.status === "failed") {
         return result;
@@ -472,7 +509,7 @@ class TransactionStatusService {
       }
     }
 
-    return await this.checkTransactionStatus(txHash, network);
+    return await this.checkTransactionStatus(txHash, networkId);
   }
 
   /**

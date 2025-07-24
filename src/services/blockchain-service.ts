@@ -5,7 +5,7 @@ import {
   parseAbi,
   decodeEventLog,
 } from "viem";
-import { mainnet, sepolia } from "viem/chains";
+import { mainnet, sepolia, bsc } from "viem/chains";
 import axios from "axios";
 import { logger } from "../utils/logger";
 import { getBlockchainNetwork, NODE_ENV } from "../config/env";
@@ -95,13 +95,37 @@ class BlockchainService {
       etherscanUrl: "https://api.etherscan.io/api",
     };
 
+    // BSC (BNB Smart Chain)
+    const bscConfig: BlockchainConfig = {
+      chainId: 56,
+      rpcUrl: process.env.BSC_RPC_URL || "https://bsc-dataseed1.binance.org/",
+      etherscanApiKey: process.env.BSCSCAN_API_KEY || "",
+      etherscanUrl: "https://api.bscscan.com/api",
+    };
+
     this.configs.set("sepolia", sepoliaConfig);
     this.configs.set("ethereum", mainnetConfig);
+    this.configs.set("bsc", bscConfig);
 
     // Initialize clients
     this.configs.forEach((config, network) => {
+      let chain;
+      switch (network) {
+        case "sepolia":
+          chain = sepolia;
+          break;
+        case "ethereum":
+          chain = mainnet;
+          break;
+        case "bsc":
+          chain = bsc;
+          break;
+        default:
+          chain = mainnet; // fallback
+      }
+
       const client = createPublicClient({
-        chain: network === "sepolia" ? sepolia : mainnet,
+        chain,
         transport: http(config.rpcUrl),
       });
       this.clients.set(network, client);
