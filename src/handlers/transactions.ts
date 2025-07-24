@@ -1185,6 +1185,34 @@ export const getTransactionStatus = requireAuth(
 );
 
 /**
+ * Fix pending transactions
+ * POST /api/transactions/fix-pending
+ */
+export const fixPendingTransactions = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Import the transaction status service
+      const { transactionStatusService } = await import(
+        "../services/transaction-status-service"
+      );
+
+      // Fix pending transactions
+      const result = await transactionStatusService.fixPendingTransactions();
+
+      return success({
+        message: "Pending transactions fix completed",
+        result,
+      });
+    } catch (err) {
+      console.error("Fix pending transactions error:", err);
+      return error("Could not fix pending transactions", 500);
+    }
+  }
+);
+
+/**
  * Get supported blockchain networks
  * GET /api/transactions/networks
  */

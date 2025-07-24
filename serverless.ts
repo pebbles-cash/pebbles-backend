@@ -416,6 +416,18 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    fixPendingTransactions: {
+      handler: "src/handlers/transactions.fixPendingTransactions",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/fix-pending",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
     getSupportedNetworks: {
       handler: "src/handlers/transactions.getSupportedNetworks",
       events: [

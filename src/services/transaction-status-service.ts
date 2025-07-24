@@ -345,8 +345,16 @@ class TransactionStatusService {
     metadata: any
   ): Promise<void> {
     let retries = 0;
-    const maxRetries = 30; // 30 retries = 60 seconds total
+    const maxRetries = 60; // Increased to 60 retries = 120 seconds total
     const retryDelay = 2000; // 2 seconds
+
+    logger.info("Starting pending transaction monitoring", {
+      transactionId,
+      txHash,
+      networkId,
+      maxRetries,
+      retryDelay,
+    });
 
     const checkPendingStatus = async (): Promise<void> => {
       try {
@@ -468,9 +476,21 @@ class TransactionStatusService {
         } else if (retries < maxRetries) {
           // Transaction still not found, retry
           retries++;
+          logger.info("Transaction not found yet, retrying", {
+            transactionId,
+            txHash,
+            retry: retries,
+            maxRetries,
+          });
           setTimeout(checkPendingStatus, retryDelay);
         } else {
           // Max retries reached, mark as failed
+          logger.warn("Max retries reached for pending transaction", {
+            transactionId,
+            txHash,
+            retries,
+            maxRetries,
+          });
           await this.updateTransactionStatus(transactionId, "failed", {
             error: "Transaction not found on blockchain after maximum retries",
           });
@@ -759,6 +779,172 @@ class TransactionStatusService {
    */
   getSupportedNetworks(): string[] {
     return blockchainService.getSupportedNetworks();
+  }
+
+  /**
+   * Fix pending transactions that might have been missed by monitoring
+   * This can be called manually or as a scheduled task
+   */
+  async fixPendingTransactions(): Promise<{ fixed: number; errors: number }> {
+    try {
+      await connectToDatabase();
+
+      // Find all pending transactions
+      const pendingTransactions = await Transaction.find({
+        status: "pending",
+        "metadata.isPending": true,
+      });
+
+      logger.info("Found pending transactions to fix", {
+        count: pendingTransactions.length,
+      });
+
+      let fixed = 0;
+      let errors = 0;
+
+      for (const transaction of pendingTransactions) {
+        try {
+          const txHash = transaction.txHash;
+          const networkId = (transaction.metadata as any)?.networkId || 1;
+          const networkName = this.getNetworkName(networkId);
+
+          // Check if transaction is now on blockchain
+          const blockchainData = await blockchainService.getTransactionDetails(
+            networkName,
+            txHash || ""
+          );
+
+          if (blockchainData) {
+            // Transaction found! Update with real data
+            const updateData = await this.buildTransactionUpdateData(
+              blockchainData,
+              networkId,
+              transaction.metadata
+            );
+
+            await Transaction.findByIdAndUpdate(transaction._id, {
+              $set: updateData,
+            });
+
+            logger.info("Fixed pending transaction", {
+              transactionId: transaction._id,
+              txHash,
+              status: "completed",
+            });
+
+            fixed++;
+          } else {
+            // Still not found, check if it's been too long
+            const createdAt = new Date(transaction.createdAt);
+            const now = new Date();
+            const hoursSinceCreation =
+              (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+            if (hoursSinceCreation > 1) {
+              // Mark as failed if it's been more than 1 hour
+              await this.updateTransactionStatus(
+                transaction._id.toString(),
+                "failed",
+                {
+                  error: "Transaction not found on blockchain after 1 hour",
+                }
+              );
+
+              logger.warn("Marked old pending transaction as failed", {
+                transactionId: transaction._id,
+                txHash,
+                hoursSinceCreation,
+              });
+            }
+          }
+        } catch (error) {
+          logger.error("Error fixing pending transaction", error as Error, {
+            transactionId: transaction._id,
+            txHash: transaction.txHash,
+          });
+          errors++;
+        }
+      }
+
+      logger.info("Finished fixing pending transactions", {
+        fixed,
+        errors,
+        total: pendingTransactions.length,
+      });
+
+      return { fixed, errors };
+    } catch (error) {
+      logger.error("Error in fixPendingTransactions", error as Error);
+      return { fixed: 0, errors: 1 };
+    }
+  }
+
+  /**
+   * Build transaction update data from blockchain data
+   */
+  private async buildTransactionUpdateData(
+    blockchainData: any,
+    networkId: number,
+    metadata: any
+  ): Promise<any> {
+    // Find users based on addresses
+    const fromUser = await User.findOne({
+      primaryWalletAddress: { $regex: new RegExp(blockchainData.from, "i") },
+    });
+
+    const toUser = await User.findOne({
+      primaryWalletAddress: {
+        $regex: new RegExp(
+          blockchainData.actualRecipient || blockchainData.to,
+          "i"
+        ),
+      },
+    });
+
+    // Determine the correct addresses and amounts
+    const fromAddress = blockchainData.from;
+    const toAddress =
+      blockchainData.isERC20Transfer && blockchainData.actualRecipient
+        ? blockchainData.actualRecipient
+        : blockchainData.to;
+    const amount =
+      blockchainData.isERC20Transfer && blockchainData.tokenAmount
+        ? blockchainData.tokenAmount
+        : blockchainData.value;
+    const tokenAddress =
+      blockchainData.isERC20Transfer && blockchainData.tokenAddress
+        ? blockchainData.tokenAddress
+        : "0x0";
+
+    return {
+      fromUserId: fromUser?._id,
+      toUserId: toUser?._id,
+      fromAddress,
+      toAddress,
+      amount,
+      tokenAddress,
+      status: this.mapBlockchainStatus(blockchainData.status),
+      updatedAt: new Date(),
+      metadata: {
+        ...metadata,
+        blockchainDetails: {
+          gas: blockchainData.gas,
+          gasPrice: blockchainData.gasPrice,
+          nonce: blockchainData.nonce,
+          blockNumber: blockchainData.blockNumber,
+          confirmations: blockchainData.confirmations,
+          timestamp: blockchainData.timestamp,
+          isERC20Transfer: blockchainData.isERC20Transfer,
+          contractAddress: blockchainData.isERC20Transfer
+            ? blockchainData.to
+            : undefined,
+        },
+        networkId,
+        networkName: this.getNetworkName(networkId),
+        isPending: false,
+        fixedAt: new Date(),
+      },
+    };
   }
 }
 

@@ -22,13 +22,30 @@ export const getUserActivity = requireAuth(
       const page = parseInt(queryParams.page || "1", 10);
       const limit = parseInt(queryParams.limit || "10", 10);
       const skip = (page - 1) * limit;
-      const category = queryParams.category as
-        | "all"
-        | "received"
-        | "paid"
-        | "deposit"
-        | "withdraw"
-        | undefined;
+
+      // Parse category filter - support both positive and negative filtering
+      const categoryParam = queryParams.category;
+      let categoryFilter: {
+        type: "include" | "exclude";
+        value: string;
+      } | null = null;
+
+      if (categoryParam) {
+        if (categoryParam.startsWith("!=")) {
+          // Negative filtering: category!=value
+          categoryFilter = {
+            type: "exclude",
+            value: categoryParam.substring(2),
+          };
+        } else {
+          // Positive filtering: category=value
+          categoryFilter = {
+            type: "include",
+            value: categoryParam,
+          };
+        }
+      }
+
       const startDate = queryParams.startDate
         ? new Date(queryParams.startDate)
         : undefined;
@@ -46,12 +63,32 @@ export const getUserActivity = requireAuth(
         if (startDate) txQuery.createdAt.$gte = startDate;
         if (endDate) txQuery.createdAt.$lte = endDate;
       }
-      // Filter by direction if needed
-      if (category === "received") txQuery.toUserId = userId;
-      if (category === "paid") txQuery.fromUserId = userId;
-      // Only include transaction types for these categories
-      if (["received", "paid"].includes(category || "")) {
-        // No further filter needed
+
+      // Apply category filtering for transactions
+      if (categoryFilter) {
+        if (categoryFilter.type === "include") {
+          // Include specific category
+          if (categoryFilter.value === "received") {
+            txQuery.toUserId = userId;
+            delete txQuery.$or;
+          } else if (categoryFilter.value === "paid") {
+            txQuery.fromUserId = userId;
+            delete txQuery.$or;
+          } else if (["deposit", "withdraw"].includes(categoryFilter.value)) {
+            // If filtering for fiat categories, exclude all transactions
+            txQuery._id = { $exists: false }; // This will return no results
+          }
+        } else {
+          // Exclude specific category
+          if (categoryFilter.value === "received") {
+            txQuery.fromUserId = userId;
+            delete txQuery.$or;
+          } else if (categoryFilter.value === "paid") {
+            txQuery.toUserId = userId;
+            delete txQuery.$or;
+          }
+          // If excluding deposit/withdraw, no change needed for transactions
+        }
       }
 
       // --- Fiat Interactions (deposit/withdraw) ---
@@ -64,8 +101,29 @@ export const getUserActivity = requireAuth(
         if (startDate) fiatQuery.createdAt.$gte = startDate;
         if (endDate) fiatQuery.createdAt.$lte = endDate;
       }
-      if (category === "deposit") fiatQuery.type = "onramp";
-      if (category === "withdraw") fiatQuery.type = "offramp";
+
+      // Apply category filtering for fiat interactions
+      if (categoryFilter) {
+        if (categoryFilter.type === "include") {
+          // Include specific category
+          if (categoryFilter.value === "deposit") {
+            fiatQuery.type = "onramp";
+          } else if (categoryFilter.value === "withdraw") {
+            fiatQuery.type = "offramp";
+          } else if (["received", "paid"].includes(categoryFilter.value)) {
+            // If filtering for transaction categories, exclude all fiat interactions
+            fiatQuery._id = { $exists: false }; // This will return no results
+          }
+        } else {
+          // Exclude specific category
+          if (categoryFilter.value === "deposit") {
+            fiatQuery.type = "offramp";
+          } else if (categoryFilter.value === "withdraw") {
+            fiatQuery.type = "onramp";
+          }
+          // If excluding received/paid, no change needed for fiat interactions
+        }
+      }
 
       // Fetch all (for now, will paginate after merge)
       const [transactions, fiatInteractions] = await Promise.all([

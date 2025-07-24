@@ -40,6 +40,8 @@ const TOKEN_SYMBOLS: Record<string, Record<string, string>> = {
     "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14": "WETH",
     // USDT on Sepolia
     "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0": "USDT",
+    // TRNSK on Sepolia
+    "0x0c86a754a29714c4fe9c6f1359fa7099ed174c0b": "TRNSK",
   },
 };
 
