@@ -2,6 +2,7 @@ import { Transaction, User } from "../models";
 import { blockchainService } from "./blockchain-service";
 import { logger } from "../utils/logger";
 import { connectToDatabase } from "./mongoose";
+import { sendTransactionConfirmationNotification } from "./notification-service";
 
 export interface TransactionStatusUpdate {
   transactionId: string;
@@ -461,9 +462,12 @@ class TransactionStatusService {
             },
           };
 
-          await Transaction.findByIdAndUpdate(transactionId, {
-            $set: updateData,
-          });
+          // Use updateTransactionStatus to ensure notifications are sent if status changes
+          await this.updateTransactionStatus(
+            transactionId,
+            "pending",
+            updateData
+          );
 
           // Start normal status monitoring
           this.monitorTransactionStatus(transactionId, txHash, networkId);
@@ -606,9 +610,12 @@ class TransactionStatusService {
             });
           }
 
-          await Transaction.findByIdAndUpdate(transactionId, {
-            $set: updateData,
-          });
+          // Use updateTransactionStatus to ensure notifications are sent
+          await this.updateTransactionStatus(
+            transactionId,
+            updateData.status,
+            updateData
+          );
 
           lastStatus = newStatus;
 
@@ -674,6 +681,46 @@ class TransactionStatusService {
         status,
         error: additionalData.error,
       });
+
+      // Send notifications when transaction is completed
+      if (status === "completed") {
+        try {
+          const transaction = await Transaction.findById(transactionId);
+          if (transaction && transaction.fromUserId && transaction.toUserId) {
+            // Get token symbol for currency
+            const { getTokenSymbol } = await import("../utils/token-symbols");
+            const currency = getTokenSymbol(
+              transaction.tokenAddress,
+              transaction.sourceChain
+            );
+
+            await sendTransactionConfirmationNotification(
+              transactionId,
+              transaction.fromUserId.toString(),
+              transaction.toUserId.toString(),
+              transaction.amount,
+              currency,
+              transaction.type as "payment" | "tip" | "subscription"
+            );
+
+            logger.info("Transaction confirmation notifications sent", {
+              transactionId,
+              fromUserId: transaction.fromUserId,
+              toUserId: transaction.toUserId,
+            });
+          }
+        } catch (notificationError) {
+          logger.error(
+            "Error sending transaction confirmation notifications",
+            notificationError as Error,
+            {
+              transactionId,
+              status,
+            }
+          );
+          // Don't fail the transaction update if notifications fail
+        }
+      }
     } catch (error) {
       logger.error("Error updating transaction status", error as Error, {
         transactionId,
@@ -785,15 +832,24 @@ class TransactionStatusService {
    * Fix pending transactions that might have been missed by monitoring
    * This can be called manually or as a scheduled task
    */
-  async fixPendingTransactions(): Promise<{ fixed: number; errors: number }> {
+  async fixPendingTransactions(): Promise<{
+    fixed: number;
+    errors: number;
+    skipped: number;
+  }> {
     try {
       await connectToDatabase();
 
-      // Find all pending transactions
+      // Find all pending transactions with better query
       const pendingTransactions = await Transaction.find({
-        status: "pending",
-        "metadata.isPending": true,
-      });
+        $or: [
+          { status: "pending" },
+          { "metadata.isPending": true },
+          { fromAddress: "pending" },
+          { toAddress: "pending" },
+          { amount: "0" },
+        ],
+      }).sort({ createdAt: 1 }); // Process oldest first
 
       logger.info("Found pending transactions to fix", {
         count: pendingTransactions.length,
@@ -801,12 +857,28 @@ class TransactionStatusService {
 
       let fixed = 0;
       let errors = 0;
+      let skipped = 0;
 
       for (const transaction of pendingTransactions) {
         try {
           const txHash = transaction.txHash;
+          if (!txHash) {
+            logger.warn("Transaction missing txHash, skipping", {
+              transactionId: transaction._id,
+            });
+            skipped++;
+            continue;
+          }
+
           const networkId = (transaction.metadata as any)?.networkId || 1;
           const networkName = this.getNetworkName(networkId);
+
+          logger.info("Processing pending transaction", {
+            transactionId: transaction._id,
+            txHash,
+            networkName,
+            createdAt: transaction.createdAt,
+          });
 
           // Check if transaction is now on blockchain
           const blockchainData = await blockchainService.getTransactionDetails(
@@ -822,14 +894,19 @@ class TransactionStatusService {
               transaction.metadata
             );
 
-            await Transaction.findByIdAndUpdate(transaction._id, {
-              $set: updateData,
-            });
+            // Use updateTransactionStatus to ensure notifications are sent
+            await this.updateTransactionStatus(
+              transaction._id.toString(),
+              "completed",
+              updateData
+            );
 
             logger.info("Fixed pending transaction", {
               transactionId: transaction._id,
               txHash,
               status: "completed",
+              blockNumber: blockchainData.blockNumber,
+              confirmations: blockchainData.confirmations,
             });
 
             fixed++;
@@ -840,21 +917,29 @@ class TransactionStatusService {
             const hoursSinceCreation =
               (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
 
-            if (hoursSinceCreation > 1) {
-              // Mark as failed if it's been more than 1 hour
+            if (hoursSinceCreation > 2) {
+              // Mark as failed if it's been more than 2 hours
               await this.updateTransactionStatus(
                 transaction._id.toString(),
                 "failed",
                 {
-                  error: "Transaction not found on blockchain after 1 hour",
+                  error: `Transaction not found on blockchain after ${Math.round(hoursSinceCreation)} hours`,
+                  hoursSinceCreation: Math.round(hoursSinceCreation),
                 }
               );
 
               logger.warn("Marked old pending transaction as failed", {
                 transactionId: transaction._id,
                 txHash,
-                hoursSinceCreation,
+                hoursSinceCreation: Math.round(hoursSinceCreation),
               });
+            } else {
+              logger.info("Transaction still pending, will retry later", {
+                transactionId: transaction._id,
+                txHash,
+                hoursSinceCreation: Math.round(hoursSinceCreation),
+              });
+              skipped++;
             }
           }
         } catch (error) {
@@ -869,13 +954,212 @@ class TransactionStatusService {
       logger.info("Finished fixing pending transactions", {
         fixed,
         errors,
+        skipped,
         total: pendingTransactions.length,
       });
 
-      return { fixed, errors };
+      return { fixed, errors, skipped };
     } catch (error) {
       logger.error("Error in fixPendingTransactions", error as Error);
-      return { fixed: 0, errors: 1 };
+      return { fixed: 0, errors: 1, skipped: 0 };
+    }
+  }
+
+  /**
+   * Comprehensive pending transaction cleanup
+   * This method handles all edge cases and provides detailed reporting
+   */
+  async comprehensivePendingTransactionCleanup(): Promise<{
+    fixed: number;
+    errors: number;
+    skipped: number;
+    failed: number;
+    report: any;
+  }> {
+    const startTime = new Date();
+    const report = {
+      startTime,
+      endTime: null as Date | null,
+      duration: 0,
+      transactions: {
+        total: 0,
+        fixed: 0,
+        errors: 0,
+        skipped: 0,
+        failed: 0,
+      },
+      networks: {} as Record<string, any>,
+      errors: [] as any[],
+    };
+
+    try {
+      await connectToDatabase();
+
+      // Find all transactions that need attention
+      const pendingTransactions = await Transaction.find({
+        $or: [
+          { status: "pending" },
+          { "metadata.isPending": true },
+          { fromAddress: "pending" },
+          { toAddress: "pending" },
+          { amount: "0" },
+          { tokenAddress: "0x0" },
+        ],
+      }).sort({ createdAt: 1 });
+
+      report.transactions.total = pendingTransactions.length;
+
+      logger.info("Starting comprehensive pending transaction cleanup", {
+        totalTransactions: pendingTransactions.length,
+        startTime,
+      });
+
+      let fixed = 0;
+      let errors = 0;
+      let skipped = 0;
+      let failed = 0;
+
+      for (const transaction of pendingTransactions) {
+        try {
+          const txHash = transaction.txHash;
+          if (!txHash) {
+            logger.warn("Transaction missing txHash, skipping", {
+              transactionId: transaction._id,
+            });
+            skipped++;
+            continue;
+          }
+
+          const networkId = (transaction.metadata as any)?.networkId || 1;
+          const networkName = this.getNetworkName(networkId);
+
+          // Track network statistics
+          if (!report.networks[networkName]) {
+            report.networks[networkName] = { total: 0, fixed: 0, errors: 0 };
+          }
+          report.networks[networkName].total++;
+
+          logger.info("Processing transaction for cleanup", {
+            transactionId: transaction._id,
+            txHash,
+            networkName,
+            createdAt: transaction.createdAt,
+            status: transaction.status,
+          });
+
+          // Check blockchain status
+          const blockchainData = await blockchainService.getTransactionDetails(
+            networkName,
+            txHash
+          );
+
+          if (blockchainData) {
+            // Transaction found on blockchain
+            const updateData = await this.buildTransactionUpdateData(
+              blockchainData,
+              networkId,
+              transaction.metadata
+            );
+
+            await this.updateTransactionStatus(
+              transaction._id.toString(),
+              "completed",
+              updateData
+            );
+
+            logger.info("Successfully fixed pending transaction", {
+              transactionId: transaction._id,
+              txHash,
+              networkName,
+              blockNumber: blockchainData.blockNumber,
+              confirmations: blockchainData.confirmations,
+            });
+
+            fixed++;
+            report.transactions.fixed++;
+            report.networks[networkName].fixed++;
+          } else {
+            // Transaction not found, check age
+            const createdAt = new Date(transaction.createdAt);
+            const now = new Date();
+            const hoursSinceCreation =
+              (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+
+            if (hoursSinceCreation > 2) {
+              // Mark as failed if too old
+              await this.updateTransactionStatus(
+                transaction._id.toString(),
+                "failed",
+                {
+                  error: `Transaction not found on blockchain after ${Math.round(hoursSinceCreation)} hours`,
+                  hoursSinceCreation: Math.round(hoursSinceCreation),
+                  lastChecked: now,
+                }
+              );
+
+              logger.warn("Marked old transaction as failed", {
+                transactionId: transaction._id,
+                txHash,
+                networkName,
+                hoursSinceCreation: Math.round(hoursSinceCreation),
+              });
+
+              failed++;
+              report.transactions.failed++;
+            } else {
+              logger.info("Transaction still pending, will retry later", {
+                transactionId: transaction._id,
+                txHash,
+                networkName,
+                hoursSinceCreation: Math.round(hoursSinceCreation),
+              });
+              skipped++;
+              report.transactions.skipped++;
+            }
+          }
+        } catch (error) {
+          const errorInfo = {
+            transactionId: transaction._id,
+            txHash: transaction.txHash,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          };
+
+          logger.error(
+            "Error processing transaction in cleanup",
+            error as Error,
+            errorInfo
+          );
+          report.errors.push(errorInfo);
+          errors++;
+          report.transactions.errors++;
+        }
+      }
+
+      const endTime = new Date();
+      report.endTime = endTime;
+      report.duration = endTime.getTime() - startTime.getTime();
+
+      logger.info("Comprehensive pending transaction cleanup completed", {
+        fixed,
+        errors,
+        skipped,
+        failed,
+        duration: report.duration,
+        report,
+      });
+
+      return { fixed, errors, skipped, failed, report };
+    } catch (error) {
+      const endTime = new Date();
+      report.endTime = endTime;
+      report.duration = endTime.getTime() - startTime.getTime();
+
+      logger.error(
+        "Error in comprehensive pending transaction cleanup",
+        error as Error
+      );
+      return { fixed: 0, errors: 1, skipped: 0, failed: 0, report };
     }
   }
 

@@ -270,6 +270,21 @@ export const NotificationTemplates = {
     },
   }),
 
+  paymentSent: (amount: string, receiverName: string): NotificationOptions => ({
+    notification: {
+      title: "Payment Sent",
+      body: `Your payment of $${amount} to ${receiverName} has been confirmed`,
+      icon: "/icons/success-icon.png",
+      clickAction: "/transactions",
+    },
+    data: {
+      type: "payment_sent",
+      amount,
+      receiver: receiverName,
+      timestamp: new Date().toISOString(),
+    },
+  }),
+
   tipReceived: (amount: string, senderName?: string): NotificationOptions => ({
     notification: {
       title: "Tip Received",

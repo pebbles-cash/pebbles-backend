@@ -77,6 +77,15 @@ const serverlessConfiguration: AWS = {
             ],
             Resource: "arn:aws:logs:${self:provider.region}:*:*",
           },
+          {
+            Effect: "Allow",
+            Action: [
+              "events:PutEvents",
+              "events:DescribeRule",
+              "events:ListRules",
+            ],
+            Resource: "*",
+          },
         ],
       },
     },
@@ -428,12 +437,46 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    comprehensivePendingTransactionCleanup: {
+      handler:
+        "src/handlers/transactions.comprehensivePendingTransactionCleanup",
+      events: [
+        {
+          http: {
+            path: "/api/transactions/cleanup-pending",
+            method: "post",
+            cors: true,
+          },
+        },
+      ],
+    },
     getSupportedNetworks: {
       handler: "src/handlers/transactions.getSupportedNetworks",
       events: [
         {
           http: {
             path: "/api/transactions/networks",
+            method: "get",
+            cors: true,
+          },
+        },
+      ],
+    },
+    // Scheduled tasks for pending transaction cleanup
+    cleanupPendingTransactions: {
+      handler: "src/handlers/scheduled-tasks.cleanupPendingTransactions",
+      events: [
+        {
+          schedule: "rate(5 minutes)", // Run every 5 minutes
+        },
+      ],
+    },
+    scheduledTaskHealthCheck: {
+      handler: "src/handlers/scheduled-tasks.scheduledTaskHealthCheck",
+      events: [
+        {
+          http: {
+            path: "/api/scheduled-tasks/health",
             method: "get",
             cors: true,
           },

@@ -1,16 +1,25 @@
-import { Schema, model } from "mongoose";
-import { ITransaction, ITransactionMetadata } from "../types";
+import mongoose, { Schema, Document } from "mongoose";
 
-const transactionMetadataSchema = new Schema<ITransactionMetadata>(
-  {
-    orderId: { type: Schema.Types.ObjectId, ref: "Order" },
-    subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription" },
-    note: String,
-    category: String,
-    anonymous: Boolean,
-  },
-  { _id: false }
-);
+export interface ITransaction extends Document {
+  type: "payment" | "tip" | "subscription";
+  fromUserId?: mongoose.Types.ObjectId;
+  toUserId: mongoose.Types.ObjectId;
+  fromAddress: string;
+  toAddress: string;
+  amount: string;
+  tokenAddress: string;
+  sourceChain: string;
+  destinationChain: string;
+  txHash?: string;
+  status: "pending" | "completed" | "failed";
+  category: string;
+  tags: string[];
+  client?: string;
+  projectId?: string;
+  metadata?: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const transactionSchema = new Schema<ITransaction>(
   {
@@ -28,7 +37,10 @@ const transactionSchema = new Schema<ITransaction>(
       ref: "User",
       required: true,
     },
-    fromAddress: String,
+    fromAddress: {
+      type: String,
+      required: true,
+    },
     toAddress: {
       type: String,
       required: true,
@@ -37,7 +49,10 @@ const transactionSchema = new Schema<ITransaction>(
       type: String,
       required: true,
     },
-    tokenAddress: String, // ERC-20 token or native currency
+    tokenAddress: {
+      type: String,
+      required: true,
+    },
     sourceChain: {
       type: String,
       required: true,
@@ -46,50 +61,68 @@ const transactionSchema = new Schema<ITransaction>(
       type: String,
       required: true,
     },
-    txHash: String,
+    txHash: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     status: {
       type: String,
       required: true,
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
-    category: { type: String, required: true }, // e.g., 'design', 'writing', 'consulting'
-    tags: { type: [String], default: [] }, // user-defined tags
-    client: String, // for freelancers to tag client-specific work
-    projectId: String, // to group transactions by project
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    category: {
+      type: String,
+      required: true,
+      default: "uncategorized",
     },
-    updatedAt: { type: Date, default: Date.now },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    client: {
+      type: String,
+    },
+    projectId: {
+      type: String,
+    },
     metadata: {
-      type: transactionMetadataSchema,
-      default: () => ({}),
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// Create indexes
-transactionSchema.index({ fromUserId: 1 });
-transactionSchema.index({ toUserId: 1 });
-transactionSchema.index({ status: 1 });
-transactionSchema.index({ createdAt: -1 });
-transactionSchema.index({ txHash: 1 }, { sparse: true });
-transactionSchema.index({ "metadata.orderId": 1 }, { sparse: true });
-transactionSchema.index({ "metadata.subscriptionId": 1 }, { sparse: true });
-
-// indices for analytics
-transactionSchema.index({ toUserId: 1, createdAt: -1, type: 1 });
-transactionSchema.index({ fromUserId: 1, createdAt: -1, type: 1 });
+// Indexes for optimal query performance
+transactionSchema.index({ status: 1, createdAt: 1 }); // For pending transaction queries
+transactionSchema.index({ txHash: 1 }); // For transaction hash lookups
+transactionSchema.index({ fromUserId: 1, createdAt: -1 }); // For user's sent transactions
+transactionSchema.index({ toUserId: 1, createdAt: -1 }); // For user's received transactions
+transactionSchema.index({ "metadata.isPending": 1, createdAt: 1 }); // For pending transaction cleanup
+transactionSchema.index({ fromAddress: 1, toAddress: 1 }); // For address-based queries
 transactionSchema.index({
-  toUserId: 1,
-  type: 1,
-  "metadata.category": 1,
-  createdAt: -1,
+  status: 1,
+  fromAddress: 1,
+  toAddress: 1,
+  amount: 1,
+}); // Composite index for pending cleanup
+
+// Compound index for comprehensive pending transaction queries
+transactionSchema.index({
+  status: 1,
+  "metadata.isPending": 1,
+  fromAddress: 1,
+  toAddress: 1,
+  amount: 1,
+  tokenAddress: 1,
+  createdAt: 1,
 });
 
-export const Transaction = model<ITransaction>(
+export const Transaction = mongoose.model<ITransaction>(
   "Transaction",
   transactionSchema
 );

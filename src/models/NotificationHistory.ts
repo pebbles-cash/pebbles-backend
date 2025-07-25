@@ -4,6 +4,7 @@ export interface INotificationHistory {
   userId: Types.ObjectId;
   type:
     | "payment_received"
+    | "payment_sent"
     | "tip_received"
     | "subscription_renewal"
     | "new_subscriber"
@@ -18,6 +19,8 @@ export interface INotificationHistory {
   senderId?: Types.ObjectId;
   senderName?: string;
   senderAvatar?: string;
+  receiverId?: Types.ObjectId;
+  receiverName?: string;
   amount?: string;
   currency?: string;
   transactionId?: Types.ObjectId;
@@ -41,6 +44,7 @@ const notificationHistorySchema = new Schema<INotificationHistory>(
       required: true,
       enum: [
         "payment_received",
+        "payment_sent",
         "tip_received",
         "subscription_renewal",
         "new_subscriber",
@@ -67,6 +71,12 @@ const notificationHistorySchema = new Schema<INotificationHistory>(
     },
     senderName: String,
     senderAvatar: String,
+    receiverId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+    receiverName: String,
     amount: String,
     currency: String,
     transactionId: {

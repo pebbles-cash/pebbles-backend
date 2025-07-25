@@ -4,6 +4,7 @@ import { Transaction, User } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 import { getTokenSymbol } from "../utils/token-symbols";
+import { sendTransactionConfirmationNotification } from "../services/notification-service";
 
 /**
  * Create a new transaction
@@ -208,6 +209,37 @@ export const updateTransaction = requireAuth(
 
       if (!updatedTransaction) {
         return error("Transaction not found after update", 404);
+      }
+
+      // Send notifications if status was changed to completed
+      if (status === "completed" && transaction.status !== "completed") {
+        try {
+          if (updatedTransaction.fromUserId && updatedTransaction.toUserId) {
+            const currency = getTokenSymbol(
+              updatedTransaction.tokenAddress,
+              updatedTransaction.sourceChain
+            );
+
+            await sendTransactionConfirmationNotification(
+              updatedTransaction._id.toString(),
+              updatedTransaction.fromUserId.toString(),
+              updatedTransaction.toUserId.toString(),
+              updatedTransaction.amount,
+              currency,
+              updatedTransaction.type as "payment" | "tip" | "subscription"
+            );
+
+            console.log(
+              `Transaction confirmation notifications sent for manually updated transaction ${updatedTransaction._id}`
+            );
+          }
+        } catch (notificationError) {
+          console.error(
+            "Failed to send transaction confirmation notifications:",
+            notificationError
+          );
+          // Don't fail the update if notification fails
+        }
       }
 
       // Format response
@@ -1208,6 +1240,35 @@ export const fixPendingTransactions = requireAuth(
     } catch (err) {
       console.error("Fix pending transactions error:", err);
       return error("Could not fix pending transactions", 500);
+    }
+  }
+);
+
+/**
+ * Comprehensive pending transaction cleanup
+ * POST /api/transactions/cleanup-pending
+ */
+export const comprehensivePendingTransactionCleanup = requireAuth(
+  async (
+    event: AuthenticatedAPIGatewayProxyEvent
+  ): Promise<APIGatewayProxyResult> => {
+    try {
+      // Import the transaction status service
+      const { transactionStatusService } = await import(
+        "../services/transaction-status-service"
+      );
+
+      // Run comprehensive cleanup
+      const result =
+        await transactionStatusService.comprehensivePendingTransactionCleanup();
+
+      return success({
+        message: "Comprehensive pending transaction cleanup completed",
+        result,
+      });
+    } catch (err) {
+      console.error("Comprehensive cleanup error:", err);
+      return error("Could not run comprehensive cleanup", 500);
     }
   }
 );

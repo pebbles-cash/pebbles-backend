@@ -18,6 +18,8 @@ export async function storeNotification(
     senderId?: string;
     senderName?: string;
     senderAvatar?: string;
+    receiverId?: string;
+    receiverName?: string;
     amount?: string;
     currency?: string;
     transactionId?: string;
@@ -34,6 +36,8 @@ export async function storeNotification(
       senderId: options.senderId,
       senderName: options.senderName,
       senderAvatar: options.senderAvatar,
+      receiverId: options.receiverId,
+      receiverName: options.receiverName,
       amount: options.amount,
       currency: options.currency,
       transactionId: options.transactionId,
@@ -429,6 +433,106 @@ export async function sendMarketingNotification(
     console.log(`Marketing notification sent to ${results.successful} users`);
   } catch (error) {
     console.error("Error sending marketing notification:", error);
+  }
+}
+
+/**
+ * Send transaction confirmation notification
+ */
+export async function sendTransactionConfirmationNotification(
+  transactionId: string,
+  senderUserId: string,
+  receiverUserId: string,
+  amount: string,
+  currency: string,
+  transactionType: "payment" | "tip" | "subscription" = "payment"
+): Promise<void> {
+  try {
+    // Get user details for sender and receiver
+    const [sender, receiver] = await Promise.all([
+      User.findById(senderUserId).select("_id username displayName avatar"),
+      User.findById(receiverUserId).select("_id username displayName avatar"),
+    ]);
+
+    if (!sender || !receiver) {
+      console.error(
+        "Sender or receiver not found for transaction confirmation"
+      );
+      return;
+    }
+
+    const senderName = sender.displayName || sender.username || "Anonymous";
+    const receiverName =
+      receiver.displayName || receiver.username || "Anonymous";
+
+    // Send notification to receiver (payment received)
+    const receiverNotificationOptions = NotificationTemplates.paymentReceived(
+      amount,
+      senderName
+    );
+
+    await sendNotificationToUser(
+      receiverUserId,
+      receiverNotificationOptions,
+      "paymentReceived"
+    );
+
+    // Store notification in database for receiver
+    await storeNotification(
+      receiverUserId,
+      "payment_received",
+      receiverNotificationOptions.notification?.title || "Payment Received",
+      receiverNotificationOptions.notification?.body ||
+        `You received ${amount} ${currency} from ${senderName}`,
+      {
+        senderId: senderUserId,
+        senderName,
+        amount,
+        currency,
+        transactionId,
+        clickAction: receiverNotificationOptions.notification?.clickAction,
+        metadata: receiverNotificationOptions.data,
+      }
+    );
+
+    // Send notification to sender (payment sent)
+    const senderNotificationOptions = NotificationTemplates.paymentSent(
+      amount,
+      receiverName
+    );
+
+    await sendNotificationToUser(
+      senderUserId,
+      senderNotificationOptions,
+      "payments"
+    );
+
+    // Store notification in database for sender
+    await storeNotification(
+      senderUserId,
+      "payment_sent",
+      senderNotificationOptions.notification?.title || "Payment Sent",
+      senderNotificationOptions.notification?.body ||
+        `Your payment of ${amount} ${currency} to ${receiverName} has been confirmed`,
+      {
+        receiverId: receiverUserId,
+        receiverName,
+        amount,
+        currency,
+        transactionId,
+        clickAction: senderNotificationOptions.notification?.clickAction,
+        metadata: senderNotificationOptions.data,
+      }
+    );
+
+    console.log(
+      `Transaction confirmation notifications sent for transaction ${transactionId}`
+    );
+  } catch (error) {
+    console.error(
+      `Error sending transaction confirmation notifications for transaction ${transactionId}:`,
+      error
+    );
   }
 }
 
