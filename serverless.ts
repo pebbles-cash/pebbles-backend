@@ -473,6 +473,15 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    // Scheduled task for auto-updating pending FiatInteractions
+    autoUpdatePendingFiatInteractions: {
+      handler: "src/handlers/scheduled-tasks.autoUpdatePendingFiatInteractions",
+      events: [
+        {
+          schedule: "rate(10 minutes)", // Run every 10 minutes
+        },
+      ],
+    },
     scheduledTaskHealthCheck: {
       handler: "src/handlers/scheduled-tasks.scheduledTaskHealthCheck",
       events: [

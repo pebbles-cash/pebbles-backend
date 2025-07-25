@@ -685,15 +685,7 @@ async function processFinancialTransaction(
       sourceCurrencyCode,
       destinationAmount,
       destinationCurrencyCode,
-      // Legacy fields for backward compatibility
-      fiatAmount: {
-        value: sourceAmount,
-        currency: sourceCurrencyCode,
-      },
-      cryptoAmount: {
-        value: destinationAmount,
-        currency: destinationCurrencyCode,
-      },
+
       exchangeRate:
         transactionData.exchangeRate || transaction.exchangeRate || 1,
       fees,
@@ -1063,15 +1055,6 @@ async function handleCryptoTransactionUpdate(
         fiatInteraction.destinationAmount = destinationAmount;
         fiatInteraction.destinationCurrencyCode = destinationCurrencyCode;
 
-        // Update legacy fields for backward compatibility
-        fiatInteraction.fiatAmount = {
-          value: sourceAmount,
-          currency: sourceCurrencyCode,
-        };
-        fiatInteraction.cryptoAmount = {
-          value: destinationAmount,
-          currency: destinationCurrencyCode,
-        };
         fiatInteraction.fees = fees;
         fiatInteraction.meldPaymentTransactionStatus = transactionData.status;
         fiatInteraction.meldTransactionType = transactionData.transactionType;
@@ -1127,6 +1110,143 @@ async function handleCryptoTransactionUpdate(
       timestamp: new Date(),
       data: transactionDetails,
     });
+
+    // Automatically trigger detailed update if we have a customer ID
+    if (customerId && fiatInteraction.status === "pending") {
+      try {
+        logger.info(
+          "Automatically triggering detailed update for new transaction",
+          {
+            customerId,
+            fiatInteractionId: fiatInteraction._id.toString(),
+            eventType,
+          }
+        );
+
+        // Import the meldService
+        const { meldService } = await import("../../services/meld-service");
+
+        // Fetch detailed transaction information from Meld API
+        const detailedTransactionData =
+          await meldService.getPaymentTransaction(customerId);
+
+        if (detailedTransactionData?.transaction) {
+          const transactionData = detailedTransactionData.transaction;
+
+          // Extract amounts from detailed transaction data using Meld API format
+          const sourceAmount =
+            transactionData.sourceAmount || fiatInteraction.sourceAmount || 0;
+          const sourceCurrencyCode =
+            transactionData.sourceCurrencyCode ||
+            fiatInteraction.sourceCurrencyCode ||
+            "USD";
+          const destinationAmount =
+            transactionData.destinationAmount ||
+            fiatInteraction.destinationAmount ||
+            0;
+          const destinationCurrencyCode =
+            transactionData.destinationCurrencyCode ||
+            fiatInteraction.destinationCurrencyCode ||
+            "USDT";
+
+          // Calculate fees from the difference between source and destination amounts
+          const feeAmount = sourceAmount - destinationAmount;
+
+          const fees = {
+            serviceFee: {
+              value: feeAmount,
+              currency: sourceCurrencyCode,
+            },
+            networkFee: {
+              value: 0,
+              currency: sourceCurrencyCode,
+            },
+            totalFees: {
+              value: feeAmount,
+              currency: sourceCurrencyCode,
+            },
+          };
+
+          // Update the FiatInteraction with detailed data using Meld API format
+          fiatInteraction.sourceAmount = sourceAmount;
+          fiatInteraction.sourceCurrencyCode = sourceCurrencyCode;
+          fiatInteraction.destinationAmount = destinationAmount;
+          fiatInteraction.destinationCurrencyCode = destinationCurrencyCode;
+
+          fiatInteraction.fees = fees;
+          fiatInteraction.meldPaymentTransactionStatus = transactionData.status;
+          fiatInteraction.meldTransactionType = transactionData.transactionType;
+          fiatInteraction.exchangeRate =
+            transactionData.exchangeRate || fiatInteraction.exchangeRate || 1;
+
+          // Auto-update status based on Meld transaction status
+          if (
+            transactionData.status === "SETTLED" &&
+            fiatInteraction.status === "pending"
+          ) {
+            await fiatInteraction.updateStatus("completed", {
+              transactionHash: transactionData.serviceTransactionId,
+            });
+
+            // Add webhook event to track this automatic status update
+            await fiatInteraction.addWebhookEvent("AUTO_STATUS_UPDATE", {
+              previousStatus: "pending",
+              newStatus: "completed",
+              meldStatus: transactionData.status,
+              timestamp: new Date().toISOString(),
+              reason: "Transaction settled in Meld API",
+            });
+          } else if (
+            transactionData.status === "FAILED" &&
+            fiatInteraction.status === "pending"
+          ) {
+            await fiatInteraction.updateStatus("failed", {
+              reason: "Transaction failed in Meld API",
+            });
+
+            // Add webhook event to track this automatic status update
+            await fiatInteraction.addWebhookEvent("AUTO_STATUS_UPDATE", {
+              previousStatus: "pending",
+              newStatus: "failed",
+              meldStatus: transactionData.status,
+              timestamp: new Date().toISOString(),
+              reason: "Transaction failed in Meld API",
+            });
+          }
+
+          await fiatInteraction.save();
+
+          logger.info(
+            "Successfully updated FiatInteraction with detailed data automatically",
+            {
+              fiatInteractionId: fiatInteraction._id.toString(),
+              customerId,
+              status: fiatInteraction.status,
+              meldStatus: transactionData.status,
+            }
+          );
+        } else {
+          logger.warn(
+            "No detailed transaction data available for automatic update",
+            {
+              customerId,
+              fiatInteractionId: fiatInteraction._id.toString(),
+            }
+          );
+        }
+      } catch (autoUpdateError) {
+        logger.error(
+          "Error during automatic detailed update",
+          autoUpdateError as Error,
+          {
+            customerId,
+            fiatInteractionId: fiatInteraction._id.toString(),
+            eventType,
+          }
+        );
+        // Don't fail the webhook processing if auto-update fails
+      }
+    }
 
     // Only send notification if user is assigned
     if (fiatInteraction.userId) {

@@ -541,9 +541,7 @@ export interface IFiatInteraction extends Document {
   sourceCurrencyCode: string;
   destinationAmount: number;
   destinationCurrencyCode: string;
-  // Legacy fields for backward compatibility
-  fiatAmount: IAmount;
-  cryptoAmount: ICryptoAmount;
+
   exchangeRate: number;
   fees: IFeeBreakdown;
   sourceAccount: IAccountDetails;

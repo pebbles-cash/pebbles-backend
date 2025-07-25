@@ -126,16 +126,7 @@ const fiatInteractionSchema = new Schema<IFiatInteraction>(
     sourceCurrencyCode: { type: String, required: true, uppercase: true },
     destinationAmount: { type: Number, required: true },
     destinationCurrencyCode: { type: String, required: true, uppercase: true },
-    // Legacy fields for backward compatibility
-    fiatAmount: {
-      value: { type: Number, required: true },
-      currency: { type: String, required: true, uppercase: true },
-    },
-    cryptoAmount: {
-      value: { type: Number, required: true },
-      currency: { type: String, required: true, uppercase: true },
-      tokenAddress: String, // For ERC-20 tokens
-    },
+
     exchangeRate: {
       type: Number,
       required: true,

@@ -37,8 +37,10 @@ export const createFiatInteraction = requireAuth(
         widgetUrl,
         token,
         // Transaction details
-        fiatAmount,
-        cryptoAmount,
+        sourceAmount,
+        sourceCurrencyCode,
+        destinationAmount,
+        destinationCurrencyCode,
         exchangeRate,
         fees,
         sourceAccount,
@@ -53,8 +55,16 @@ export const createFiatInteraction = requireAuth(
         return error("Meld session ID and customer ID are required", 400);
       }
 
-      if (!fiatAmount || !cryptoAmount) {
-        return error("Fiat and crypto amounts are required", 400);
+      if (
+        !sourceAmount ||
+        !sourceCurrencyCode ||
+        !destinationAmount ||
+        !destinationCurrencyCode
+      ) {
+        return error(
+          "Source and destination amounts and currencies are required",
+          400
+        );
       }
 
       // Check if FiatInteraction already exists for this customer
@@ -79,8 +89,10 @@ export const createFiatInteraction = requireAuth(
         meldExternalCustomerId: externalCustomerId,
         meldExternalSessionId: externalSessionId,
         // Transaction details
-        fiatAmount,
-        cryptoAmount,
+        sourceAmount,
+        sourceCurrencyCode,
+        destinationAmount,
+        destinationCurrencyCode,
         exchangeRate,
         fees,
         sourceAccount,
@@ -280,16 +292,6 @@ export const updateFiatInteractionDetails = requireAuth(
       fiatInteraction.sourceCurrencyCode = sourceCurrencyCode;
       fiatInteraction.destinationAmount = destinationAmount;
       fiatInteraction.destinationCurrencyCode = destinationCurrencyCode;
-
-      // Update legacy fields for backward compatibility
-      fiatInteraction.fiatAmount = {
-        value: sourceAmount,
-        currency: sourceCurrencyCode,
-      };
-      fiatInteraction.cryptoAmount = {
-        value: destinationAmount,
-        currency: destinationCurrencyCode,
-      };
 
       fiatInteraction.fees = fees;
       fiatInteraction.meldPaymentTransactionStatus = transactionData.status;

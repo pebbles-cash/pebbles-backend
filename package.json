@@ -24,7 +24,8 @@
     "ssm:prod": "NODE_ENV=production ./scripts/setup-ssm-parameters.sh prod",
     "logs:dev": "serverless logs --stage dev --region us-east-1",
     "logs:staging": "serverless logs --stage staging --region us-east-1",
-    "logs:prod": "serverless logs --stage prod --region us-east-1"
+    "logs:prod": "serverless logs --stage prod --region us-east-1",
+    "retroactive-meld-update": "node retroactive-meld-update.js"
   },
   "dependencies": {
     "aws-sdk": "^2.1692.0",

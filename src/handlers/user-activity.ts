@@ -239,23 +239,6 @@ export const getUserActivity = requireAuth(
           amount = fiat.destinationAmount || 0;
         }
 
-        // Fallback to legacy fields if new fields are not available
-        if (!amount || amount === 0) {
-          if (fiat.fiatAmount?.value) {
-            amount = fiat.fiatAmount.value;
-            currency = fiat.fiatAmount.currency || currency;
-          } else if (fiat.cryptoAmount?.value) {
-            amount = fiat.cryptoAmount.value;
-            currency = fiat.cryptoAmount.currency || currency;
-          }
-        }
-
-        // If it's a crypto amount with a token address, get the symbol
-        if (fiat.cryptoAmount?.tokenAddress) {
-          const network = fiat.blockchain || "ethereum";
-          currency = getTokenSymbol(fiat.cryptoAmount.tokenAddress, network);
-        }
-
         activities.push({
           id: fiat._id,
           amount: amount.toString(),
