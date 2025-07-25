@@ -602,6 +602,65 @@ async function processFinancialTransaction(
       return;
     }
 
+    // Fetch detailed transaction information from Meld API if we have a customer ID
+    let detailedTransactionData = null;
+    if (transaction.customerId) {
+      try {
+        logger.info("Fetching detailed transaction data from Meld API", {
+          customerId: transaction.customerId,
+        });
+        detailedTransactionData = await meldService.getPaymentTransaction(
+          transaction.customerId
+        );
+        logger.info("Successfully fetched detailed transaction data", {
+          customerId: transaction.customerId,
+          hasTransactionData: !!detailedTransactionData?.transaction,
+        });
+      } catch (apiError) {
+        logger.error(
+          "Failed to fetch detailed transaction data from Meld API",
+          apiError as Error,
+          {
+            customerId: transaction.customerId,
+          }
+        );
+        // Continue with webhook data only if API call fails
+      }
+    }
+
+    // Use detailed transaction data if available, otherwise fall back to webhook data
+    const transactionData = detailedTransactionData?.transaction || transaction;
+
+    // Extract amounts from detailed transaction data using Meld API format
+    const sourceAmount =
+      transactionData.sourceAmount || transaction.amount || 0;
+    const sourceCurrencyCode =
+      transactionData.sourceCurrencyCode || transaction.currency || "USD";
+    const destinationAmount =
+      transactionData.destinationAmount || transaction.cryptoAmount || 0;
+    const destinationCurrencyCode =
+      transactionData.destinationCurrencyCode ||
+      transaction.cryptoCurrency ||
+      "USDT";
+
+    // Calculate fees from the difference between source and destination amounts
+    const feeAmount = sourceAmount - destinationAmount;
+
+    const fees = {
+      serviceFee: {
+        value: feeAmount,
+        currency: sourceCurrencyCode,
+      },
+      networkFee: {
+        value: 0,
+        currency: sourceCurrencyCode,
+      },
+      totalFees: {
+        value: feeAmount,
+        currency: sourceCurrencyCode,
+      },
+    };
+
     // Create new FiatInteraction record
     const fiatInteraction = new FiatInteraction({
       userId,
@@ -615,33 +674,51 @@ async function processFinancialTransaction(
       meldProfileId: transaction.profileId,
       meldExternalCustomerId: transaction.externalCustomerId,
       meldExternalSessionId: transaction.externalSessionId,
-      meldTransactionType: transaction.transactionType,
-      meldPaymentTransactionStatus: transaction.paymentTransactionStatus,
+      meldTransactionType:
+        transactionData.transactionType || transaction.transactionType,
+      meldPaymentTransactionStatus:
+        transactionData.status || transaction.paymentTransactionStatus,
       // Legacy field for backward compatibility
       externalTransactionId: transaction.paymentTransactionId,
-      // Note: Some fields may not be available in the webhook payload
-      // and would need to be populated from other sources
+      // Transaction data from detailed API response using Meld API format
+      sourceAmount,
+      sourceCurrencyCode,
+      destinationAmount,
+      destinationCurrencyCode,
+      // Legacy fields for backward compatibility
       fiatAmount: {
-        value: transaction.amount || 0,
-        currency: transaction.currency || "USD",
+        value: sourceAmount,
+        currency: sourceCurrencyCode,
       },
       cryptoAmount: {
-        value: transaction.cryptoAmount || 0,
-        currency: transaction.cryptoCurrency || "BTC",
+        value: destinationAmount,
+        currency: destinationCurrencyCode,
       },
-      exchangeRate: transaction.exchangeRate,
-      fees: transaction.fees,
-      sourceAccount: transaction.sourceAccount,
-      destinationAccount: transaction.destinationAccount,
-      blockchain: transaction.blockchain,
+      exchangeRate:
+        transactionData.exchangeRate || transaction.exchangeRate || 1,
+      fees,
+      sourceAccount: transaction.sourceAccount || {
+        type: "bank_account",
+        identifier: "Meld",
+      },
+      destinationAccount: transaction.destinationAccount || {
+        type: "crypto_wallet",
+        identifier: "Unknown",
+      },
+      blockchain: transaction.blockchain || "ethereum",
       transactionHash: transaction.transactionHash,
       initiatedAt: new Date(transaction.createdAt || Date.now()),
       completedAt: new Date(transaction.completedAt || Date.now()),
-      ipAddress: transaction.ipAddress,
-      deviceInfo: transaction.deviceInfo,
-      kycLevel: transaction.kycLevel,
+      ipAddress: transaction.ipAddress || "Unknown",
+      deviceInfo: transaction.deviceInfo || {
+        userAgent: "Unknown",
+        platform: "web",
+        fingerprint: "Unknown",
+      },
+      kycLevel: transaction.kycLevel || "none",
       metadata: {
         meldEventId: eventId,
+        meldTransactionId: transaction.paymentTransactionId,
         ...transaction.metadata,
       },
     });
@@ -652,6 +729,7 @@ async function processFinancialTransaction(
       userId,
       transactionId: transaction.paymentTransactionId,
       fiatInteractionId: fiatInteraction._id.toString(),
+      hasDetailedData: !!detailedTransactionData,
     });
   } catch (err) {
     logger.error("Error processing financial transaction", err as Error, {
@@ -802,6 +880,31 @@ async function handleCryptoTransactionUpdate(
       meldCustomerId: customerId,
     });
 
+    // Fetch detailed transaction information from Meld API if we have a customer ID
+    let detailedTransactionData = null;
+    if (customerId) {
+      try {
+        logger.info("Fetching detailed transaction data from Meld API", {
+          customerId,
+        });
+        detailedTransactionData =
+          await meldService.getPaymentTransaction(customerId);
+        logger.info("Successfully fetched detailed transaction data", {
+          customerId,
+          hasTransactionData: !!detailedTransactionData?.transaction,
+        });
+      } catch (apiError) {
+        logger.error(
+          "Failed to fetch detailed transaction data from Meld API",
+          apiError as Error,
+          {
+            customerId,
+          }
+        );
+        // Continue with webhook data only if API call fails
+      }
+    }
+
     if (!fiatInteraction) {
       logger.info("Creating new FiatInteraction for Meld transaction", {
         customerId,
@@ -809,6 +912,42 @@ async function handleCryptoTransactionUpdate(
         eventType,
         eventId,
       });
+
+      // Use detailed transaction data if available, otherwise fall back to webhook data
+      const transactionData =
+        detailedTransactionData?.transaction || transactionDetails;
+
+      // Extract amounts from detailed transaction data using Meld API format
+      const sourceAmount =
+        transactionData.sourceAmount || transactionDetails.amount || 0;
+      const sourceCurrencyCode =
+        transactionData.sourceCurrencyCode ||
+        transactionDetails.currency ||
+        "USD";
+      const destinationAmount =
+        transactionData.destinationAmount ||
+        transactionDetails.cryptoAmount ||
+        0;
+      const destinationCurrencyCode =
+        transactionData.destinationCurrencyCode ||
+        transactionDetails.cryptoCurrency ||
+        "USDT";
+      const feeAmount = sourceAmount - destinationAmount;
+
+      const fees = {
+        serviceFee: {
+          value: feeAmount,
+          currency: sourceCurrencyCode,
+        },
+        networkFee: {
+          value: 0,
+          currency: sourceCurrencyCode,
+        },
+        totalFees: {
+          value: feeAmount,
+          currency: sourceCurrencyCode,
+        },
+      };
 
       // Create new FiatInteraction without userId (will be assigned later)
       fiatInteraction = new FiatInteraction({
@@ -825,26 +964,29 @@ async function handleCryptoTransactionUpdate(
         meldProfileId: transactionDetails.profileId,
         meldExternalCustomerId: transactionDetails.externalCustomerId,
         meldExternalSessionId: transactionDetails.externalSessionId,
-        meldTransactionType: transactionDetails.transactionType,
+        meldTransactionType:
+          transactionData.transactionType || transactionDetails.transactionType,
         meldPaymentTransactionStatus:
-          transactionDetails.paymentTransactionStatus,
+          transactionData.status || transactionDetails.paymentTransactionStatus,
         // Legacy field for backward compatibility
         externalTransactionId: paymentTransactionId,
-        // Basic transaction data (will be updated with more details later)
+        // Transaction data from detailed API response using Meld API format
+        sourceAmount,
+        sourceCurrencyCode,
+        destinationAmount,
+        destinationCurrencyCode,
+        // Legacy fields for backward compatibility
         fiatAmount: {
-          value: transactionDetails.amount || 0,
-          currency: transactionDetails.currency || "USD",
+          value: sourceAmount,
+          currency: sourceCurrencyCode,
         },
         cryptoAmount: {
-          value: transactionDetails.cryptoAmount || 0,
-          currency: transactionDetails.cryptoCurrency || "BTC",
+          value: destinationAmount,
+          currency: destinationCurrencyCode,
         },
-        exchangeRate: transactionDetails.exchangeRate || 1,
-        fees: {
-          serviceFee: { value: 0, currency: "USD" },
-          networkFee: { value: 0, currency: "USD" },
-          totalFees: { value: 0, currency: "USD" },
-        },
+        exchangeRate:
+          transactionData.exchangeRate || transactionDetails.exchangeRate || 1,
+        fees,
         sourceAccount: {
           type: "bank_account",
           identifier: "Meld",
@@ -865,6 +1007,7 @@ async function handleCryptoTransactionUpdate(
         metadata: {
           meldEventId: eventId,
           meldAccountId: accountId,
+          meldTransactionId: paymentTransactionId,
           ...transactionDetails.metadata,
         },
       });
@@ -875,6 +1018,73 @@ async function handleCryptoTransactionUpdate(
         customerId,
         eventType,
       });
+    } else {
+      // Update existing FiatInteraction with detailed transaction data if available
+      if (detailedTransactionData?.transaction) {
+        const transactionData = detailedTransactionData.transaction;
+
+        // Update amounts with detailed data using Meld API format
+        const sourceAmount =
+          transactionData.sourceAmount || fiatInteraction.sourceAmount || 0;
+        const sourceCurrencyCode =
+          transactionData.sourceCurrencyCode ||
+          fiatInteraction.sourceCurrencyCode ||
+          "USD";
+        const destinationAmount =
+          transactionData.destinationAmount ||
+          fiatInteraction.destinationAmount ||
+          0;
+        const destinationCurrencyCode =
+          transactionData.destinationCurrencyCode ||
+          fiatInteraction.destinationCurrencyCode ||
+          "USDT";
+
+        // Calculate fees from the difference between source and destination amounts
+        const feeAmount = sourceAmount - destinationAmount;
+
+        const fees = {
+          serviceFee: {
+            value: feeAmount,
+            currency: sourceCurrencyCode,
+          },
+          networkFee: {
+            value: 0,
+            currency: sourceCurrencyCode,
+          },
+          totalFees: {
+            value: feeAmount,
+            currency: sourceCurrencyCode,
+          },
+        };
+
+        // Update the FiatInteraction with detailed data using Meld API format
+        fiatInteraction.sourceAmount = sourceAmount;
+        fiatInteraction.sourceCurrencyCode = sourceCurrencyCode;
+        fiatInteraction.destinationAmount = destinationAmount;
+        fiatInteraction.destinationCurrencyCode = destinationCurrencyCode;
+
+        // Update legacy fields for backward compatibility
+        fiatInteraction.fiatAmount = {
+          value: sourceAmount,
+          currency: sourceCurrencyCode,
+        };
+        fiatInteraction.cryptoAmount = {
+          value: destinationAmount,
+          currency: destinationCurrencyCode,
+        };
+        fiatInteraction.fees = fees;
+        fiatInteraction.meldPaymentTransactionStatus = transactionData.status;
+        fiatInteraction.meldTransactionType = transactionData.transactionType;
+
+        logger.info("Updated FiatInteraction with detailed transaction data", {
+          fiatInteractionId: fiatInteraction._id.toString(),
+          sourceAmount,
+          sourceCurrencyCode,
+          destinationAmount,
+          destinationCurrencyCode,
+          fees,
+        });
+      }
     }
 
     // Update Meld-specific fields from webhook data
@@ -942,6 +1152,7 @@ async function handleCryptoTransactionUpdate(
       customerId,
       fiatInteractionId: fiatInteraction._id.toString(),
       hasUser: !!fiatInteraction.userId,
+      hasDetailedData: !!detailedTransactionData,
     });
   } catch (err) {
     logger.error("Error handling crypto transaction update", err as Error, {
@@ -950,6 +1161,122 @@ async function handleCryptoTransactionUpdate(
       eventId,
       payload,
     });
+  }
+}
+
+/**
+ * Update existing FiatInteraction with detailed transaction data from Meld API
+ * This can be used to fix existing records that have incorrect or missing information
+ */
+async function updateFiatInteractionWithDetailedData(
+  fiatInteraction: any,
+  customerId: string
+): Promise<void> {
+  try {
+    logger.info("Updating FiatInteraction with detailed transaction data", {
+      fiatInteractionId: fiatInteraction._id.toString(),
+      customerId,
+    });
+
+    // Fetch detailed transaction information from Meld API
+    const detailedTransactionData =
+      await meldService.getPaymentTransaction(customerId);
+
+    if (!detailedTransactionData?.transaction) {
+      logger.warn("No detailed transaction data found", {
+        customerId,
+        fiatInteractionId: fiatInteraction._id.toString(),
+      });
+      return;
+    }
+
+    const transactionData = detailedTransactionData.transaction;
+
+    // Extract amounts from detailed transaction data using Meld API format
+    const sourceAmount =
+      transactionData.sourceAmount || fiatInteraction.sourceAmount || 0;
+    const sourceCurrencyCode =
+      transactionData.sourceCurrencyCode ||
+      fiatInteraction.sourceCurrencyCode ||
+      "USD";
+    const destinationAmount =
+      transactionData.destinationAmount ||
+      fiatInteraction.destinationAmount ||
+      0;
+    const destinationCurrencyCode =
+      transactionData.destinationCurrencyCode ||
+      fiatInteraction.destinationCurrencyCode ||
+      "USDT";
+
+    // Calculate fees from the difference between source and destination amounts
+    const feeAmount = sourceAmount - destinationAmount;
+
+    const fees = {
+      serviceFee: {
+        value: feeAmount,
+        currency: sourceCurrencyCode,
+      },
+      networkFee: {
+        value: 0,
+        currency: sourceCurrencyCode,
+      },
+      totalFees: {
+        value: feeAmount,
+        currency: sourceCurrencyCode,
+      },
+    };
+
+    // Update the FiatInteraction with detailed data using Meld API format
+    fiatInteraction.sourceAmount = sourceAmount;
+    fiatInteraction.sourceCurrencyCode = sourceCurrencyCode;
+    fiatInteraction.destinationAmount = destinationAmount;
+    fiatInteraction.destinationCurrencyCode = destinationCurrencyCode;
+
+    // Update legacy fields for backward compatibility
+    fiatInteraction.fiatAmount = {
+      value: sourceAmount,
+      currency: sourceCurrencyCode,
+    };
+    fiatInteraction.cryptoAmount = {
+      value: destinationAmount,
+      currency: destinationCurrencyCode,
+    };
+    fiatInteraction.fees = fees;
+    fiatInteraction.meldPaymentTransactionStatus = transactionData.status;
+    fiatInteraction.meldTransactionType = transactionData.transactionType;
+    fiatInteraction.exchangeRate =
+      transactionData.exchangeRate || fiatInteraction.exchangeRate || 1;
+
+    // Add metadata about the update
+    fiatInteraction.metadata = {
+      ...fiatInteraction.metadata,
+      lastDetailedUpdate: new Date().toISOString(),
+      meldCustomerId: customerId,
+    };
+
+    await fiatInteraction.save();
+
+    logger.info(
+      "Successfully updated FiatInteraction with detailed transaction data",
+      {
+        fiatInteractionId: fiatInteraction._id.toString(),
+        sourceAmount,
+        sourceCurrencyCode,
+        destinationAmount,
+        destinationCurrencyCode,
+        fees,
+        customerId,
+      }
+    );
+  } catch (err) {
+    logger.error(
+      "Error updating FiatInteraction with detailed data",
+      err as Error,
+      {
+        fiatInteractionId: fiatInteraction._id.toString(),
+        customerId,
+      }
+    );
   }
 }
 

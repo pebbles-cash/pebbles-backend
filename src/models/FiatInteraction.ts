@@ -121,6 +121,12 @@ const fiatInteractionSchema = new Schema<IFiatInteraction>(
       required: false,
       unique: false, // Remove unique constraint as we'll use Meld IDs
     },
+    // Meld API response format
+    sourceAmount: { type: Number, required: true },
+    sourceCurrencyCode: { type: String, required: true, uppercase: true },
+    destinationAmount: { type: Number, required: true },
+    destinationCurrencyCode: { type: String, required: true, uppercase: true },
+    // Legacy fields for backward compatibility
     fiatAmount: {
       value: { type: Number, required: true },
       currency: { type: String, required: true, uppercase: true },
@@ -218,8 +224,8 @@ fiatInteractionSchema.index({
 // Virtual for calculating net amount after fees
 fiatInteractionSchema.virtual("netFiatAmount").get(function () {
   return this.type === "onramp"
-    ? this.fiatAmount.value - this.fees.totalFees.value
-    : this.fiatAmount.value + this.fees.totalFees.value;
+    ? this.sourceAmount - this.fees.totalFees.value
+    : this.sourceAmount + this.fees.totalFees.value;
 });
 
 // Instance methods
@@ -301,10 +307,10 @@ fiatInteractionSchema.statics.getUserStats = async function (
       $group: {
         _id: "$type",
         totalTransactions: { $sum: 1 },
-        totalFiatVolume: { $sum: "$fiatAmount.value" },
-        totalCryptoVolume: { $sum: "$cryptoAmount.value" },
+        totalFiatVolume: { $sum: "$sourceAmount" },
+        totalCryptoVolume: { $sum: "$destinationAmount" },
         totalFees: { $sum: "$fees.totalFees.value" },
-        avgTransactionSize: { $avg: "$fiatAmount.value" },
+        avgTransactionSize: { $avg: "$sourceAmount" },
       },
     },
   ]);

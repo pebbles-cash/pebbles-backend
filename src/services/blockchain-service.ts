@@ -200,6 +200,11 @@ class BlockchainService {
       const tx = await client.getTransaction({ hash: txHash as `0x${string}` });
 
       if (!tx) {
+        logger.warn("Transaction not found on blockchain", {
+          network,
+          txHash,
+          error: "TransactionNotFoundError",
+        });
         return null;
       }
 
@@ -273,10 +278,26 @@ class BlockchainService {
         tokenAmount,
       };
     } catch (error) {
-      logger.error("Error getting transaction details", error as Error, {
-        network,
-        txHash,
-      });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const isTransactionNotFound =
+        errorMessage.includes("TransactionNotFoundError") ||
+        errorMessage.includes("not found") ||
+        errorMessage.includes("could not be found");
+
+      if (isTransactionNotFound) {
+        logger.warn("Transaction not found on blockchain", {
+          network,
+          txHash,
+          error: errorMessage,
+        });
+      } else {
+        logger.error("Error getting transaction details", error as Error, {
+          network,
+          txHash,
+          error: errorMessage,
+        });
+      }
       return null;
     }
   }

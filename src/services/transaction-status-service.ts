@@ -141,8 +141,8 @@ class TransactionStatusService {
 
         await pendingTransaction.save();
 
-        // Start monitoring for the transaction to appear on blockchain
-        this.monitorPendingTransaction(
+        // Do immediate check first (most transactions are mined within seconds)
+        this.immediateTransactionCheck(
           pendingTransaction._id.toString(),
           txHash,
           networkId,
@@ -332,6 +332,172 @@ class TransactionStatusService {
             ? error.message
             : "Failed to process transaction",
       };
+    }
+  }
+
+  /**
+   * Immediate transaction check - tries to find the transaction right away
+   * Most transactions are mined within seconds, so this catches them immediately
+   */
+  private async immediateTransactionCheck(
+    transactionId: string,
+    txHash: string,
+    networkId: number,
+    userId: string,
+    metadata: any
+  ): Promise<void> {
+    try {
+      logger.info("Starting immediate transaction check", {
+        transactionId,
+        txHash,
+        networkId,
+      });
+
+      const networkName = this.getNetworkName(networkId);
+      const blockchainData = await blockchainService.getTransactionDetails(
+        networkName,
+        txHash
+      );
+
+      if (blockchainData) {
+        // Transaction found immediately! Update with real data
+        logger.info("Transaction found immediately on blockchain", {
+          transactionId,
+          txHash,
+          networkName,
+          blockNumber: blockchainData.blockNumber,
+          confirmations: blockchainData.confirmations,
+        });
+
+        // Get the authenticated user's wallet address
+        const user = await User.findById(userId);
+        const userWalletAddress = user?.primaryWalletAddress?.toLowerCase();
+
+        // Determine user's role based on blockchain transaction
+        const txFromAddress = blockchainData.from.toLowerCase();
+        const txToAddress =
+          blockchainData.isERC20Transfer && blockchainData.actualRecipient
+            ? blockchainData.actualRecipient.toLowerCase()
+            : blockchainData.to.toLowerCase();
+
+        let fromUserId = undefined;
+        let toUserId = undefined;
+
+        // Check if the authenticated user is the sender
+        if (userWalletAddress && txFromAddress === userWalletAddress) {
+          fromUserId = userId;
+          const recipientUser = await User.findOne({
+            primaryWalletAddress: { $regex: new RegExp(txToAddress, "i") },
+          });
+          toUserId = recipientUser?._id || userId;
+        }
+        // Check if the authenticated user is the recipient
+        else if (userWalletAddress && txToAddress === userWalletAddress) {
+          toUserId = userId;
+          const senderUser = await User.findOne({
+            primaryWalletAddress: { $regex: new RegExp(txFromAddress, "i") },
+          });
+          fromUserId = senderUser?._id;
+        }
+        // If user is neither sender nor recipient, this might be a transaction they're tracking
+        else {
+          toUserId = userId;
+          fromUserId = undefined;
+        }
+
+        // Determine the correct addresses and amounts
+        const fromAddress = blockchainData.from;
+        const toAddress =
+          blockchainData.isERC20Transfer && blockchainData.actualRecipient
+            ? blockchainData.actualRecipient
+            : blockchainData.to;
+        const amount =
+          blockchainData.isERC20Transfer && blockchainData.tokenAmount
+            ? blockchainData.tokenAmount
+            : blockchainData.value;
+        const tokenAddress =
+          blockchainData.isERC20Transfer && blockchainData.tokenAddress
+            ? blockchainData.tokenAddress
+            : metadata.tokenAddress || "0x0";
+
+        // Update transaction with real blockchain data
+        const updateData: any = {
+          fromUserId,
+          toUserId,
+          fromAddress,
+          toAddress,
+          amount,
+          tokenAddress,
+          status: this.mapBlockchainStatus(blockchainData.status),
+          updatedAt: new Date(),
+          metadata: {
+            ...metadata,
+            blockchainDetails: {
+              gas: blockchainData.gas,
+              gasPrice: blockchainData.gasPrice,
+              nonce: blockchainData.nonce,
+              blockNumber: blockchainData.blockNumber,
+              confirmations: blockchainData.confirmations,
+              timestamp: blockchainData.timestamp,
+              isERC20Transfer: blockchainData.isERC20Transfer,
+              contractAddress: blockchainData.isERC20Transfer
+                ? blockchainData.to
+                : undefined,
+            },
+            networkId,
+            networkName,
+            isPending: false,
+            immediateCheck: true,
+          },
+        };
+
+        await Transaction.findByIdAndUpdate(transactionId, {
+          $set: updateData,
+        });
+
+        // Start normal status monitoring for confirmations
+        this.monitorTransactionStatus(transactionId, txHash, networkId);
+
+        logger.info("Transaction updated immediately with blockchain data", {
+          transactionId,
+          txHash,
+          status: updateData.status,
+          immediateCheck: true,
+        });
+      } else {
+        // Transaction not found immediately, start background monitoring
+        logger.info(
+          "Transaction not found immediately, starting background monitoring",
+          {
+            transactionId,
+            txHash,
+            networkName,
+          }
+        );
+
+        this.monitorPendingTransaction(
+          transactionId,
+          txHash,
+          networkId,
+          userId,
+          metadata
+        );
+      }
+    } catch (error) {
+      logger.error("Error in immediate transaction check", error as Error, {
+        transactionId,
+        txHash,
+        networkId,
+      });
+
+      // Fall back to background monitoring if immediate check fails
+      this.monitorPendingTransaction(
+        transactionId,
+        txHash,
+        networkId,
+        userId,
+        metadata
+      );
     }
   }
 
@@ -969,13 +1135,19 @@ class TransactionStatusService {
    * Comprehensive pending transaction cleanup
    * This method handles all edge cases and provides detailed reporting
    */
-  async comprehensivePendingTransactionCleanup(): Promise<{
+  async comprehensivePendingTransactionCleanup(
+    options: {
+      dryRun?: boolean;
+      maxTransactions?: number;
+    } = {}
+  ): Promise<{
     fixed: number;
     errors: number;
     skipped: number;
     failed: number;
     report: any;
   }> {
+    const { dryRun = false, maxTransactions = 1000 } = options;
     const startTime = new Date();
     const report = {
       startTime,
@@ -1005,13 +1177,17 @@ class TransactionStatusService {
           { amount: "0" },
           { tokenAddress: "0x0" },
         ],
-      }).sort({ createdAt: 1 });
+      })
+        .sort({ createdAt: 1 })
+        .limit(maxTransactions);
 
       report.transactions.total = pendingTransactions.length;
 
       logger.info("Starting comprehensive pending transaction cleanup", {
         totalTransactions: pendingTransactions.length,
         startTime,
+        dryRun,
+        maxTransactions,
       });
 
       let fixed = 0;
@@ -1030,7 +1206,42 @@ class TransactionStatusService {
             continue;
           }
 
-          const networkId = (transaction.metadata as any)?.networkId || 1;
+          // Use the stored networkId from metadata (this is what the frontend sent)
+          let networkId = (transaction.metadata as any)?.networkId;
+
+          // If networkId is missing, try to determine from transaction data
+          if (!networkId) {
+            logger.warn(
+              "Transaction missing networkId in metadata, trying to determine from chain",
+              {
+                transactionId: transaction._id,
+                txHash,
+                sourceChain: transaction.sourceChain,
+                destinationChain: transaction.destinationChain,
+              }
+            );
+
+            // Try to determine network from chain names
+            if (
+              transaction.sourceChain === "sepolia" ||
+              transaction.destinationChain === "sepolia"
+            ) {
+              networkId = 11155111; // Sepolia
+            } else if (
+              transaction.sourceChain === "ethereum" ||
+              transaction.destinationChain === "ethereum"
+            ) {
+              networkId = 1; // Ethereum mainnet
+            } else {
+              logger.warn("Cannot determine network, skipping", {
+                transactionId: transaction._id,
+                txHash,
+              });
+              skipped++;
+              continue;
+            }
+          }
+
           const networkName = this.getNetworkName(networkId);
 
           // Track network statistics
@@ -1043,15 +1254,18 @@ class TransactionStatusService {
             transactionId: transaction._id,
             txHash,
             networkName,
+            networkId,
             createdAt: transaction.createdAt,
             status: transaction.status,
           });
 
           // Check blockchain status
-          const blockchainData = await blockchainService.getTransactionDetails(
-            networkName,
-            txHash
-          );
+          const blockchainData = dryRun
+            ? null
+            : await blockchainService.getTransactionDetails(
+                networkName,
+                txHash
+              );
 
           if (blockchainData) {
             // Transaction found on blockchain
@@ -1061,11 +1275,13 @@ class TransactionStatusService {
               transaction.metadata
             );
 
-            await this.updateTransactionStatus(
-              transaction._id.toString(),
-              "completed",
-              updateData
-            );
+            if (!dryRun) {
+              await this.updateTransactionStatus(
+                transaction._id.toString(),
+                "completed",
+                updateData
+              );
+            }
 
             logger.info("Successfully fixed pending transaction", {
               transactionId: transaction._id,
@@ -1073,6 +1289,7 @@ class TransactionStatusService {
               networkName,
               blockNumber: blockchainData.blockNumber,
               confirmations: blockchainData.confirmations,
+              dryRun,
             });
 
             fixed++;
@@ -1087,21 +1304,24 @@ class TransactionStatusService {
 
             if (hoursSinceCreation > 2) {
               // Mark as failed if too old
-              await this.updateTransactionStatus(
-                transaction._id.toString(),
-                "failed",
-                {
-                  error: `Transaction not found on blockchain after ${Math.round(hoursSinceCreation)} hours`,
-                  hoursSinceCreation: Math.round(hoursSinceCreation),
-                  lastChecked: now,
-                }
-              );
+              if (!dryRun) {
+                await this.updateTransactionStatus(
+                  transaction._id.toString(),
+                  "failed",
+                  {
+                    error: `Transaction not found on blockchain after ${Math.round(hoursSinceCreation)} hours`,
+                    hoursSinceCreation: Math.round(hoursSinceCreation),
+                    lastChecked: now,
+                  }
+                );
+              }
 
               logger.warn("Marked old transaction as failed", {
                 transactionId: transaction._id,
                 txHash,
                 networkName,
                 hoursSinceCreation: Math.round(hoursSinceCreation),
+                dryRun,
               });
 
               failed++;

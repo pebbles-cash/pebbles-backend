@@ -536,6 +536,12 @@ export interface IFiatInteraction extends Document {
   // Legacy field for backward compatibility
   externalTransactionId?: string;
 
+  // Meld API response format
+  sourceAmount: number;
+  sourceCurrencyCode: string;
+  destinationAmount: number;
+  destinationCurrencyCode: string;
+  // Legacy fields for backward compatibility
   fiatAmount: IAmount;
   cryptoAmount: ICryptoAmount;
   exchangeRate: number;

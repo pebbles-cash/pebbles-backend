@@ -11,6 +11,7 @@ import {
 } from "../types";
 import axios from "axios";
 import { CountryConfig } from "../models";
+import { isValidUsername } from "../utils/endpoint-validation";
 
 /**
  * Create new user profile
@@ -40,6 +41,11 @@ export const createUser = async (
     // Validate username
     if (username !== null && (username.length < 3 || username.length > 50)) {
       return error("Username must be between 3-50 characters", 400);
+    }
+
+    // Validate username against reserved endpoint names
+    if (username && !isValidUsername(username)) {
+      return error("Username cannot be a reserved endpoint name", 400);
     }
 
     // Check for existing user
@@ -311,6 +317,11 @@ export const updateCurrentUser = requireAuth(
       // Basic validation
       if (username && (username.length < 3 || username.length > 50)) {
         return error("Username must be between 3 and 50 characters", 400);
+      }
+
+      // Validate username against reserved endpoint names
+      if (username && !isValidUsername(username)) {
+        return error("Username cannot be a reserved endpoint name", 400);
       }
 
       // Check if username is taken (if changing)

@@ -1034,8 +1034,28 @@ export const processTransactionHash = requireAuth(
         metadata = {},
       } = body;
 
-      // Default to Ethereum mainnet (1) if no networkId provided
-      const selectedNetworkId = networkId || 1;
+      // Require networkId to be provided
+      if (!networkId) {
+        return error(
+          "networkId is required to specify which blockchain network the transaction is on",
+          400
+        );
+      }
+
+      // Validate networkId is a number
+      const selectedNetworkId = parseInt(networkId.toString(), 10);
+      if (isNaN(selectedNetworkId)) {
+        return error("networkId must be a valid number", 400);
+      }
+
+      // Validate networkId is supported
+      const supportedNetworks = [1, 11155111, 56]; // Ethereum mainnet, Sepolia, BSC
+      if (!supportedNetworks.includes(selectedNetworkId)) {
+        return error(
+          `Unsupported networkId: ${selectedNetworkId}. Supported networks: ${supportedNetworks.join(", ")}`,
+          400
+        );
+      }
 
       // Validate required fields
       if (!txHash) {
@@ -1220,58 +1240,70 @@ export const getTransactionStatus = requireAuth(
  * Fix pending transactions
  * POST /api/transactions/fix-pending
  */
-export const fixPendingTransactions = requireAuth(
-  async (
-    event: AuthenticatedAPIGatewayProxyEvent
-  ): Promise<APIGatewayProxyResult> => {
-    try {
-      // Import the transaction status service
-      const { transactionStatusService } = await import(
-        "../services/transaction-status-service"
-      );
+export const fixPendingTransactions = async (
+  event: any
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Import the transaction status service
+    const { transactionStatusService } = await import(
+      "../services/transaction-status-service"
+    );
 
-      // Fix pending transactions
-      const result = await transactionStatusService.fixPendingTransactions();
+    // Fix pending transactions
+    const result = await transactionStatusService.fixPendingTransactions();
 
-      return success({
-        message: "Pending transactions fix completed",
-        result,
-      });
-    } catch (err) {
-      console.error("Fix pending transactions error:", err);
-      return error("Could not fix pending transactions", 500);
-    }
+    return success({
+      message: "Pending transactions fix completed",
+      result,
+    });
+  } catch (err) {
+    console.error("Fix pending transactions error:", err);
+    return error("Could not fix pending transactions", 500);
   }
-);
+};
 
 /**
  * Comprehensive pending transaction cleanup
  * POST /api/transactions/cleanup-pending
  */
-export const comprehensivePendingTransactionCleanup = requireAuth(
-  async (
-    event: AuthenticatedAPIGatewayProxyEvent
-  ): Promise<APIGatewayProxyResult> => {
-    try {
-      // Import the transaction status service
-      const { transactionStatusService } = await import(
-        "../services/transaction-status-service"
-      );
+export const comprehensivePendingTransactionCleanup = async (
+  event: any
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Import the transaction status service
+    const { transactionStatusService } = await import(
+      "../services/transaction-status-service"
+    );
 
-      // Run comprehensive cleanup
-      const result =
-        await transactionStatusService.comprehensivePendingTransactionCleanup();
+    // Check if this is a dry run
+    const body = event.body ? JSON.parse(event.body) : {};
+    const isDryRun = body.dryRun === true;
+    const maxTransactions = body.maxTransactions || 100; // Limit processing
 
-      return success({
-        message: "Comprehensive pending transaction cleanup completed",
-        result,
+    console.log("Starting comprehensive cleanup", {
+      isDryRun,
+      maxTransactions,
+      body,
+    });
+
+    // Run comprehensive cleanup with limits
+    const result =
+      await transactionStatusService.comprehensivePendingTransactionCleanup({
+        dryRun: isDryRun,
+        maxTransactions,
       });
-    } catch (err) {
-      console.error("Comprehensive cleanup error:", err);
-      return error("Could not run comprehensive cleanup", 500);
-    }
+
+    return success({
+      message: "Comprehensive pending transaction cleanup completed",
+      result,
+      isDryRun,
+      maxTransactions,
+    });
+  } catch (err) {
+    console.error("Comprehensive cleanup error:", err);
+    return error("Could not run comprehensive cleanup", 500);
   }
-);
+};
 
 /**
  * Get supported blockchain networks

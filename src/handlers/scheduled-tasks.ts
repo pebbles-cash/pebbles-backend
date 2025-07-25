@@ -15,9 +15,12 @@ export const cleanupPendingTransactions = async (
       event: event.body ? JSON.parse(event.body) : event,
     });
 
-    // Run comprehensive cleanup
+    // Run comprehensive cleanup with limits for scheduled task
     const result =
-      await transactionStatusService.comprehensivePendingTransactionCleanup();
+      await transactionStatusService.comprehensivePendingTransactionCleanup({
+        dryRun: false,
+        maxTransactions: 50, // Process fewer transactions in scheduled task
+      });
 
     logger.info("Scheduled cleanup completed", {
       fixed: result.fixed,

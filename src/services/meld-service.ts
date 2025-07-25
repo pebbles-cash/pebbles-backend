@@ -226,6 +226,28 @@ class MeldService {
   }
 
   /**
+   * Get payment transaction details
+   * GET /payments/transactions/{customerId}
+   */
+  async getPaymentTransaction(customerId: string): Promise<any> {
+    try {
+      const response = await this.client.get(
+        `/payments/transactions/${customerId}`
+      );
+      return response.data;
+    } catch (error) {
+      logger.error(
+        "Error getting payment transaction from Meld",
+        error as Error,
+        {
+          customerId,
+        }
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get crypto currencies
    * GET /service-providers/properties/crypto-currencies
    */

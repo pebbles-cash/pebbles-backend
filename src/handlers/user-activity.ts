@@ -4,6 +4,7 @@ import { AuthenticatedAPIGatewayProxyEvent } from "../types";
 import { Transaction, FiatInteraction, User } from "../models";
 import { success, error } from "../utils/response";
 import { getTokenSymbol } from "../utils/token-symbols";
+import { Types } from "mongoose";
 
 /**
  * Unified user activity feed
@@ -92,8 +93,32 @@ export const getUserActivity = requireAuth(
       }
 
       // --- Fiat Interactions (deposit/withdraw) ---
+      // Get user's Meld identifiers from metadata to find unassigned fiat interactions
+      const user = await User.findById(userId).lean();
+      const userMeldIdentifiers =
+        user && (user as any).metadata
+          ? [
+              (user as any).metadata.meldCustomerId,
+              (user as any).metadata.customerId,
+              (user as any).metadata.meldAccountId,
+            ].filter(Boolean)
+          : [];
+
       const fiatQuery: any = {
-        userId,
+        $or: [
+          { userId }, // Assigned fiat interactions
+          // Unassigned fiat interactions that might belong to this user
+          ...(userMeldIdentifiers.length > 0
+            ? [
+                {
+                  userId: { $exists: false },
+                  $or: userMeldIdentifiers.map((identifier) => ({
+                    meldCustomerId: identifier,
+                  })),
+                },
+              ]
+            : []),
+        ],
         status: "completed",
       };
       if (startDate || endDate) {
@@ -130,6 +155,29 @@ export const getUserActivity = requireAuth(
         Transaction.find(txQuery).sort({ createdAt: -1 }).lean(),
         FiatInteraction.find(fiatQuery).sort({ createdAt: -1 }).lean(),
       ]);
+
+      // Auto-assign unassigned fiat interactions to the user
+      if (userMeldIdentifiers.length > 0) {
+        const unassignedFiatInteractions = fiatInteractions.filter(
+          (fiat) => !fiat.userId
+        );
+
+        if (unassignedFiatInteractions.length > 0) {
+          // Update unassigned fiat interactions to assign them to this user
+          const fiatInteractionIds = unassignedFiatInteractions.map(
+            (fiat) => fiat._id
+          );
+
+          await FiatInteraction.updateMany(
+            { _id: { $in: fiatInteractionIds } },
+            { userId: new Types.ObjectId(userId) }
+          );
+
+          console.log(
+            `Auto-assigned ${unassignedFiatInteractions.length} fiat interactions to user ${userId}`
+          );
+        }
+      }
 
       // Get user info for counterparties
       const userIds = new Set<string>();
@@ -176,9 +224,31 @@ export const getUserActivity = requireAuth(
       }
       // Fiat Interactions
       for (const fiat of fiatInteractions) {
-        // Get token symbol for crypto currency if it has a token address
+        // Use the new Meld API format fields
         let currency =
-          fiat.fiatAmount?.currency || fiat.cryptoAmount?.currency || "USD";
+          fiat.sourceCurrencyCode || fiat.destinationCurrencyCode || "USD";
+        let amount = fiat.sourceAmount || fiat.destinationAmount || 0;
+
+        // For onramp, show the fiat amount (source)
+        // For offramp, show the crypto amount (destination)
+        if (fiat.type === "onramp") {
+          currency = fiat.sourceCurrencyCode || "USD";
+          amount = fiat.sourceAmount || 0;
+        } else {
+          currency = fiat.destinationCurrencyCode || "USD";
+          amount = fiat.destinationAmount || 0;
+        }
+
+        // Fallback to legacy fields if new fields are not available
+        if (!amount || amount === 0) {
+          if (fiat.fiatAmount?.value) {
+            amount = fiat.fiatAmount.value;
+            currency = fiat.fiatAmount.currency || currency;
+          } else if (fiat.cryptoAmount?.value) {
+            amount = fiat.cryptoAmount.value;
+            currency = fiat.cryptoAmount.currency || currency;
+          }
+        }
 
         // If it's a crypto amount with a token address, get the symbol
         if (fiat.cryptoAmount?.tokenAddress) {
@@ -188,10 +258,7 @@ export const getUserActivity = requireAuth(
 
         activities.push({
           id: fiat._id,
-          amount:
-            fiat.fiatAmount?.value?.toString() ||
-            fiat.cryptoAmount?.value?.toString() ||
-            "",
+          amount: amount.toString(),
           currency: currency,
           direction: fiat.type === "onramp" ? "input" : "output",
           date: fiat.createdAt,

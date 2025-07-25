@@ -440,6 +440,8 @@ const serverlessConfiguration: AWS = {
     comprehensivePendingTransactionCleanup: {
       handler:
         "src/handlers/transactions.comprehensivePendingTransactionCleanup",
+      timeout: 29, // 5 minutes timeout for this heavy operation
+      memorySize: 3008, // Maximum allowed memory for Lambda
       events: [
         {
           http: {
@@ -828,6 +830,19 @@ const serverlessConfiguration: AWS = {
         },
       ],
     },
+    updateFiatInteractionDetails: {
+      handler: "src/handlers/fiat-interactions.updateFiatInteractionDetails",
+      events: [
+        {
+          http: {
+            path: "/api/fiat-interactions/customer/{partnerCustomerId}/update-details",
+            method: "put",
+            cors: true,
+          },
+        },
+      ],
+    },
+
     // Tips Handlers
     configureTipPage: {
       handler: "src/handlers/tips.configureTipPage",
